@@ -20,6 +20,7 @@ For commercial licensing, please contact support@quantumnous.com
 import React, { useMemo } from 'react';
 import { Button, Typography } from '@douyinfe/semi-ui';
 import { IconChevronLeft, IconChevronRight } from '@douyinfe/semi-icons';
+import { Check } from 'lucide-react';
 
 const { Text } = Typography;
 
@@ -136,30 +137,21 @@ const CheckinCalendar = ({ year, month, checkedDays, onMonthChange, t }) => {
       </div>
 
       {/* 日期格子 */}
-      <div className='grid grid-cols-7 gap-1'>
+      <div className='grid grid-cols-7 gap-2'>
         {calendarData.map((item, index) => (
           <div
             key={index}
-            className={`
-              aspect-square flex items-center justify-center rounded-lg text-sm
-              ${item.day === null ? '' : 'cursor-default'}
-              ${item.isToday ? 'ring-2 ring-primary' : ''}
-              ${item.isChecked ? 'bg-primary text-white' : ''}
-              ${!item.isChecked && item.isPast && item.day ? 'bg-gray-100 dark:bg-gray-800' : ''}
-              ${item.isFuture ? 'text-gray-300 dark:text-gray-600' : ''}
-            `}
-            style={item.isChecked ? { 
-              backgroundColor: 'var(--semi-color-primary)',
-              color: 'white'
-            } : item.isToday ? {
-              borderColor: 'var(--semi-color-primary)'
-            } : {}}
+            className={`calendar-day-cell ${item.day === null ? 'empty' : ''}`}
           >
             {item.day && (
-              <div className='flex flex-col items-center'>
-                <span>{item.day}</span>
+              <div 
+                className={`calendar-day ${item.isChecked ? 'checked' : ''} ${item.isToday ? 'today' : ''} ${item.isFuture ? 'future' : ''} ${!item.isChecked && item.isPast ? 'past' : ''}`}
+              >
+                <span className='day-number'>{item.day}</span>
                 {item.isChecked && (
-                  <span className='text-xs'>✓</span>
+                  <span className='day-check'>
+                    <Check size={12} />
+                  </span>
                 )}
               </div>
             )}
@@ -168,20 +160,14 @@ const CheckinCalendar = ({ year, month, checkedDays, onMonthChange, t }) => {
       </div>
 
       {/* 图例 */}
-      <div className='flex items-center justify-center gap-6 mt-4 text-sm'>
-        <div className='flex items-center gap-2'>
-          <div 
-            className='w-4 h-4 rounded' 
-            style={{ backgroundColor: 'var(--semi-color-primary)' }}
-          />
-          <Text type='secondary'>{t('已签到')}</Text>
+      <div className='calendar-legend'>
+        <div className='legend-item'>
+          <div className='legend-dot checked' />
+          <Text type='secondary' size='small'>{t('已签到')}</Text>
         </div>
-        <div className='flex items-center gap-2'>
-          <div 
-            className='w-4 h-4 rounded ring-2'
-            style={{ borderColor: 'var(--semi-color-primary)' }}
-          />
-          <Text type='secondary'>{t('今天')}</Text>
+        <div className='legend-item'>
+          <div className='legend-dot today' />
+          <Text type='secondary' size='small'>{t('今天')}</Text>
         </div>
       </div>
     </div>

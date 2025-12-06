@@ -21,12 +21,15 @@ import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, Button, Modal, Spin, Toast, Tag, Typography } from '@douyinfe/semi-ui';
 import { IconGift, IconCalendar, IconHistory, IconTick } from '@douyinfe/semi-icons';
+import { Sparkles, Crown, Flame } from 'lucide-react';
 import { API, showError, showSuccess, renderQuota } from '../../helpers';
 import { UserContext } from '../../context/User';
 import CheckinCalendar from './CheckinCalendar';
 import CheckinStats from './CheckinStats';
 import CheckinHistory from './CheckinHistory';
+import CheckinRules from './CheckinRules';
 import MakeupModal from './MakeupModal';
+import './checkin.css';
 
 const { Title, Text } = Typography;
 
@@ -153,110 +156,180 @@ const Checkin = () => {
 
   return (
     <div className='w-full max-w-4xl mx-auto space-y-6'>
-      {/* 签到卡片 */}
-      <Card className='checkin-main-card'>
-        <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-          <div className='flex-1'>
-            <Title heading={4} className='mb-2'>
-              <IconGift className='mr-2' />
+      {/* 签到主卡片 - 高级渐变风格 */}
+      <div className='checkin-hero-card'>
+        {/* 粒子背景效果 */}
+        <div className='checkin-particles'>
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className='particle' style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 4}s`
+            }} />
+          ))}
+        </div>
+        
+        {/* 装饰光晕 */}
+        <div className='checkin-glow checkin-glow-1' />
+        <div className='checkin-glow checkin-glow-2' />
+        
+        <div className='checkin-hero-content'>
+          {/* 左侧信息区 */}
+          <div className='checkin-hero-info'>
+            <div className='checkin-hero-badge'>
+              <Crown size={14} />
+              <span>{t('每日福利')}</span>
+            </div>
+            <Title heading={2} className='checkin-hero-title'>
               {t('每日签到')}
             </Title>
-            <Text type='secondary'>
+            <Text className='checkin-hero-desc'>
               {stats?.checked_in_today 
                 ? t('今日已签到，明天再来吧！')
                 : t('签到领取额度奖励，连续签到奖励更多！')}
             </Text>
+            
+            {/* 连续签到展示 */}
+            {stats?.consecutive_days > 0 && (
+              <div className='checkin-streak-badge'>
+                <Flame size={16} className='streak-icon' />
+                <span>{t('连续签到')} <strong>{stats.consecutive_days}</strong> {t('天')}</span>
+              </div>
+            )}
           </div>
-          <div className='flex gap-3'>
-            <Button
-              theme='solid'
-              type='primary'
-              size='large'
-              icon={stats?.checked_in_today ? <IconTick /> : <IconGift />}
-              loading={checkinLoading}
-              disabled={stats?.checked_in_today}
+          
+          {/* 右侧按钮区 */}
+          <div className='checkin-hero-actions'>
+            <button
+              className={`checkin-main-btn ${stats?.checked_in_today ? 'checked' : ''}`}
+              disabled={stats?.checked_in_today || checkinLoading}
               onClick={handleCheckin}
             >
-              {stats?.checked_in_today ? t('已签到') : t('立即签到')}
-            </Button>
+              {checkinLoading ? (
+                <Spin size='small' />
+              ) : stats?.checked_in_today ? (
+                <>
+                  <IconTick size='large' />
+                  <span>{t('已签到')}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={24} />
+                  <span>{t('立即签到')}</span>
+                </>
+              )}
+            </button>
             <Button
               theme='light'
               type='tertiary'
               size='large'
               icon={<IconCalendar />}
               onClick={() => setMakeupVisible(true)}
+              className='checkin-makeup-btn'
             >
               {t('补签')}
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
+
+      {/* 签到规则 */}
+      <CheckinRules t={t} renderQuota={renderQuota} />
 
       {/* 统计信息 */}
       <CheckinStats stats={stats} t={t} renderQuota={renderQuota} />
 
       {/* 签到日历 */}
-      <Card
-        title={
-          <div className='flex items-center justify-between w-full'>
-            <span>
-              <IconCalendar className='mr-2' />
-              {t('签到日历')}
-            </span>
-            <Button
-              theme='borderless'
-              type='tertiary'
-              icon={<IconHistory />}
-              onClick={() => setHistoryVisible(true)}
-            >
-              {t('签到记录')}
-            </Button>
+      <div className='checkin-calendar-card'>
+        <div className='calendar-card-header'>
+          <div className='calendar-card-title'>
+            <IconCalendar className='mr-2' style={{ color: '#8b5cf6' }} />
+            <span>{t('签到日历')}</span>
           </div>
-        }
-      >
-        <CheckinCalendar
-          year={currentYear}
-          month={currentMonth}
-          checkedDays={calendar}
-          onMonthChange={handleMonthChange}
-          t={t}
-        />
-      </Card>
+          <Button
+            theme='borderless'
+            type='tertiary'
+            icon={<IconHistory />}
+            onClick={() => setHistoryVisible(true)}
+          >
+            {t('签到记录')}
+          </Button>
+        </div>
+        <div className='calendar-card-body'>
+          <CheckinCalendar
+            year={currentYear}
+            month={currentMonth}
+            checkedDays={calendar}
+            onMonthChange={handleMonthChange}
+            t={t}
+          />
+        </div>
+      </div>
 
-      {/* 签到结果弹窗 */}
+      {/* 签到结果弹窗 - 高级风格 */}
       <Modal
-        title={t('签到成功')}
+        title={null}
         visible={resultVisible}
         onOk={() => setResultVisible(false)}
         onCancel={() => setResultVisible(false)}
-        footer={
-          <Button theme='solid' type='primary' onClick={() => setResultVisible(false)}>
-            {t('太棒了')}
-          </Button>
-        }
+        footer={null}
         centered
+        className='checkin-result-modal'
+        width={400}
       >
         {checkinResult && (
-          <div className='text-center py-4'>
-            <div className='text-6xl mb-4'>🎉</div>
-            <Title heading={3} className='mb-4'>
-              +{renderQuota(checkinResult.total_reward)}
-            </Title>
-            <div className='space-y-2'>
-              <Text>{t('基础奖励')}: {renderQuota(checkinResult.base_reward)}</Text>
-              {checkinResult.bonus_triggered && (
-                <div>
-                  <Tag color='orange' size='large'>
-                    🎁 {t('惊喜奖励')}: +{renderQuota(checkinResult.bonus_reward)}
-                  </Tag>
-                </div>
-              )}
-              <div className='mt-4'>
-                <Text type='secondary'>
-                  {t('连续签到')}: {checkinResult.consecutive_days} {t('天')}
-                </Text>
+          <div className='checkin-result-content'>
+            {/* 顶部装饰 */}
+            <div className='result-decoration'>
+              <div className='result-glow' />
+              <div className='result-icon'>
+                <Sparkles size={32} />
               </div>
             </div>
+            
+            <Title heading={4} className='result-title'>
+              {t('签到成功')}
+            </Title>
+            
+            {/* 奖励金额 */}
+            <div className='result-reward'>
+              <span className='reward-plus'>+</span>
+              <span className='reward-amount'>{renderQuota(checkinResult.total_reward)}</span>
+            </div>
+            
+            {/* 奖励明细 */}
+            <div className='result-details'>
+              <div className='detail-item'>
+                <span className='detail-label'>{t('基础奖励')}</span>
+                <span className='detail-value'>{renderQuota(checkinResult.base_reward)}</span>
+              </div>
+              {checkinResult.bonus_triggered && (
+                <div className='detail-item bonus'>
+                  <span className='detail-label'>
+                    <Sparkles size={14} className='inline mr-1' />
+                    {t('惊喜奖励')}
+                  </span>
+                  <span className='detail-value bonus'>+{renderQuota(checkinResult.bonus_reward)}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* 连续签到 */}
+            <div className='result-streak'>
+              <Flame size={16} className='streak-icon' />
+              <span>{t('连续签到')} <strong>{checkinResult.consecutive_days}</strong> {t('天')}</span>
+            </div>
+            
+            <Button 
+              theme='solid' 
+              type='primary' 
+              size='large'
+              block
+              onClick={() => setResultVisible(false)}
+              className='result-btn'
+            >
+              {t('太棒了')}
+            </Button>
           </div>
         )}
       </Modal>

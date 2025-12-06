@@ -1,0 +1,662 @@
+/* ==================== 签到页面高级样式 ==================== */
+
+/* 签到主卡片 - 渐变背景 */
+.checkin-hero-card {
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 20px;
+  padding: 32px;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+/* 浅色主题 */
+html:not(.dark) .checkin-hero-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+/* 粒子效果 */
+.checkin-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 215, 0, 0.6);
+  border-radius: 50%;
+  bottom: -10px;
+  animation: float-up linear infinite;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-250px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* 装饰光晕 */
+.checkin-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.checkin-glow-1 {
+  width: 200px;
+  height: 200px;
+  background: rgba(139, 92, 246, 0.4);
+  top: -50px;
+  right: -50px;
+}
+
+.checkin-glow-2 {
+  width: 150px;
+  height: 150px;
+  background: rgba(245, 158, 11, 0.3);
+  bottom: -30px;
+  left: 20%;
+}
+
+/* 内容区 */
+.checkin-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .checkin-hero-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* 信息区 */
+.checkin-hero-info {
+  flex: 1;
+}
+
+.checkin-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  color: #ffd700;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.checkin-hero-title {
+  color: #fff !important;
+  margin: 0 0 8px 0 !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+}
+
+.checkin-hero-desc {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 14px;
+}
+
+.checkin-streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: rgba(245, 158, 11, 0.2);
+  border-radius: 12px;
+  color: #fbbf24;
+  font-size: 14px;
+}
+
+.checkin-streak-badge .streak-icon {
+  color: #f97316;
+  animation: flame-pulse 1s ease-in-out infinite;
+}
+
+@keyframes flame-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 按钮区 */
+.checkin-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .checkin-hero-actions {
+    align-items: flex-end;
+  }
+}
+
+/* 签到主按钮 */
+.checkin-main-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 160px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  border: none;
+  border-radius: 16px;
+  color: #1a1a2e;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+}
+
+.checkin-main-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.4);
+}
+
+.checkin-main-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.checkin-main-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.checkin-main-btn.checked {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.checkin-makeup-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.checkin-makeup-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+
+/* ==================== 签到规则卡片 ==================== */
+.checkin-rules-card {
+  background: var(--semi-color-bg-1);
+  border-radius: 16px;
+  border: 1px solid var(--semi-color-border);
+  overflow: hidden;
+}
+
+.checkin-rules-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.checkin-rules-trigger:hover {
+  background: var(--semi-color-fill-0);
+}
+
+.checkin-rules-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  border-radius: 8px;
+  color: #fff;
+}
+
+.checkin-rules-content {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkin-rule-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--semi-color-fill-0);
+  border-radius: 12px;
+}
+
+.checkin-rule-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.checkin-rule-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkin-rule-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.checkin-rule-tier {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--semi-color-bg-2);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.checkin-rule-tier.highlight {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tier-label {
+  color: var(--semi-color-text-2);
+}
+
+.tier-multiplier {
+  font-weight: 600;
+  color: var(--semi-color-text-0);
+}
+
+.tier-multiplier.gold {
+  color: #f59e0b;
+}
+
+/* ==================== 签到结果弹窗 ==================== */
+.checkin-result-modal .semi-modal-content {
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+html:not(.dark) .checkin-result-modal .semi-modal-content {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+}
+
+.checkin-result-content {
+  padding: 24px;
+  text-align: center;
+}
+
+.result-decoration {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.result-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+}
+
+.result-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  border-radius: 50%;
+  color: #1a1a2e;
+  animation: icon-bounce 0.6s ease-out;
+}
+
+@keyframes icon-bounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.result-title {
+  color: #fff !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.result-reward {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.reward-plus {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.reward-amount {
+  font-size: 36px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.result-details {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.detail-item:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-item.bonus {
+  color: #fbbf24;
+}
+
+.detail-value.bonus {
+  font-weight: 600;
+}
+
+.result-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(245, 158, 11, 0.2);
+  border-radius: 20px;
+  color: #fbbf24;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.result-streak .streak-icon {
+  color: #f97316;
+}
+
+.result-btn {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%) !important;
+  border: none !important;
+  color: #1a1a2e !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+}
+
+/* ==================== 统计卡片增强 ==================== */
+.checkin-stats-card {
+  background: var(--semi-color-bg-1);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid var(--semi-color-border);
+  transition: all 0.3s ease;
+}
+
+.checkin-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.checkin-stats-card.highlight {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* ==================== 日历增强 ==================== */
+.checkin-calendar-card {
+  background: var(--semi-color-bg-1);
+  border-radius: 16px;
+  border: 1px solid var(--semi-color-border);
+}
+
+.checkin-calendar .calendar-day.checked {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.checkin-calendar .calendar-day.today {
+  border: 2px solid #8b5cf6;
+}
+
+
+/* ==================== 日历增强样式 ==================== */
+.calendar-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-day-cell.empty {
+  background: transparent;
+}
+
+.calendar-day {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  background: var(--semi-color-fill-0);
+}
+
+.calendar-day:hover:not(.future) {
+  transform: scale(1.05);
+}
+
+.calendar-day.checked {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.calendar-day.today {
+  border: 2px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.calendar-day.today.checked {
+  border: 2px solid #ffd700;
+}
+
+.calendar-day.future {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.calendar-day.past:not(.checked) {
+  background: var(--semi-color-fill-1);
+  color: var(--semi-color-text-2);
+}
+
+.day-number {
+  line-height: 1;
+}
+
+.day-check {
+  position: absolute;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 图例样式 */
+.calendar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--semi-color-border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+}
+
+.legend-dot.checked {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+}
+
+.legend-dot.today {
+  border: 2px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+/* 月份导航增强 */
+.checkin-calendar .month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.checkin-calendar .month-title {
+  font-size: 18px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+
+/* ==================== 日历卡片容器 ==================== */
+.checkin-calendar-card {
+  background: var(--semi-color-bg-1);
+  border-radius: 16px;
+  border: 1px solid var(--semi-color-border);
+  overflow: hidden;
+}
+
+.calendar-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--semi-color-border);
+}
+
+.calendar-card-title {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--semi-color-text-0);
+}
+
+.calendar-card-body {
+  padding: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .checkin-hero-card {
+    padding: 20px;
+  }
+  
+  .checkin-hero-title {
+    font-size: 22px !important;
+  }
+  
+  .checkin-main-btn {
+    width: 100%;
+    padding: 14px 24px;
+  }
+  
+  .checkin-makeup-btn {
+    width: 100%;
+  }
+  
+  .calendar-day {
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  
+  .checkin-rule-items {
+    flex-direction: column;
+  }
+  
+  .checkin-rule-tier {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
