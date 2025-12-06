@@ -19,16 +19,17 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, Button, Modal, Spin, Toast, Tag, Typography } from '@douyinfe/semi-ui';
-import { IconGift, IconCalendar, IconHistory, IconTick } from '@douyinfe/semi-icons';
+import { Button, Modal, Spin, Toast, Typography } from '@douyinfe/semi-ui';
+import { IconCalendar, IconHistory, IconTick } from '@douyinfe/semi-icons';
 import { Sparkles, Crown, Flame } from 'lucide-react';
-import { API, showError, showSuccess, renderQuota } from '../../helpers';
+import { API, showError, renderQuota } from '../../helpers';
 import { UserContext } from '../../context/User';
 import CheckinCalendar from './CheckinCalendar';
 import CheckinStats from './CheckinStats';
 import CheckinHistory from './CheckinHistory';
 import CheckinRules from './CheckinRules';
 import MakeupModal from './MakeupModal';
+import { SliderCaptcha } from '../captcha';
 import './checkin.css';
 
 const { Title, Text } = Typography;
@@ -48,6 +49,10 @@ const Checkin = () => {
   const [makeupVisible, setMakeupVisible] = useState(false);
   const [resultVisible, setResultVisible] = useState(false);
   const [checkinResult, setCheckinResult] = useState(null);
+  
+  // 滑块验证码状态
+  const [sliderCaptchaEnabled, setSliderCaptchaEnabled] = useState(false);
+  const [captchaModalVisible, setCaptchaModalVisible] = useState(false);
   
   // 当前日期
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -85,29 +90,49 @@ const Checkin = () => {
     }
   }, [t]);
 
+  // 获取滑块验证码状态
+  const fetchCaptchaStatus = useCallback(async () => {
+    try {
+      const res = await API.get('/api/captcha/status');
+      if (res.data.success && res.data.data) {
+        const { enabled, require_on_checkin } = res.data.data;
+        setSliderCaptchaEnabled(enabled && require_on_checkin);
+      }
+    } catch (err) {
+      // 忽略错误，默认不启用
+    }
+  }, []);
+
   // 初始化加载
   useEffect(() => {
     const init = async () => {
       setLoading(true);
       await Promise.all([
         fetchStats(),
-        fetchCalendar(currentYear, currentMonth)
+        fetchCalendar(currentYear, currentMonth),
+        fetchCaptchaStatus()
       ]);
       setLoading(false);
     };
     init();
-  }, [fetchStats, fetchCalendar, currentYear, currentMonth]);
+  }, [fetchStats, fetchCalendar, fetchCaptchaStatus, currentYear, currentMonth]);
 
-  // 执行签到
-  const handleCheckin = async () => {
-    if (stats?.checked_in_today) {
-      Toast.warning(t('今日已签到'));
-      return;
-    }
-    
+  // 滑块验证码成功回调
+  const handleSliderCaptchaSuccess = (token) => {
+    setCaptchaModalVisible(false);
+    // 验证成功后执行签到
+    doCheckin(token);
+  };
+
+  // 实际执行签到
+  const doCheckin = async (captchaToken) => {
     setCheckinLoading(true);
     try {
-      const res = await API.post('/api/user/checkin');
+      const checkinData = {};
+      if (captchaToken) {
+        checkinData.captcha_token = captchaToken;
+      }
+      const res = await API.post('/api/user/checkin', checkinData);
       const { success, data, message } = res.data;
       if (success) {
         setCheckinResult(data);
@@ -123,6 +148,7 @@ const Checkin = () => {
           };
           userDispatch({ type: 'login', payload: updatedUser });
         }
+
       } else {
         showError(message);
       }
@@ -131,6 +157,23 @@ const Checkin = () => {
     } finally {
       setCheckinLoading(false);
     }
+  };
+
+  // 执行签到
+  const handleCheckin = async () => {
+    if (stats?.checked_in_today) {
+      Toast.warning(t('今日已签到'));
+      return;
+    }
+    
+    // 如果启用了滑块验证码，先显示验证弹窗
+    if (sliderCaptchaEnabled) {
+      setCaptchaModalVisible(true);
+      return;
+    }
+    
+    // 否则直接签到
+    doCheckin(null);
   };
 
   // 补签成功回调
@@ -355,6 +398,23 @@ const Checkin = () => {
         userDispatch={userDispatch}
         userState={userState}
       />
+
+      {/* 滑块验证码弹窗 */}
+      <Modal
+        title={t('安全验证')}
+        visible={captchaModalVisible}
+        onCancel={() => setCaptchaModalVisible(false)}
+        footer={null}
+        centered
+        width={380}
+      >
+        <div className='py-4'>
+          <SliderCaptcha
+            onSuccess={handleSliderCaptchaSuccess}
+            disabled={checkinLoading}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

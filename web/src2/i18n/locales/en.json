@@ -2241,6 +2241,16 @@
     "默认区域，如: us-central1": "Default region, e.g.: us-central1",
     "默认折叠侧边栏": "Default collapse sidebar",
     "默认测试模型": "Default Test Model",
-    "默认补全倍率": "Default completion ratio"
+    "默认补全倍率": "Default completion ratio",
+    "向右拖动滑块完成验证": "Drag the slider to the right to complete verification",
+    "请完成人机验证后继续": "Please complete human verification to continue",
+    "验证码设置": "Captcha Settings",
+    "滑块验证码设置": "Slider Captcha Settings",
+    "启用滑块验证码": "Enable Slider Captcha",
+    "容差范围（像素）": "Tolerance Range (pixels)",
+    "需要验证的操作": "Operations Requiring Verification",
+    "获取验证码设置失败": "Failed to get captcha settings",
+    "验证码设置已保存": "Captcha settings saved",
+    "保存验证码设置失败": "Failed to save captcha settings"
   }
 }

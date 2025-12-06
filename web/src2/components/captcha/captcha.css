@@ -1,0 +1,448 @@
+/*
+Copyright (C) 2025 QuantumNous
+
+Slider Captcha Styles
+*/
+
+/* ==================== 触发器样式 ==================== */
+.slider-captcha-container {
+  width: 100%;
+}
+
+.captcha-trigger {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid var(--semi-color-border);
+  border-radius: 8px;
+  background: var(--semi-color-bg-2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.captcha-trigger:hover:not(.disabled):not(.verified) {
+  border-color: var(--semi-color-primary);
+  background: var(--semi-color-bg-1);
+}
+
+.captcha-trigger.verified {
+  border-color: var(--semi-color-success);
+  background: rgba(var(--semi-green-5), 0.1);
+}
+
+.captcha-trigger.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.captcha-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.captcha-trigger-text {
+  color: var(--semi-color-text-2);
+  font-size: 14px;
+}
+
+.captcha-trigger-verified {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--semi-color-success);
+}
+
+.captcha-check-icon {
+  color: var(--semi-color-success);
+}
+
+/* ==================== 弹窗样式 ==================== */
+.captcha-dialog .semi-modal-content {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.captcha-dialog .semi-modal-header {
+  display: none;
+}
+
+.captcha-dialog-content {
+  padding: 16px;
+}
+
+.captcha-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.captcha-dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--semi-color-text-0);
+}
+
+.captcha-refresh-btn {
+  color: var(--semi-color-text-2);
+}
+
+/* ==================== 图片区域样式 ==================== */
+.captcha-image-container {
+  position: relative;
+  width: 300px;
+  height: 150px;
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--semi-color-bg-3);
+}
+
+.captcha-loading-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--semi-color-bg-3);
+}
+
+.captcha-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--semi-color-danger);
+  font-size: 14px;
+}
+
+.captcha-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.captcha-puzzle-piece {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  transition: none;
+  /* 3D 立体阴影效果 */
+  filter: 
+    drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.4))
+    drop-shadow(4px 4px 6px rgba(0, 0, 0, 0.2))
+    drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
+  z-index: 10;
+  /* 轻微的 3D 变换效果 */
+  transform-style: preserve-3d;
+}
+
+.captcha-puzzle-piece.dragging {
+  /* 拖动时增强 3D 效果 */
+  filter: 
+    drop-shadow(3px 3px 3px rgba(0, 0, 0, 0.5))
+    drop-shadow(6px 6px 10px rgba(0, 0, 0, 0.25))
+    drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
+  transform: scale(1.02);
+}
+
+.captcha-puzzle-piece.success {
+  filter: 
+    drop-shadow(0 0 8px rgba(var(--semi-green-5), 0.8))
+    drop-shadow(0 0 16px rgba(var(--semi-green-5), 0.4));
+  animation: successPulse 0.5s ease-out;
+}
+
+.captcha-puzzle-piece.error {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ==================== 提示文字样式 ==================== */
+.captcha-hint {
+  text-align: center;
+  margin: 12px 0;
+  font-size: 14px;
+  color: var(--semi-color-text-2);
+}
+
+.captcha-hint-success {
+  color: var(--semi-color-success);
+}
+
+.captcha-hint-error {
+  color: var(--semi-color-danger);
+}
+
+/* ==================== 滑块轨道样式 ==================== */
+.slider-track {
+  position: relative;
+  width: 100%;
+  height: 44px;
+  background: var(--semi-color-bg-3);
+  border-radius: 22px;
+  border: 1px solid var(--semi-color-border);
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.slider-track.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.slider-track.success {
+  border-color: var(--semi-color-success);
+  background: rgba(var(--semi-green-5), 0.1);
+}
+
+.slider-track.error {
+  border-color: var(--semi-color-danger);
+}
+
+.slider-track-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(var(--semi-blue-5), 0.2) 0%, 
+    rgba(var(--semi-blue-5), 0.4) 100%
+  );
+  border-radius: 22px 0 0 22px;
+  transition: none;
+}
+
+.slider-track.success .slider-track-fill {
+  background: linear-gradient(90deg, 
+    rgba(var(--semi-green-5), 0.2) 0%, 
+    rgba(var(--semi-green-5), 0.4) 100%
+  );
+}
+
+/* ==================== 滑块手柄样式 ==================== */
+.slider-handle {
+  position: absolute;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease;
+  z-index: 10;
+}
+
+.slider-handle:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.slider-handle.dragging {
+  cursor: grabbing;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.slider-handle.success {
+  background: linear-gradient(135deg, 
+    var(--semi-color-success) 0%, 
+    var(--semi-color-success-light-default) 100%
+  );
+}
+
+.slider-handle-icon {
+  font-size: 20px;
+  color: var(--semi-color-primary);
+}
+
+.slider-handle-icon.success {
+  color: #fff;
+}
+
+/* ==================== 动画 ==================== */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 成功脉冲动画 */
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 成功勾选动画 */
+@keyframes checkmarkDraw {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 滑块轨道成功闪烁 */
+@keyframes successFlash {
+  0% {
+    background: rgba(var(--semi-green-5), 0.1);
+  }
+  50% {
+    background: rgba(var(--semi-green-5), 0.3);
+  }
+  100% {
+    background: rgba(var(--semi-green-5), 0.1);
+  }
+}
+
+.slider-track.success {
+  animation: successFlash 0.5s ease-out;
+}
+
+.captcha-dialog .semi-modal-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 平滑的拼图移动过渡（仅在非拖动状态） */
+.captcha-puzzle-piece.idle {
+  transition: left 0.1s ease-out;
+}
+
+/* ==================== 响应式设计 ==================== */
+/* 平板设备 */
+@media (max-width: 768px) {
+  .captcha-dialog .semi-modal-content {
+    margin: 16px;
+  }
+  
+  .captcha-dialog-content {
+    padding: 12px;
+  }
+}
+
+/* 移动设备 */
+@media (max-width: 480px) {
+  .captcha-image-container {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+  }
+  
+  /* 确保拼图块触摸目标至少 44x44px (Requirements 9.3) */
+  .captcha-puzzle-piece {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* 确保滑块手柄触摸目标至少 44x44px (Requirements 9.3) */
+  .slider-handle {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .slider-track {
+    height: 48px;
+    border-radius: 24px;
+  }
+  
+  .captcha-trigger {
+    padding: 14px 16px;
+  }
+  
+  .captcha-hint {
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  
+  .captcha-dialog-title {
+    font-size: 15px;
+  }
+}
+
+/* 横屏模式适配 (Requirements 9.4) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .captcha-dialog .semi-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .captcha-image-container {
+    height: 120px;
+  }
+  
+  .captcha-hint {
+    margin: 8px 0;
+  }
+  
+  .captcha-dialog-content {
+    padding: 10px;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .slider-handle {
+    /* 增大触摸区域 */
+    width: 48px;
+    height: 48px;
+  }
+  
+  .slider-handle:hover {
+    /* 禁用 hover 效果，避免触摸后残留 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .captcha-trigger:hover:not(.disabled):not(.verified) {
+    border-color: var(--semi-color-border);
+    background: var(--semi-color-bg-2);
+  }
+}
+
+/* ==================== 深色模式适配 ==================== */
+[data-theme='dark'] .slider-handle {
+  background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+}
+
+[data-theme='dark'] .slider-handle-icon {
+  color: var(--semi-color-primary-light-default);
+}
+
+[data-theme='dark'] .captcha-trigger {
+  background: var(--semi-color-bg-1);
+}

@@ -55,6 +55,7 @@ import LinuxDoIcon from '../common/logo/LinuxDoIcon';
 import TwoFAVerification from './TwoFAVerification';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord }from 'react-icons/si';
+import { SliderCaptcha } from '../captcha';
 
 const LoginForm = () => {
   let navigate = useNavigate();
@@ -93,6 +94,10 @@ const LoginForm = () => {
   const [githubButtonText, setGithubButtonText] = useState('使用 GitHub 继续');
   const [githubButtonDisabled, setGithubButtonDisabled] = useState(false);
   const githubTimeoutRef = useRef(null);
+  
+  // 滑块验证码状态
+  const [sliderCaptchaEnabled, setSliderCaptchaEnabled] = useState(false);
+  const [sliderCaptchaToken, setSliderCaptchaToken] = useState('');
 
   const logo = getLogo();
   const systemName = getSystemName();
@@ -116,6 +121,20 @@ const LoginForm = () => {
     // 从 status 获取用户协议和隐私政策的启用状态
     setHasUserAgreement(status.user_agreement_enabled || false);
     setHasPrivacyPolicy(status.privacy_policy_enabled || false);
+    
+    // 获取滑块验证码状态
+    const fetchCaptchaStatus = async () => {
+      try {
+        const res = await API.get('/api/captcha/status');
+        if (res.data.success && res.data.data) {
+          const { enabled, require_on_login } = res.data.data;
+          setSliderCaptchaEnabled(enabled && require_on_login);
+        }
+      } catch (err) {
+        // 忽略错误，默认不启用
+      }
+    };
+    fetchCaptchaStatus();
   }, [status]);
 
   useEffect(() => {
@@ -179,6 +198,11 @@ const LoginForm = () => {
     setInputs((inputs) => ({ ...inputs, [name]: value }));
   }
 
+  // 滑块验证码成功回调
+  const handleSliderCaptchaSuccess = (token) => {
+    setSliderCaptchaToken(token);
+  };
+
   async function handleSubmit(e) {
     if ((hasUserAgreement || hasPrivacyPolicy) && !agreedToTerms) {
       showInfo(t('请先阅读并同意用户协议和隐私政策'));
@@ -188,16 +212,26 @@ const LoginForm = () => {
       showInfo('请稍后几秒重试，Turnstile 正在检查用户环境！');
       return;
     }
+    // 检查滑块验证码
+    if (sliderCaptchaEnabled && !sliderCaptchaToken) {
+      showInfo(t('请完成人机验证后继续'));
+      return;
+    }
     setSubmitted(true);
     setLoginLoading(true);
     try {
       if (username && password) {
+        const loginData = {
+          username,
+          password,
+        };
+        // 添加滑块验证码 token
+        if (sliderCaptchaToken) {
+          loginData.captcha_token = sliderCaptchaToken;
+        }
         const res = await API.post(
           `/api/user/login?turnstile=${turnstileToken}`,
-          {
-            username,
-            password,
-          },
+          loginData,
         );
         const { success, message, data } = res.data;
         if (success) {
@@ -716,6 +750,16 @@ const LoginForm = () => {
                         )}
                       </Text>
                     </Checkbox>
+                  </div>
+                )}
+
+                {/* 滑块验证码 */}
+                {sliderCaptchaEnabled && (
+                  <div className='pt-4'>
+                    <SliderCaptcha
+                      onSuccess={handleSliderCaptchaSuccess}
+                      disabled={loginLoading}
+                    />
                   </div>
                 )}
 

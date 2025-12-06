@@ -448,6 +448,21 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.StreamCacheQueueLength, _ = strconv.Atoi(value)
 	case "PayMethods":
 		err = operation_setting.UpdatePayMethodsByJsonString(value)
+	// 验证码配置
+	case "CaptchaEnabled":
+		setting.CaptchaEnabled = value == "true"
+	case "CaptchaToleranceRange":
+		setting.CaptchaToleranceRange, _ = strconv.Atoi(value)
+	case "CaptchaRequireOnLogin":
+		setting.CaptchaRequireOnLogin = value == "true"
+	case "CaptchaRequireOnRegister":
+		setting.CaptchaRequireOnRegister = value == "true"
+	case "CaptchaRequireOnCheckin":
+		setting.CaptchaRequireOnCheckin = value == "true"
+	case "CaptchaMaxAttempts":
+		setting.CaptchaMaxAttempts, _ = strconv.Atoi(value)
+	case "CaptchaBlockDuration":
+		setting.CaptchaBlockDuration, _ = strconv.Atoi(value)
 	}
 	return err
 }

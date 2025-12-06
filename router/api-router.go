@@ -50,8 +50,8 @@ func SetApiRouter(router *gin.Engine) {
 
 		userRoute := apiRouter.Group("/user")
 		{
-			userRoute.POST("/register", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.Register)
-			userRoute.POST("/login", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.Login)
+			userRoute.POST("/register", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), middleware.CaptchaRequiredForRegister(), controller.Register)
+			userRoute.POST("/login", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), middleware.CaptchaRequiredForLogin(), controller.Login)
 			userRoute.POST("/login/2fa", middleware.CriticalRateLimit(), controller.Verify2FALogin)
 			userRoute.POST("/passkey/login/begin", middleware.CriticalRateLimit(), controller.PasskeyLoginBegin)
 			userRoute.POST("/passkey/login/finish", middleware.CriticalRateLimit(), controller.PasskeyLoginFinish)
@@ -95,7 +95,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/2fa/backup_codes", controller.RegenerateBackupCodes)
 
 				// 签到路由
-				selfRoute.POST("/checkin", controller.Checkin)
+				selfRoute.POST("/checkin", middleware.CaptchaRequiredForCheckin(), controller.Checkin)
 				selfRoute.POST("/checkin/makeup", controller.MakeupCheckin)
 				selfRoute.GET("/checkin/stats", controller.GetCheckinStats)
 				selfRoute.GET("/checkin/history", controller.GetCheckinHistory)
@@ -260,6 +260,19 @@ func SetApiRouter(router *gin.Engine) {
 			vendorRoute.POST("/", controller.CreateVendorMeta)
 			vendorRoute.PUT("/", controller.UpdateVendorMeta)
 			vendorRoute.DELETE("/:id", controller.DeleteVendorMeta)
+		}
+
+		// 滑块验证码路由
+		captchaRoute := apiRouter.Group("/captcha")
+		{
+			// 公开接口
+			captchaRoute.GET("/challenge", controller.GetCaptchaChallenge)
+			captchaRoute.POST("/verify", controller.VerifyCaptcha)
+			captchaRoute.GET("/status", controller.GetCaptchaStatus)
+
+			// 管理员接口
+			captchaRoute.GET("/settings", middleware.AdminAuth(), controller.GetCaptchaSettings)
+			captchaRoute.PUT("/settings", middleware.AdminAuth(), controller.UpdateCaptchaSettings)
 		}
 
 		modelsRoute := apiRouter.Group("/models")

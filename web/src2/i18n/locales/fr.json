@@ -2268,6 +2268,16 @@
     "五": "Ven",
     "六": "Sam",
     "已签到": "Enregistré",
-    "今天": "Aujourd'hui"
+    "今天": "Aujourd'hui",
+    "向右拖动滑块完成验证": "Faites glisser le curseur vers la droite pour terminer la vérification",
+    "请完成人机验证后继续": "Veuillez compléter la vérification humaine pour continuer",
+    "验证码设置": "Paramètres du captcha",
+    "滑块验证码设置": "Paramètres du captcha à curseur",
+    "启用滑块验证码": "Activer le captcha à curseur",
+    "容差范围（像素）": "Plage de tolérance (pixels)",
+    "需要验证的操作": "Opérations nécessitant une vérification",
+    "获取验证码设置失败": "Échec de la récupération des paramètres du captcha",
+    "验证码设置已保存": "Paramètres du captcha enregistrés",
+    "保存验证码设置失败": "Échec de l'enregistrement des paramètres du captcha"
   }
 }

@@ -2778,6 +2778,16 @@
     "五": "T6",
     "六": "T7",
     "已签到": "Đã điểm danh",
-    "今天": "Hôm nay"
+    "今天": "Hôm nay",
+    "向右拖动滑块完成验证": "Kéo thanh trượt sang phải để hoàn tất xác minh",
+    "请完成人机验证后继续": "Vui lòng hoàn tất xác minh để tiếp tục",
+    "验证码设置": "Cài đặt mã xác minh",
+    "滑块验证码设置": "Cài đặt xác minh thanh trượt",
+    "启用滑块验证码": "Bật xác minh thanh trượt",
+    "容差范围（像素）": "Phạm vi dung sai (pixel)",
+    "需要验证的操作": "Các thao tác cần xác minh",
+    "获取验证码设置失败": "Không thể lấy cài đặt mã xác minh",
+    "验证码设置已保存": "Đã lưu cài đặt mã xác minh",
+    "保存验证码设置失败": "Không thể lưu cài đặt mã xác minh"
   }
 }
