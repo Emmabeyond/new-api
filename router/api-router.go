@@ -93,6 +93,13 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/2fa/enable", controller.Enable2FA)
 				selfRoute.POST("/2fa/disable", controller.Disable2FA)
 				selfRoute.POST("/2fa/backup_codes", controller.RegenerateBackupCodes)
+
+				// 签到路由
+				selfRoute.POST("/checkin", controller.Checkin)
+				selfRoute.POST("/checkin/makeup", controller.MakeupCheckin)
+				selfRoute.GET("/checkin/stats", controller.GetCheckinStats)
+				selfRoute.GET("/checkin/history", controller.GetCheckinHistory)
+				selfRoute.GET("/checkin/calendar", controller.GetCheckinCalendar)
 			}
 
 			adminRoute := userRoute.Group("/")
@@ -211,6 +218,18 @@ func SetApiRouter(router *gin.Engine) {
 		groupRoute.Use(middleware.AdminAuth())
 		{
 			groupRoute.GET("/", controller.GetGroups)
+		}
+
+		// 管理员签到管理路由
+		adminCheckinRoute := apiRouter.Group("/admin/checkin")
+		adminCheckinRoute.Use(middleware.AdminAuth())
+		{
+			adminCheckinRoute.GET("/records", controller.GetAllCheckinRecords)
+			adminCheckinRoute.GET("/user/:id", controller.GetUserCheckinInfo)
+			adminCheckinRoute.GET("/dashboard", controller.GetCheckinDashboard)
+			adminCheckinRoute.PUT("/user/:id/consecutive", controller.AdjustUserConsecutiveDays)
+			adminCheckinRoute.GET("/settings", controller.GetCheckinSettingsAPI)
+			adminCheckinRoute.PUT("/settings", controller.UpdateCheckinSettingsAPI)
 		}
 
 		prefillGroupRoute := apiRouter.Group("/prefill_group")

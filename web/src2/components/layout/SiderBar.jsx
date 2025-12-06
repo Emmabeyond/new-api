@@ -36,6 +36,7 @@ const routerMap = {
   token: '/console/token',
   redemption: '/console/redemption',
   topup: '/console/topup',
+  checkin: '/console/checkin',
   user: '/console/user',
   log: '/console/log',
   midjourney: '/console/midjourney',
@@ -47,6 +48,7 @@ const routerMap = {
   models: '/console/models',
   playground: '/console/playground',
   personal: '/console/personal',
+  'admin-checkin': '/console/admin-checkin',
 };
 
 const SiderBar = ({ onNavigate = () => {} }) => {
@@ -128,6 +130,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         to: '/topup',
       },
       {
+        text: t('每日签到'),
+        itemKey: 'checkin',
+        to: '/checkin',
+      },
+      {
         text: t('个人设置'),
         itemKey: 'personal',
         to: '/personal',
@@ -167,6 +174,12 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('用户管理'),
         itemKey: 'user',
         to: '/user',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('签到管理'),
+        itemKey: 'admin-checkin',
+        to: '/admin-checkin',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {
