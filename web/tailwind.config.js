@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  content: ['./index.html', './src2/**/*.{js,jsx,ts,tsx}'],
   theme: {
     colors: {
       'semi-color-white': 'var(--semi-color-white)',

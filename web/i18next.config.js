@@ -29,12 +29,12 @@ export default defineConfig({
   ],
   extract: {
     input: [
-      "src/**/*.{js,jsx,ts,tsx}"
+      "src2/**/*.{js,jsx,ts,tsx}"
     ],
     ignore: [
-      "src/i18n/**/*"
+      "src2/i18n/**/*"
     ],
-    output: "src/i18n/locales/{{language}}.json",
+    output: "src2/i18n/locales/{{language}}.json",
     ignoredAttributes: [
       "accept",
       "align",

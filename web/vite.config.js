@@ -17,24 +17,33 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import { defineConfig, transformWithEsbuild } from 'vite';
-import pkg from '@douyinfe/vite-plugin-semi';
+import semiVitePlugin from '@douyinfe/vite-plugin-semi';
 import path from 'path';
-const { vitePluginSemi } = pkg;
 
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src2'),
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'legacy',
+        loadPaths: [path.resolve(__dirname, 'node_modules')],
+        silenceDeprecations: ['legacy-js-api'],
+      },
     },
   },
   plugins: [
     {
       name: 'treat-js-files-as-jsx',
       async transform(code, id) {
-        if (!/src\/.*\.js$/.test(id)) {
+        // Handle src2 files and react-telegram-login
+        if (!/src2\/.*\.js$/.test(id) && !id.includes('react-telegram-login')) {
           return null;
         }
 
@@ -46,9 +55,11 @@ export default defineConfig({
         });
       },
     },
-    react(),
-    vitePluginSemi({
-      cssLayer: true,
+    react({
+      include: [/\.jsx?$/, /\.tsx?$/],
+    }),
+    semiVitePlugin({
+      cssLayer: false,
     }),
   ],
   optimizeDeps: {
