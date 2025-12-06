@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -27,13 +28,13 @@ const (
 
 const maxLogCount = 1000000
 
-var logCount int
+var logCount int64 // 使用int64配合atomic操作
 var setupLogLock sync.Mutex
-var setupLogWorking bool
+var setupLogWorking int32 // 使用int32配合atomic操作
 
 func SetupLogger() {
 	defer func() {
-		setupLogWorking = false
+		atomic.StoreInt32(&setupLogWorking, 0)
 	}()
 	if *common.LogDir != "" {
 		ok := setupLogLock.TryLock()
@@ -86,10 +87,9 @@ func logHelper(ctx context.Context, level string, msg string) {
 	}
 	now := time.Now()
 	_, _ = fmt.Fprintf(writer, "[%s] %v | %s | %s \n", level, now.Format("2006/01/02 - 15:04:05"), id, msg)
-	logCount++ // we don't need accurate count, so no lock here
-	if logCount > maxLogCount && !setupLogWorking {
-		logCount = 0
-		setupLogWorking = true
+	count := atomic.AddInt64(&logCount, 1)
+	if count > maxLogCount && atomic.CompareAndSwapInt32(&setupLogWorking, 0, 1) {
+		atomic.StoreInt64(&logCount, 0)
 		gopool.Go(func() {
 			SetupLogger()
 		})

@@ -228,18 +228,29 @@ func CacheUpdateChannelStatus(id int, status int) {
 	}
 	channelSyncLock.Lock()
 	defer channelSyncLock.Unlock()
-	if channel, ok := channelsIDM[id]; ok {
-		channel.Status = status
+	channel, ok := channelsIDM[id]
+	if !ok {
+		return
 	}
+	channel.Status = status
 	if status != common.ChannelStatusEnabled {
-		// delete the channel from group2model2channels
-		for group, model2channels := range group2model2channels {
-			for model, channels := range model2channels {
-				for i, channelId := range channels {
-					if channelId == id {
-						// remove the channel from the slice
-						group2model2channels[group][model] = append(channels[:i], channels[i+1:]...)
-						break
+		// 获取该渠道的groups和models，避免遍历所有组合
+		groups := strings.Split(channel.Group, ",")
+		models := strings.Split(channel.Models, ",")
+		// 只遍历该渠道相关的group和model组合
+		for _, group := range groups {
+			group = strings.TrimSpace(group)
+			if model2channels, ok := group2model2channels[group]; ok {
+				for _, model := range models {
+					model = strings.TrimSpace(model)
+					if channels, ok := model2channels[model]; ok {
+						for i, channelId := range channels {
+							if channelId == id {
+								// remove the channel from the slice
+								group2model2channels[group][model] = append(channels[:i], channels[i+1:]...)
+								break
+							}
+						}
 					}
 				}
 			}
@@ -256,10 +267,5 @@ func CacheUpdateChannel(channel *Channel) {
 	if channel == nil {
 		return
 	}
-
-	println("CacheUpdateChannel:", channel.Id, channel.Name, channel.Status, channel.ChannelInfo.MultiKeyPollingIndex)
-
-	println("before:", channelsIDM[channel.Id].ChannelInfo.MultiKeyPollingIndex)
 	channelsIDM[channel.Id] = channel
-	println("after :", channelsIDM[channel.Id].ChannelInfo.MultiKeyPollingIndex)
 }

@@ -37,6 +37,10 @@ func InitHttpClient() {
 	transport := &http.Transport{
 		MaxIdleConns:          common.RelayMaxIdleConns,
 		MaxIdleConnsPerHost:   common.RelayMaxIdleConnsPerHost,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 		ForceAttemptHTTP2:     true,
 	}
 
@@ -94,13 +98,32 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 			Transport: &http.Transport{
 				MaxIdleConns:          common.RelayMaxIdleConns,
 				MaxIdleConnsPerHost:   common.RelayMaxIdleConnsPerHost,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ResponseHeaderTimeout: 30 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
 				ForceAttemptHTTP2:     true,
-				Proxy: http.ProxyURL(parsedURL),
+				Proxy:                 http.ProxyURL(parsedURL),
 			},
 			CheckRedirect: checkRedirect,
 		}
 		client.Timeout = time.Duration(common.RelayTimeout) * time.Second
 		proxyClientLock.Lock()
+		// 限制代理客户端缓存大小，防止内存泄漏
+		if len(proxyClients) >= 100 {
+			// 清理一半的缓存
+			count := 0
+			for k, c := range proxyClients {
+				if transport, ok := c.Transport.(*http.Transport); ok && transport != nil {
+					transport.CloseIdleConnections()
+				}
+				delete(proxyClients, k)
+				count++
+				if count >= 50 {
+					break
+				}
+			}
+		}
 		proxyClients[proxyURL] = client
 		proxyClientLock.Unlock()
 		return client, nil
@@ -129,6 +152,10 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 			Transport: &http.Transport{
 				MaxIdleConns:          common.RelayMaxIdleConns,
 				MaxIdleConnsPerHost:   common.RelayMaxIdleConnsPerHost,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ResponseHeaderTimeout: 30 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
 				ForceAttemptHTTP2:     true,
 				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 					return dialer.Dial(network, addr)
@@ -138,6 +165,21 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 		}
 		client.Timeout = time.Duration(common.RelayTimeout) * time.Second
 		proxyClientLock.Lock()
+		// 限制代理客户端缓存大小，防止内存泄漏
+		if len(proxyClients) >= 100 {
+			// 清理一半的缓存
+			count := 0
+			for k, c := range proxyClients {
+				if transport, ok := c.Transport.(*http.Transport); ok && transport != nil {
+					transport.CloseIdleConnections()
+				}
+				delete(proxyClients, k)
+				count++
+				if count >= 50 {
+					break
+				}
+			}
+		}
 		proxyClients[proxyURL] = client
 		proxyClientLock.Unlock()
 		return client, nil

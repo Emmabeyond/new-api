@@ -160,17 +160,22 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 	logger.LogInfo(c, fmt.Sprintf("record consume log: userId=%d, params=%s", userId, common.GetJsonString(params)))
 	username := c.GetString("username")
 	otherStr := common.MapToJsonStr(params.Other)
-	// 判断是否需要记录 IP
+	// 判断是否需要记录 IP - 使用缓存的用户设置
 	needRecordIp := false
-	if settingMap, err := GetUserSetting(userId, false); err == nil {
+	if settingMap, err := GetUserSettingCached(userId); err == nil {
 		if settingMap.RecordIpLog {
 			needRecordIp = true
 		}
 	}
+	clientIP := ""
+	if needRecordIp {
+		clientIP = c.ClientIP()
+	}
+	createdAt := common.GetTimestamp()
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
-		CreatedAt:        common.GetTimestamp(),
+		CreatedAt:        createdAt,
 		Type:             LogTypeConsume,
 		Content:          params.Content,
 		PromptTokens:     params.PromptTokens,
@@ -183,21 +188,19 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 		UseTime:          params.UseTimeSeconds,
 		IsStream:         params.IsStream,
 		Group:            params.Group,
-		Ip: func() string {
-			if needRecordIp {
-				return c.ClientIP()
-			}
-			return ""
-		}(),
-		Other: otherStr,
+		Ip:               clientIP,
+		Other:            otherStr,
 	}
-	err := LOG_DB.Create(log).Error
-	if err != nil {
-		logger.LogError(c, "failed to record log: "+err.Error())
-	}
+	// 异步写入日志，避免阻塞请求
+	gopool.Go(func() {
+		err := LOG_DB.Create(log).Error
+		if err != nil {
+			common.SysLog("failed to record consume log: " + err.Error())
+		}
+	})
 	if common.DataExportEnabled {
 		gopool.Go(func() {
-			LogQuotaData(userId, username, params.ModelName, params.Quota, common.GetTimestamp(), params.PromptTokens+params.CompletionTokens)
+			LogQuotaData(userId, username, params.ModelName, params.Quota, createdAt, params.PromptTokens+params.CompletionTokens)
 		})
 	}
 }

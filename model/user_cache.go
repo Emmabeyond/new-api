@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -11,6 +12,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/bytedance/gopkg/util/gopool"
+)
+
+// 用户设置本地缓存，用于高频访问场景
+type userSettingCacheEntry struct {
+	setting   dto.UserSetting
+	expireAt  time.Time
+}
+
+var (
+	userSettingLocalCache     = make(map[int]*userSettingCacheEntry)
+	userSettingLocalCacheLock sync.RWMutex
+	userSettingCacheTTL       = 60 * time.Second // 本地缓存60秒
 )
 
 // UserBase struct remains the same as it represents the cached data structure
@@ -215,5 +228,59 @@ func updateUserSettingCache(userId int, setting string) error {
 	if !common.RedisEnabled {
 		return nil
 	}
+	// 同时清除本地缓存
+	userSettingLocalCacheLock.Lock()
+	delete(userSettingLocalCache, userId)
+	userSettingLocalCacheLock.Unlock()
 	return common.RedisHSetField(getUserCacheKey(userId), "Setting", setting)
+}
+
+// GetUserSettingCached 获取用户设置，使用本地缓存减少Redis/DB访问
+// 适用于高频访问场景，如日志记录时判断是否需要记录IP
+func GetUserSettingCached(userId int) (dto.UserSetting, error) {
+	now := time.Now()
+	
+	// 先检查本地缓存
+	userSettingLocalCacheLock.RLock()
+	if entry, ok := userSettingLocalCache[userId]; ok && now.Before(entry.expireAt) {
+		userSettingLocalCacheLock.RUnlock()
+		return entry.setting, nil
+	}
+	userSettingLocalCacheLock.RUnlock()
+	
+	// 本地缓存未命中，从Redis/DB获取
+	setting, err := GetUserSetting(userId, false)
+	if err != nil {
+		return dto.UserSetting{}, err
+	}
+	
+	// 更新本地缓存
+	userSettingLocalCacheLock.Lock()
+	// 限制本地缓存大小，防止内存泄漏
+	if len(userSettingLocalCache) >= 10000 {
+		// 清理过期的缓存项
+		for k, v := range userSettingLocalCache {
+			if now.After(v.expireAt) {
+				delete(userSettingLocalCache, k)
+			}
+		}
+		// 如果还是太多，清理一半
+		if len(userSettingLocalCache) >= 10000 {
+			count := 0
+			for k := range userSettingLocalCache {
+				delete(userSettingLocalCache, k)
+				count++
+				if count >= 5000 {
+					break
+				}
+			}
+		}
+	}
+	userSettingLocalCache[userId] = &userSettingCacheEntry{
+		setting:  setting,
+		expireAt: now.Add(userSettingCacheTTL),
+	}
+	userSettingLocalCacheLock.Unlock()
+	
+	return setting, nil
 }
