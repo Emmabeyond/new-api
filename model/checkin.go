@@ -44,6 +44,7 @@ func GetOrCreateCheckin(userId int) (*Checkin, error) {
 			ConsecutiveDays: 0,
 			TotalCheckins:   0,
 			TotalQuota:      0,
+			LastCheckinDate: time.Now(),
 		}
 		if err := DB.Create(checkin).Error; err != nil {
 			return nil, err
