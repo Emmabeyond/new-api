@@ -19,11 +19,11 @@ import (
 
 type Log struct {
 	Id               int    `json:"id" gorm:"index:idx_created_at_id,priority:1"`
-	UserId           int    `json:"user_id" gorm:"index"`
-	CreatedAt        int64  `json:"created_at" gorm:"bigint;index:idx_created_at_id,priority:2;index:idx_created_at_type"`
-	Type             int    `json:"type" gorm:"index:idx_created_at_type"`
+	UserId           int    `json:"user_id" gorm:"index;index:idx_user_created,priority:1"`
+	CreatedAt        int64  `json:"created_at" gorm:"bigint;index:idx_created_at_id,priority:2;index:idx_created_at_type,priority:2;index:idx_user_created,priority:2;index:idx_username_created,priority:2;index:idx_channel_created,priority:2"`
+	Type             int    `json:"type" gorm:"index:idx_created_at_type,priority:1"`
 	Content          string `json:"content"`
-	Username         string `json:"username" gorm:"index;index:index_username_model_name,priority:2;default:''"`
+	Username         string `json:"username" gorm:"index;index:index_username_model_name,priority:2;index:idx_username_created,priority:1;default:''"`
 	TokenName        string `json:"token_name" gorm:"index;default:''"`
 	ModelName        string `json:"model_name" gorm:"index;index:index_username_model_name,priority:1;default:''"`
 	Quota            int    `json:"quota" gorm:"default:0"`
@@ -31,7 +31,7 @@ type Log struct {
 	CompletionTokens int    `json:"completion_tokens" gorm:"default:0"`
 	UseTime          int    `json:"use_time" gorm:"default:0"`
 	IsStream         bool   `json:"is_stream"`
-	ChannelId        int    `json:"channel" gorm:"index"`
+	ChannelId        int    `json:"channel" gorm:"index;index:idx_channel_created,priority:1"`
 	ChannelName      string `json:"channel_name" gorm:"->"`
 	TokenId          int    `json:"token_id" gorm:"default:0;index"`
 	Group            string `json:"group" gorm:"index"`
@@ -61,6 +61,33 @@ func formatUserLogs(logs []*Log) {
 		}
 		logs[i].Other = common.MapToJsonStr(otherMap)
 		logs[i].Id = logs[i].Id % 1024
+	}
+}
+
+// FillChannelNames fills channel names for a list of logs by batch lookup
+func FillChannelNames(logs []*Log) {
+	channelIds := types.NewSet[int]()
+	for _, log := range logs {
+		if log.ChannelId != 0 {
+			channelIds.Add(log.ChannelId)
+		}
+	}
+
+	if channelIds.Len() > 0 {
+		var channels []struct {
+			Id   int    `gorm:"column:id"`
+			Name string `gorm:"column:name"`
+		}
+		if err := DB.Table("channels").Select("id, name").Where("id IN ?", channelIds.Items()).Find(&channels).Error; err != nil {
+			return
+		}
+		channelMap := make(map[int]string, len(channels))
+		for _, channel := range channels {
+			channelMap[channel.Id] = channel.Name
+		}
+		for i := range logs {
+			logs[i].ChannelName = channelMap[logs[i].ChannelId]
+		}
 	}
 }
 
@@ -243,29 +270,8 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 		return nil, 0, err
 	}
 
-	channelIds := types.NewSet[int]()
-	for _, log := range logs {
-		if log.ChannelId != 0 {
-			channelIds.Add(log.ChannelId)
-		}
-	}
-
-	if channelIds.Len() > 0 {
-		var channels []struct {
-			Id   int    `gorm:"column:id"`
-			Name string `gorm:"column:name"`
-		}
-		if err = DB.Table("channels").Select("id, name").Where("id IN ?", channelIds.Items()).Find(&channels).Error; err != nil {
-			return logs, total, err
-		}
-		channelMap := make(map[int]string, len(channels))
-		for _, channel := range channels {
-			channelMap[channel.Id] = channel.Name
-		}
-		for i := range logs {
-			logs[i].ChannelName = channelMap[logs[i].ChannelId]
-		}
-	}
+	// Fill channel names using the shared helper function
+	FillChannelNames(logs)
 
 	return logs, total, err
 }
@@ -321,6 +327,207 @@ type Stat struct {
 	Quota int `json:"quota"`
 	Rpm   int `json:"rpm"`
 	Tpm   int `json:"tpm"`
+}
+
+// LogQueryOptions defines the options for cursor-based log queries
+type LogQueryOptions struct {
+	LogType        int
+	StartTimestamp int64
+	EndTimestamp   int64
+	ModelName      string
+	Username       string
+	TokenName      string
+	ChannelId      int
+	Group          string
+	PageSize       int
+	Cursor         int64 // ID of the last record from previous page, 0 for first page
+}
+
+// LogQueryResult represents the result of a cursor-based log query
+type LogQueryResult struct {
+	Items      []*Log `json:"items"`
+	NextCursor int64  `json:"next_cursor"` // Cursor for next page, 0 if no more data
+	HasMore    bool   `json:"has_more"`
+}
+
+// applyLogFilters applies common filter conditions to a query
+func applyLogFilters(query *gorm.DB, opts LogQueryOptions) *gorm.DB {
+	if opts.LogType != LogTypeUnknown {
+		query = query.Where("type = ?", opts.LogType)
+	}
+	if opts.StartTimestamp > 0 {
+		query = query.Where("created_at >= ?", opts.StartTimestamp)
+	}
+	if opts.EndTimestamp > 0 {
+		query = query.Where("created_at <= ?", opts.EndTimestamp)
+	}
+	if opts.Username != "" {
+		query = query.Where("username = ?", opts.Username)
+	}
+	if opts.ModelName != "" {
+		query = query.Where("model_name LIKE ?", opts.ModelName)
+	}
+	if opts.TokenName != "" {
+		query = query.Where("token_name = ?", opts.TokenName)
+	}
+	if opts.ChannelId > 0 {
+		query = query.Where("channel_id = ?", opts.ChannelId)
+	}
+	if opts.Group != "" {
+		query = query.Where(logGroupCol+" = ?", opts.Group)
+	}
+	return query
+}
+
+// GetLogsByCursor retrieves logs using cursor-based pagination
+func GetLogsByCursor(opts LogQueryOptions) (*LogQueryResult, error) {
+	query := LOG_DB.Model(&Log{})
+
+	// Apply cursor condition (for pagination)
+	if opts.Cursor > 0 {
+		query = query.Where("id < ?", opts.Cursor)
+	}
+
+	// Apply filter conditions
+	query = applyLogFilters(query, opts)
+
+	// Query pageSize + 1 records to determine if there are more
+	pageSize := opts.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	var logs []*Log
+	err := query.Order("id DESC").Limit(pageSize + 1).Find(&logs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result := &LogQueryResult{
+		Items:   logs,
+		HasMore: len(logs) > pageSize,
+	}
+
+	if result.HasMore {
+		result.Items = logs[:pageSize]
+		result.NextCursor = int64(logs[pageSize-1].Id)
+	}
+
+	return result, nil
+}
+
+// GetLogsCount returns the total count of logs matching the filter conditions
+func GetLogsCount(opts LogQueryOptions) (int64, error) {
+	query := LOG_DB.Model(&Log{})
+
+	// Apply filter conditions (reuse the same filter logic)
+	query = applyLogFilters(query, opts)
+
+	var count int64
+	err := query.Count(&count).Error
+	return count, err
+}
+
+// LogQueryOptionsWithUser extends LogQueryOptions with user-specific filtering
+type LogQueryOptionsWithUser struct {
+	LogQueryOptions
+	UserId int
+}
+
+// GetUserLogsByCursor retrieves user-specific logs using cursor-based pagination
+func GetUserLogsByCursor(opts LogQueryOptionsWithUser) (*LogQueryResult, error) {
+	query := LOG_DB.Model(&Log{}).Where("user_id = ?", opts.UserId)
+
+	// Apply cursor condition (for pagination)
+	if opts.Cursor > 0 {
+		query = query.Where("id < ?", opts.Cursor)
+	}
+
+	// Apply filter conditions
+	query = applyLogFilters(query, opts.LogQueryOptions)
+
+	// Query pageSize + 1 records to determine if there are more
+	pageSize := opts.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	var logs []*Log
+	err := query.Order("id DESC").Limit(pageSize + 1).Find(&logs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result := &LogQueryResult{
+		Items:   logs,
+		HasMore: len(logs) > pageSize,
+	}
+
+	if result.HasMore {
+		result.Items = logs[:pageSize]
+		result.NextCursor = int64(logs[pageSize-1].Id)
+	}
+
+	// Format user logs (hide sensitive info)
+	formatUserLogs(result.Items)
+
+	return result, nil
+}
+
+// LogStat represents aggregated statistics for logs
+type LogStat struct {
+	Quota int64 `json:"quota"`
+	Rpm   int64 `json:"rpm"`
+	Tpm   int64 `json:"tpm"`
+}
+
+// GetLogStats retrieves quota, rpm, and tpm statistics in a single optimized query
+func GetLogStats(opts LogQueryOptions) (*LogStat, error) {
+	now := time.Now().Unix()
+	recentStart := now - 60 // Last 60 seconds for rpm/tpm
+
+	// Single query to get all statistics using CASE WHEN
+	var result struct {
+		Quota     int64
+		RecentRpm int64
+		RecentTpm int64
+	}
+
+	query := LOG_DB.Table("logs").
+		Select(`
+			SUM(CASE WHEN created_at >= ? AND created_at <= ? THEN quota ELSE 0 END) as quota,
+			SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent_rpm,
+			SUM(CASE WHEN created_at >= ? THEN prompt_tokens + completion_tokens ELSE 0 END) as recent_tpm
+		`, opts.StartTimestamp, opts.EndTimestamp, recentStart, recentStart).
+		Where("type = ?", LogTypeConsume)
+
+	// Apply filter conditions
+	if opts.Username != "" {
+		query = query.Where("username = ?", opts.Username)
+	}
+	if opts.ModelName != "" {
+		query = query.Where("model_name LIKE ?", opts.ModelName)
+	}
+	if opts.TokenName != "" {
+		query = query.Where("token_name = ?", opts.TokenName)
+	}
+	if opts.ChannelId > 0 {
+		query = query.Where("channel_id = ?", opts.ChannelId)
+	}
+	if opts.Group != "" {
+		query = query.Where(logGroupCol+" = ?", opts.Group)
+	}
+
+	err := query.Scan(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &LogStat{
+		Quota: result.Quota,
+		Rpm:   result.RecentRpm,
+		Tpm:   result.RecentTpm,
+	}, nil
 }
 
 func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string) (stat Stat) {

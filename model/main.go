@@ -278,6 +278,10 @@ func migrateDB() error {
 	}
 	// Create composite indexes for channel queries optimization
 	createChannelIndexes()
+	// Create composite indexes for log queries optimization (when LOG_SQL_DSN is not set, use DB directly)
+	if os.Getenv("LOG_SQL_DSN") == "" {
+		createLogIndexesWithDB(DB)
+	}
 	return nil
 }
 
@@ -383,7 +387,62 @@ func migrateLOGDB() error {
 	if err = LOG_DB.AutoMigrate(&Log{}); err != nil {
 		return err
 	}
+	// Create composite indexes for log queries optimization
+	createLogIndexesWithDB(LOG_DB)
 	return nil
+}
+
+// createLogIndexesWithDB creates composite indexes for optimizing log queries using the provided db instance
+// These indexes support common query patterns: user-based, username-based, channel-based, and type-based filtering
+func createLogIndexesWithDB(db *gorm.DB) {
+	if db == nil {
+		common.SysLog("Warning: cannot create log indexes, db is nil")
+		return
+	}
+
+	var err error
+
+	// Determine which database type is being used
+	isPostgreSQL := common.LogSqlType == common.DatabaseTypePostgreSQL
+	isMySQL := common.LogSqlType == common.DatabaseTypeMySQL
+
+	// If LOG_SQL_DSN is not set, use main DB type flags
+	if os.Getenv("LOG_SQL_DSN") == "" {
+		isPostgreSQL = common.UsingPostgreSQL
+		isMySQL = common.UsingMySQL
+	}
+
+	// Index definitions: (index_name, columns)
+	indexes := []struct {
+		name    string
+		columns string
+	}{
+		{"idx_logs_type_created", "type, created_at DESC"},
+		{"idx_logs_user_created", "user_id, created_at DESC"},
+		{"idx_logs_username_created", "username, created_at DESC"},
+		{"idx_logs_channel_created", "channel_id, created_at DESC"},
+	}
+
+	for _, idx := range indexes {
+		if isPostgreSQL {
+			err = db.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON logs(%s)", idx.name, idx.columns)).Error
+		} else if isMySQL {
+			// MySQL doesn't support IF NOT EXISTS for indexes, check first
+			var count int64
+			db.Raw("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'logs' AND index_name = ?", idx.name).Scan(&count)
+			if count == 0 {
+				err = db.Exec(fmt.Sprintf("CREATE INDEX %s ON logs(%s)", idx.name, idx.columns)).Error
+			}
+		} else {
+			// SQLite
+			err = db.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON logs(%s)", idx.name, idx.columns)).Error
+		}
+		if err != nil {
+			common.SysLog(fmt.Sprintf("Warning: failed to create %s: %v", idx.name, err))
+		}
+	}
+
+	common.SysLog("Log composite indexes created/verified")
 }
 
 func closeDB(db *gorm.DB) error {
