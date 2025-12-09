@@ -109,6 +109,18 @@ var RetryTimes = 0
 
 //var RootUserEmail = ""
 
+// Channel masking configuration
+var (
+	// EnableChannelMasking is the master switch for channel information masking
+	EnableChannelMasking = true
+	// MaskChannelNames controls whether channel names are masked in error messages
+	MaskChannelNames = true
+	// MaskChannelIDs controls whether channel IDs are masked in error messages
+	MaskChannelIDs = true
+	// MaskChannelTypes controls whether channel types are masked in error messages
+	MaskChannelTypes = true
+)
+
 var IsMasterNode bool
 
 var requestInterval int

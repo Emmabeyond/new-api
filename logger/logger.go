@@ -158,3 +158,57 @@ func LogJson(ctx context.Context, msg string, obj any) {
 	}
 	LogDebug(ctx, fmt.Sprintf("%s | %s", msg, string(jsonStr)))
 }
+
+// ChannelInfo holds channel information for admin logging
+type ChannelInfo struct {
+	ChannelID   int    `json:"channel_id"`
+	ChannelName string `json:"channel_name"`
+	ChannelType int    `json:"channel_type"`
+}
+
+// LogErrorAdmin logs error with full channel details for administrators.
+// This function preserves all channel information without masking,
+// intended for admin-only logs and debugging purposes.
+func LogErrorAdmin(ctx context.Context, msg string, channelInfo *ChannelInfo) {
+	var adminMsg string
+	if channelInfo != nil {
+		adminMsg = fmt.Sprintf("[ADMIN] %s | channel_id=%d, channel_name=%s, channel_type=%d",
+			msg, channelInfo.ChannelID, channelInfo.ChannelName, channelInfo.ChannelType)
+	} else {
+		adminMsg = fmt.Sprintf("[ADMIN] %s", msg)
+	}
+	logHelper(ctx, loggerError, adminMsg)
+}
+
+// LogErrorUser logs error with masked channel information.
+// This function automatically applies channel masking to remove
+// sensitive channel details from the log message.
+func LogErrorUser(ctx context.Context, msg string) {
+	// Apply channel masking to remove sensitive information
+	maskedMsg := common.MaskChannelInfo(msg)
+	logHelper(ctx, loggerError, maskedMsg)
+}
+
+// LogWarnAdmin logs warning with full channel details for administrators.
+func LogWarnAdmin(ctx context.Context, msg string, channelInfo *ChannelInfo) {
+	var adminMsg string
+	if channelInfo != nil {
+		adminMsg = fmt.Sprintf("[ADMIN] %s | channel_id=%d, channel_name=%s, channel_type=%d",
+			msg, channelInfo.ChannelID, channelInfo.ChannelName, channelInfo.ChannelType)
+	} else {
+		adminMsg = fmt.Sprintf("[ADMIN] %s", msg)
+	}
+	logHelper(ctx, loggerWarn, adminMsg)
+}
+
+// LogInfoAdmin logs info with full channel details for administrators.
+func LogInfoAdmin(ctx context.Context, msg string, channelInfo *ChannelInfo) {
+	var adminMsg string
+	if channelInfo != nil {
+		adminMsg = fmt.Sprintf("[ADMIN] %s | channel_id=%d, channel_name=%s, channel_type=%d",
+			msg, channelInfo.ChannelID, channelInfo.ChannelName, channelInfo.ChannelType)
+	} else {
+		adminMsg = fmt.Sprintf("[ADMIN] %s", msg)
+	}
+	logHelper(ctx, loggerINFO, adminMsg)
+}

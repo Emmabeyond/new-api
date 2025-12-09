@@ -199,6 +199,116 @@ func (e *NewAPIError) ToClaudeError() ClaudeError {
 	return result
 }
 
+// ToUserSafeOpenAIError returns an OpenAI error with masked channel information
+// for end-user consumption. This method applies channel masking to remove
+// sensitive channel details like channel names, IDs, and types.
+func (e *NewAPIError) ToUserSafeOpenAIError() OpenAIError {
+	var result OpenAIError
+	switch e.errorType {
+	case ErrorTypeOpenAIError:
+		if openAIError, ok := e.RelayError.(OpenAIError); ok {
+			result = openAIError
+		}
+	case ErrorTypeClaudeError:
+		if claudeError, ok := e.RelayError.(ClaudeError); ok {
+			result = OpenAIError{
+				Message: e.Error(),
+				Type:    claudeError.Type,
+				Param:   "",
+				Code:    e.errorCode,
+			}
+		}
+	default:
+		result = OpenAIError{
+			Message: e.Error(),
+			Type:    string(e.errorType),
+			Param:   "",
+			Code:    e.errorCode,
+		}
+	}
+
+	// Apply channel masking to remove sensitive channel information
+	if e.errorCode != ErrorCodeCountTokenFailed {
+		result.Message = common.MaskChannelInfo(result.Message)
+	}
+	if result.Message == "" {
+		result.Message = string(e.errorType)
+	}
+	return result
+}
+
+// ToUserSafeClaudeError returns a Claude error with masked channel information
+// for end-user consumption. This method applies channel masking to remove
+// sensitive channel details like channel names, IDs, and types.
+func (e *NewAPIError) ToUserSafeClaudeError() ClaudeError {
+	var result ClaudeError
+	switch e.errorType {
+	case ErrorTypeOpenAIError:
+		if openAIError, ok := e.RelayError.(OpenAIError); ok {
+			result = ClaudeError{
+				Message: e.Error(),
+				Type:    fmt.Sprintf("%v", openAIError.Code),
+			}
+		}
+	case ErrorTypeClaudeError:
+		if claudeError, ok := e.RelayError.(ClaudeError); ok {
+			result = claudeError
+		}
+	default:
+		result = ClaudeError{
+			Message: e.Error(),
+			Type:    string(e.errorType),
+		}
+	}
+
+	// Apply channel masking to remove sensitive channel information
+	if e.errorCode != ErrorCodeCountTokenFailed {
+		result.Message = common.MaskChannelInfo(result.Message)
+	}
+	if result.Message == "" {
+		result.Message = string(e.errorType)
+	}
+	return result
+}
+
+// ToAdminOpenAIError returns an OpenAI error with full channel information
+// for administrator logging and debugging. This method preserves all
+// channel details without masking.
+func (e *NewAPIError) ToAdminOpenAIError() OpenAIError {
+	var result OpenAIError
+	switch e.errorType {
+	case ErrorTypeOpenAIError:
+		if openAIError, ok := e.RelayError.(OpenAIError); ok {
+			result = openAIError
+		}
+	case ErrorTypeClaudeError:
+		if claudeError, ok := e.RelayError.(ClaudeError); ok {
+			result = OpenAIError{
+				Message: e.Error(),
+				Type:    claudeError.Type,
+				Param:   "",
+				Code:    e.errorCode,
+			}
+		}
+	default:
+		result = OpenAIError{
+			Message: e.Error(),
+			Type:    string(e.errorType),
+			Param:   "",
+			Code:    e.errorCode,
+		}
+	}
+
+	// For admin errors, only mask sensitive info like URLs/IPs but preserve channel info
+	if e.errorCode != ErrorCodeCountTokenFailed {
+		result.Message = common.MaskSensitiveInfo(result.Message)
+	}
+	if result.Message == "" {
+		result.Message = string(e.errorType)
+	}
+	return result
+}
+
 type NewAPIErrorOptions func(*NewAPIError)
 
 func NewError(err error, errorCode ErrorCode, ops ...NewAPIErrorOptions) *NewAPIError {

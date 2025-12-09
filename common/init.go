@@ -97,6 +97,12 @@ func InitEnv() {
 	GeminiSafetySetting = GetEnvOrDefaultString("GEMINI_SAFETY_SETTING", "BLOCK_NONE")
 	CohereSafetySetting = GetEnvOrDefaultString("COHERE_SAFETY_SETTING", "NONE")
 
+	// Initialize channel masking configuration
+	EnableChannelMasking = GetEnvOrDefaultBool("ENABLE_CHANNEL_MASKING", true)
+	MaskChannelNames = GetEnvOrDefaultBool("MASK_CHANNEL_NAMES", true)
+	MaskChannelIDs = GetEnvOrDefaultBool("MASK_CHANNEL_IDS", true)
+	MaskChannelTypes = GetEnvOrDefaultBool("MASK_CHANNEL_TYPES", true)
+
 	// Initialize rate limit variables
 	GlobalApiRateLimitEnable = GetEnvOrDefaultBool("GLOBAL_API_RATE_LIMIT_ENABLE", true)
 	GlobalApiRateLimitNum = GetEnvOrDefault("GLOBAL_API_RATE_LIMIT", 180)
