@@ -87,28 +87,29 @@ func GetAllChannels(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
 			return
 		}
+		// Collect non-empty tags
+		validTags := make([]string, 0, len(tags))
 		for _, tag := range tags {
-			if tag == nil || *tag == "" {
-				continue
+			if tag != nil && *tag != "" {
+				validTags = append(validTags, *tag)
 			}
-			tagChannels, err := model.GetChannelsByTag(*tag, idSort, false)
-			if err != nil {
-				continue
-			}
-			filtered := make([]*model.Channel, 0)
-			for _, ch := range tagChannels {
-				if statusFilter == common.ChannelStatusEnabled && ch.Status != common.ChannelStatusEnabled {
-					continue
-				}
-				if statusFilter == 0 && ch.Status == common.ChannelStatusEnabled {
-					continue
-				}
-				if typeFilter >= 0 && ch.Type != typeFilter {
-					continue
-				}
-				filtered = append(filtered, ch)
-			}
-			channelData = append(channelData, filtered...)
+		}
+		// Use optimized single query for all tags with filters applied at database level
+		opts := model.ChannelQueryOptions{
+			IdSort: idSort,
+		}
+		if statusFilter == common.ChannelStatusEnabled {
+			opts.Status = &statusFilter
+		} else if statusFilter == 0 {
+			opts.Status = &statusFilter
+		}
+		if typeFilter >= 0 {
+			opts.Type = &typeFilter
+		}
+		channelData, err = model.GetChannelsByTagsOptimized(validTags, opts)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+			return
 		}
 		total, _ = model.CountAllTags()
 	} else {
@@ -140,20 +141,33 @@ func GetAllChannels(c *gin.Context) {
 		clearChannelInfo(datum)
 	}
 
-	countQuery := model.DB.Model(&model.Channel{})
-	if statusFilter == common.ChannelStatusEnabled {
-		countQuery = countQuery.Where("status = ?", common.ChannelStatusEnabled)
-	} else if statusFilter == 0 {
-		countQuery = countQuery.Where("status != ?", common.ChannelStatusEnabled)
-	}
-	var results []struct {
-		Type  int64
-		Count int64
-	}
-	_ = countQuery.Select("type, count(*) as count").Group("type").Find(&results).Error
-	typeCounts := make(map[int64]int64)
-	for _, r := range results {
-		typeCounts[r.Type] = r.Count
+	// Get type counts from cache or database
+	var typeCounts map[int64]int64
+	if statusFilter == -1 {
+		// No status filter, use cached type counts
+		var err error
+		typeCounts, err = service.GetChannelTypeCache().GetOrFetch()
+		if err != nil {
+			// Fallback to direct query on error
+			typeCounts = make(map[int64]int64)
+		}
+	} else {
+		// With status filter, query directly (filtered counts can't be cached easily)
+		countQuery := model.DB.Model(&model.Channel{})
+		if statusFilter == common.ChannelStatusEnabled {
+			countQuery = countQuery.Where("status = ?", common.ChannelStatusEnabled)
+		} else if statusFilter == 0 {
+			countQuery = countQuery.Where("status != ?", common.ChannelStatusEnabled)
+		}
+		var results []struct {
+			Type  int64
+			Count int64
+		}
+		_ = countQuery.Select("type, count(*) as count").Group("type").Find(&results).Error
+		typeCounts = make(map[int64]int64)
+		for _, r := range results {
+			typeCounts[r.Type] = r.Count
+		}
 	}
 	common.ApiSuccess(c, gin.H{
 		"items":       channelData,
@@ -285,73 +299,6 @@ func SearchChannels(c *gin.Context) {
 	statusFilter := parseStatusFilter(statusParam)
 	idSort, _ := strconv.ParseBool(c.Query("id_sort"))
 	enableTagMode, _ := strconv.ParseBool(c.Query("tag_mode"))
-	channelData := make([]*model.Channel, 0)
-	if enableTagMode {
-		tags, err := model.SearchTags(keyword, group, modelKeyword, idSort)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": err.Error(),
-			})
-			return
-		}
-		for _, tag := range tags {
-			if tag != nil && *tag != "" {
-				tagChannel, err := model.GetChannelsByTag(*tag, idSort, false)
-				if err == nil {
-					channelData = append(channelData, tagChannel...)
-				}
-			}
-		}
-	} else {
-		channels, err := model.SearchChannels(keyword, group, modelKeyword, idSort)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": err.Error(),
-			})
-			return
-		}
-		channelData = channels
-	}
-
-	if statusFilter == common.ChannelStatusEnabled || statusFilter == 0 {
-		filtered := make([]*model.Channel, 0, len(channelData))
-		for _, ch := range channelData {
-			if statusFilter == common.ChannelStatusEnabled && ch.Status != common.ChannelStatusEnabled {
-				continue
-			}
-			if statusFilter == 0 && ch.Status == common.ChannelStatusEnabled {
-				continue
-			}
-			filtered = append(filtered, ch)
-		}
-		channelData = filtered
-	}
-
-	// calculate type counts for search results
-	typeCounts := make(map[int64]int64)
-	for _, channel := range channelData {
-		typeCounts[int64(channel.Type)]++
-	}
-
-	typeParam := c.Query("type")
-	typeFilter := -1
-	if typeParam != "" {
-		if tp, err := strconv.Atoi(typeParam); err == nil {
-			typeFilter = tp
-		}
-	}
-
-	if typeFilter >= 0 {
-		filtered := make([]*model.Channel, 0, len(channelData))
-		for _, ch := range channelData {
-			if ch.Type == typeFilter {
-				filtered = append(filtered, ch)
-			}
-		}
-		channelData = filtered
-	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("p", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
@@ -362,19 +309,115 @@ func SearchChannels(c *gin.Context) {
 		pageSize = 20
 	}
 
-	total := len(channelData)
-	startIdx := (page - 1) * pageSize
-	if startIdx > total {
-		startIdx = total
-	}
-	endIdx := startIdx + pageSize
-	if endIdx > total {
-		endIdx = total
+	typeParam := c.Query("type")
+	var typeFilter *int
+	if typeParam != "" {
+		if tp, err := strconv.Atoi(typeParam); err == nil {
+			typeFilter = &tp
+		}
 	}
 
-	pagedData := channelData[startIdx:endIdx]
+	var statusPtr *int
+	if statusFilter != -1 {
+		statusPtr = &statusFilter
+	}
 
-	for _, datum := range pagedData {
+	var channelData []*model.Channel
+	var total int64
+	typeCounts := make(map[int64]int64)
+
+	if enableTagMode {
+		// Tag mode: search tags first, then get channels
+		tags, err := model.SearchTags(keyword, group, modelKeyword, idSort)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		// Collect valid tags
+		validTags := make([]string, 0, len(tags))
+		for _, tag := range tags {
+			if tag != nil && *tag != "" {
+				validTags = append(validTags, *tag)
+			}
+		}
+		// Use optimized query with filters at database level
+		opts := model.ChannelQueryOptions{
+			IdSort: idSort,
+			Status: statusPtr,
+			Type:   typeFilter,
+		}
+		channelData, err = model.GetChannelsByTagsOptimized(validTags, opts)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		// Calculate type counts from results
+		for _, ch := range channelData {
+			typeCounts[int64(ch.Type)]++
+		}
+		// Manual pagination for tag mode (since we need all channels for grouping)
+		total = int64(len(channelData))
+		startIdx := (page - 1) * pageSize
+		if startIdx > int(total) {
+			startIdx = int(total)
+		}
+		endIdx := startIdx + pageSize
+		if endIdx > int(total) {
+			endIdx = int(total)
+		}
+		channelData = channelData[startIdx:endIdx]
+	} else {
+		// Non-tag mode: use database-level pagination
+		opts := model.ChannelSearchOptions{
+			ChannelQueryOptions: model.ChannelQueryOptions{
+				Page:     page,
+				PageSize: pageSize,
+				IdSort:   idSort,
+				Status:   statusPtr,
+				Type:     typeFilter,
+			},
+			Keyword: keyword,
+			Group:   group,
+			Model:   modelKeyword,
+		}
+		result, err := model.SearchChannelsPaginated(opts)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		channelData = result.Items
+		total = result.Total
+
+		// Get type counts for search results (without type filter to show all types)
+		optsForCounts := model.ChannelSearchOptions{
+			ChannelQueryOptions: model.ChannelQueryOptions{
+				Page:     1,
+				PageSize: 100000, // Large number to get all for counting
+				IdSort:   idSort,
+				Status:   statusPtr,
+			},
+			Keyword: keyword,
+			Group:   group,
+			Model:   modelKeyword,
+		}
+		allResults, _ := model.SearchChannelsPaginated(optsForCounts)
+		if allResults != nil {
+			for _, ch := range allResults.Items {
+				typeCounts[int64(ch.Type)]++
+			}
+		}
+	}
+
+	for _, datum := range channelData {
 		clearChannelInfo(datum)
 	}
 
@@ -382,7 +425,7 @@ func SearchChannels(c *gin.Context) {
 		"success": true,
 		"message": "",
 		"data": gin.H{
-			"items":       pagedData,
+			"items":       channelData,
 			"total":       total,
 			"type_counts": typeCounts,
 		},
@@ -636,6 +679,7 @@ func AddChannel(c *gin.Context) {
 		return
 	}
 	service.ResetProxyClientCache()
+	service.InvalidateChannelTypeCache() // Invalidate type count cache
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -652,6 +696,7 @@ func DeleteChannel(c *gin.Context) {
 		return
 	}
 	model.InitChannelCache()
+	service.InvalidateChannelTypeCache() // Invalidate type count cache
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -666,6 +711,7 @@ func DeleteDisabledChannel(c *gin.Context) {
 		return
 	}
 	model.InitChannelCache()
+	service.InvalidateChannelTypeCache() // Invalidate type count cache
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -805,6 +851,7 @@ func DeleteChannelBatch(c *gin.Context) {
 		return
 	}
 	model.InitChannelCache()
+	service.InvalidateChannelTypeCache() // Invalidate type count cache
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -922,6 +969,7 @@ func UpdateChannel(c *gin.Context) {
 	}
 	model.InitChannelCache()
 	service.ResetProxyClientCache()
+	service.InvalidateChannelTypeCache() // Invalidate type count cache
 	channel.Key = ""
 	clearChannelInfo(&channel.Channel)
 	c.JSON(http.StatusOK, gin.H{

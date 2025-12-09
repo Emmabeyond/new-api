@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   API,
@@ -35,6 +35,18 @@ import {
 import { useIsMobile } from '../common/useIsMobile';
 import { useTableCompactMode } from '../common/useTableCompactMode';
 import { Modal } from '@douyinfe/semi-ui';
+
+// Debounce utility function
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
+// Cache configuration
+const CACHE_TTL = 30000; // 30 seconds
 
 export const useChannelsData = () => {
   const { t } = useTranslation();
@@ -97,6 +109,38 @@ export const useChannelsData = () => {
   const requestCounter = useRef(0);
   const allSelectingRef = useRef(false);
   const [formApi, setFormApi] = useState(null);
+
+  // Cache for channel data
+  const channelCache = useRef(new Map());
+
+  // Cache helper functions
+  const getCacheKey = (page, pageSize, idSort, enableTagMode, typeKey, statusF, searchKeyword, searchGroup, searchModel) => {
+    return `${page}-${pageSize}-${idSort}-${enableTagMode}-${typeKey}-${statusF}-${searchKeyword}-${searchGroup}-${searchModel}`;
+  };
+
+  const getCachedData = (cacheKey) => {
+    const cached = channelCache.current.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    return null;
+  };
+
+  const setCachedData = (cacheKey, data) => {
+    channelCache.current.set(cacheKey, {
+      data,
+      timestamp: Date.now()
+    });
+    // Clean up old cache entries (keep max 20)
+    if (channelCache.current.size > 20) {
+      const oldestKey = channelCache.current.keys().next().value;
+      channelCache.current.delete(oldestKey);
+    }
+  };
+
+  const invalidateCache = () => {
+    channelCache.current.clear();
+  };
 
   const formInitValues = {
     searchKeyword: '',
@@ -314,6 +358,23 @@ export const useChannelsData = () => {
     }
 
     const reqId = ++requestCounter.current;
+    
+    // Check cache first
+    const cacheKey = getCacheKey(page, pageSize, idSort, enableTagMode, typeKey, statusF, '', '', '');
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      // Use cached data immediately
+      const { items, total, type_counts } = cachedData;
+      if (type_counts) {
+        const sumAll = Object.values(type_counts).reduce((acc, v) => acc + v, 0);
+        setTypeCounts({ ...type_counts, all: sumAll });
+      }
+      setChannelFormat(items, enableTagMode);
+      setChannelCount(total);
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const typeParam = typeKey !== 'all' ? `&type=${typeKey}` : '';
     const statusParam = statusF !== 'all' ? `&status=${statusF}` : '';
@@ -328,6 +389,8 @@ export const useChannelsData = () => {
     const { success, message, data } = res.data;
     if (success) {
       const { items, total, type_counts } = data;
+      // Cache the response
+      setCachedData(cacheKey, { items, total, type_counts });
       if (type_counts) {
         const sumAll = Object.values(type_counts).reduce(
           (acc, v) => acc + v,
@@ -444,6 +507,8 @@ export const useChannelsData = () => {
     const { success, message } = res.data;
     if (success) {
       showSuccess(t('操作成功完成！'));
+      // Invalidate cache on channel changes
+      invalidateCache();
       let channel = res.data.data;
       let newChannels = [...channels];
       if (action !== 'delete') {
@@ -484,6 +549,14 @@ export const useChannelsData = () => {
       showError(message);
     }
   };
+
+  // Debounced search function for filter changes
+  const debouncedSearchRef = useRef(null);
+  if (!debouncedSearchRef.current) {
+    debouncedSearchRef.current = debounce((enableTagMode, typeKey, statusF, page, pageSz, sortFlag) => {
+      searchChannels(enableTagMode, typeKey, statusF, page, pageSz, sortFlag);
+    }, 300);
+  }
 
   // Page handlers
   const handlePageChange = (page) => {

@@ -276,7 +276,49 @@ func migrateDB() error {
 	if err != nil {
 		return err
 	}
+	// Create composite indexes for channel queries optimization
+	createChannelIndexes()
 	return nil
+}
+
+// createChannelIndexes creates composite indexes for optimizing channel queries
+func createChannelIndexes() {
+	var err error
+	// Composite index for common filter combinations (status + type + priority)
+	if common.UsingPostgreSQL {
+		err = DB.Exec("CREATE INDEX IF NOT EXISTS idx_channels_status_type_priority ON channels(status, type, priority DESC)").Error
+	} else if common.UsingMySQL {
+		// MySQL doesn't support IF NOT EXISTS for indexes, check first
+		var count int64
+		DB.Raw("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'channels' AND index_name = 'idx_channels_status_type_priority'").Scan(&count)
+		if count == 0 {
+			err = DB.Exec("CREATE INDEX idx_channels_status_type_priority ON channels(status, type, priority DESC)").Error
+		}
+	} else {
+		// SQLite
+		err = DB.Exec("CREATE INDEX IF NOT EXISTS idx_channels_status_type_priority ON channels(status, type, priority DESC)").Error
+	}
+	if err != nil {
+		common.SysLog(fmt.Sprintf("Warning: failed to create idx_channels_status_type_priority: %v", err))
+	}
+
+	// Composite index for tag mode queries (tag + status)
+	if common.UsingPostgreSQL {
+		err = DB.Exec("CREATE INDEX IF NOT EXISTS idx_channels_tag_status ON channels(tag, status)").Error
+	} else if common.UsingMySQL {
+		var count int64
+		DB.Raw("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'channels' AND index_name = 'idx_channels_tag_status'").Scan(&count)
+		if count == 0 {
+			err = DB.Exec("CREATE INDEX idx_channels_tag_status ON channels(tag, status)").Error
+		}
+	} else {
+		err = DB.Exec("CREATE INDEX IF NOT EXISTS idx_channels_tag_status ON channels(tag, status)").Error
+	}
+	if err != nil {
+		common.SysLog(fmt.Sprintf("Warning: failed to create idx_channels_tag_status: %v", err))
+	}
+
+	common.SysLog("Channel composite indexes created/verified")
 }
 
 func migrateDBFast() error {

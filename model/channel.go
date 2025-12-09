@@ -20,11 +20,11 @@ import (
 
 type Channel struct {
 	Id                 int     `json:"id"`
-	Type               int     `json:"type" gorm:"default:0"`
+	Type               int     `json:"type" gorm:"default:0;index"`
 	Key                string  `json:"key" gorm:"not null"`
 	OpenAIOrganization *string `json:"openai_organization"`
 	TestModel          *string `json:"test_model"`
-	Status             int     `json:"status" gorm:"default:1"`
+	Status             int     `json:"status" gorm:"default:1;index"`
 	Name               string  `json:"name" gorm:"index"`
 	Weight             *uint   `json:"weight" gorm:"default:0"`
 	CreatedTime        int64   `json:"created_time" gorm:"bigint"`
@@ -35,12 +35,12 @@ type Channel struct {
 	Balance            float64 `json:"balance"` // in USD
 	BalanceUpdatedTime int64   `json:"balance_updated_time" gorm:"bigint"`
 	Models             string  `json:"models"`
-	Group              string  `json:"group" gorm:"type:varchar(64);default:'default'"`
+	Group              string  `json:"group" gorm:"type:varchar(64);default:'default';index"`
 	UsedQuota          int64   `json:"used_quota" gorm:"bigint;default:0"`
 	ModelMapping       *string `json:"model_mapping" gorm:"type:text"`
 	//MaxInputTokens     *int    `json:"max_input_tokens" gorm:"default:0"`
 	StatusCodeMapping *string `json:"status_code_mapping" gorm:"type:varchar(1024);default:''"`
-	Priority          *int64  `json:"priority" gorm:"bigint;default:0"`
+	Priority          *int64  `json:"priority" gorm:"bigint;default:0;index"`
 	AutoBan           *int    `json:"auto_ban" gorm:"default:1"`
 	OtherInfo         string  `json:"other_info"`
 	Tag               *string `json:"tag" gorm:"index"`
@@ -76,6 +76,50 @@ func (c ChannelInfo) Value() (driver.Value, error) {
 func (c *ChannelInfo) Scan(value interface{}) error {
 	bytesValue, _ := value.([]byte)
 	return common.Unmarshal(bytesValue, c)
+}
+
+// ChannelQueryOptions defines options for channel queries
+type ChannelQueryOptions struct {
+	Page     int    // Page number (1-based)
+	PageSize int    // Items per page
+	Status   *int   // Filter by status (nil = all)
+	Type     *int   // Filter by type (nil = all)
+	OrderBy  string // Order clause
+	IdSort   bool   // Sort by ID desc instead of priority
+}
+
+// ChannelSearchOptions extends ChannelQueryOptions with search criteria
+type ChannelSearchOptions struct {
+	ChannelQueryOptions
+	Keyword string // Search keyword (name, id, base_url)
+	Group   string // Filter by group
+	Model   string // Filter by model
+}
+
+// ChannelQueryResult represents the result of a channel query
+type ChannelQueryResult struct {
+	Items      []*Channel      `json:"items"`
+	Total      int64           `json:"total"`
+	TypeCounts map[int64]int64 `json:"type_counts,omitempty"`
+}
+
+// GetOffset calculates the offset for pagination
+func (o *ChannelQueryOptions) GetOffset() int {
+	if o.Page < 1 {
+		o.Page = 1
+	}
+	return (o.Page - 1) * o.PageSize
+}
+
+// GetOrderClause returns the order clause based on options
+func (o *ChannelQueryOptions) GetOrderClause() string {
+	if o.OrderBy != "" {
+		return o.OrderBy
+	}
+	if o.IdSort {
+		return "id desc"
+	}
+	return "priority desc"
 }
 
 func (channel *Channel) GetKeys() []string {
@@ -272,6 +316,45 @@ func GetAllChannels(startIdx int, num int, selectAll bool, idSort bool) ([]*Chan
 	return channels, err
 }
 
+// GetChannelsPaginated returns channels with optimized pagination and filtering
+func GetChannelsPaginated(opts ChannelQueryOptions) (*ChannelQueryResult, error) {
+	query := DB.Model(&Channel{})
+
+	// Apply filters
+	if opts.Status != nil {
+		if *opts.Status == common.ChannelStatusEnabled {
+			query = query.Where("status = ?", common.ChannelStatusEnabled)
+		} else {
+			query = query.Where("status != ?", common.ChannelStatusEnabled)
+		}
+	}
+	if opts.Type != nil {
+		query = query.Where("type = ?", *opts.Type)
+	}
+
+	// Get total count
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	// Get paginated results
+	var channels []*Channel
+	err := query.Order(opts.GetOrderClause()).
+		Limit(opts.PageSize).
+		Offset(opts.GetOffset()).
+		Omit("key").
+		Find(&channels).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &ChannelQueryResult{
+		Items: channels,
+		Total: total,
+	}, nil
+}
+
 func GetChannelsByTag(tag string, idSort bool, selectAll bool) ([]*Channel, error) {
 	var channels []*Channel
 	order := "priority desc"
@@ -283,6 +366,34 @@ func GetChannelsByTag(tag string, idSort bool, selectAll bool) ([]*Channel, erro
 		query = query.Omit("key")
 	}
 	err := query.Find(&channels).Error
+	return channels, err
+}
+
+// GetChannelsByTagsOptimized retrieves channels for multiple tags in a single query
+// with optional status and type filtering at database level
+func GetChannelsByTagsOptimized(tags []string, opts ChannelQueryOptions) ([]*Channel, error) {
+	if len(tags) == 0 {
+		return []*Channel{}, nil
+	}
+
+	query := DB.Where("tag IN ?", tags)
+
+	// Apply status filter at database level
+	if opts.Status != nil {
+		if *opts.Status == common.ChannelStatusEnabled {
+			query = query.Where("status = ?", common.ChannelStatusEnabled)
+		} else {
+			query = query.Where("status != ?", common.ChannelStatusEnabled)
+		}
+	}
+
+	// Apply type filter at database level
+	if opts.Type != nil {
+		query = query.Where("type = ?", *opts.Type)
+	}
+
+	var channels []*Channel
+	err := query.Order(opts.GetOrderClause()).Omit("key").Find(&channels).Error
 	return channels, err
 }
 
@@ -333,6 +444,77 @@ func SearchChannels(keyword string, group string, model string, idSort bool) ([]
 		return nil, err
 	}
 	return channels, nil
+}
+
+// SearchChannelsPaginated searches channels with database-level pagination
+func SearchChannelsPaginated(opts ChannelSearchOptions) (*ChannelQueryResult, error) {
+	modelsCol := "`models`"
+	if common.UsingPostgreSQL {
+		modelsCol = `"models"`
+	}
+
+	baseURLCol := "`base_url`"
+	if common.UsingPostgreSQL {
+		baseURLCol = `"base_url"`
+	}
+
+	// Build base query
+	baseQuery := DB.Model(&Channel{})
+
+	// Build WHERE clause for search
+	var whereClause string
+	var args []interface{}
+	if opts.Group != "" && opts.Group != "null" {
+		var groupCondition string
+		if common.UsingMySQL {
+			groupCondition = `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
+		} else {
+			groupCondition = `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+		}
+		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + ` LIKE ? AND ` + groupCondition
+		args = append(args, common.String2Int(opts.Keyword), "%"+opts.Keyword+"%", opts.Keyword, "%"+opts.Keyword+"%", "%"+opts.Model+"%", "%,"+opts.Group+",%")
+	} else {
+		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + " LIKE ?"
+		args = append(args, common.String2Int(opts.Keyword), "%"+opts.Keyword+"%", opts.Keyword, "%"+opts.Keyword+"%", "%"+opts.Model+"%")
+	}
+
+	baseQuery = baseQuery.Where(whereClause, args...)
+
+	// Apply status filter
+	if opts.Status != nil {
+		if *opts.Status == common.ChannelStatusEnabled {
+			baseQuery = baseQuery.Where("status = ?", common.ChannelStatusEnabled)
+		} else {
+			baseQuery = baseQuery.Where("status != ?", common.ChannelStatusEnabled)
+		}
+	}
+
+	// Apply type filter
+	if opts.Type != nil {
+		baseQuery = baseQuery.Where("type = ?", *opts.Type)
+	}
+
+	// Get total count
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	// Get paginated results
+	var channels []*Channel
+	err := baseQuery.Order(opts.GetOrderClause()).
+		Limit(opts.PageSize).
+		Offset(opts.GetOffset()).
+		Omit("key").
+		Find(&channels).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &ChannelQueryResult{
+		Items: channels,
+		Total: total,
+	}, nil
 }
 
 func GetChannelById(id int, selectAll bool) (*Channel, error) {
