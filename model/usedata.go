@@ -12,10 +12,10 @@ import (
 // QuotaData 柱状图数据
 type QuotaData struct {
 	Id        int    `json:"id"`
-	UserID    int    `json:"user_id" gorm:"index"`
+	UserID    int    `json:"user_id" gorm:"index:idx_qdt_user_time,priority:1"`
 	Username  string `json:"username" gorm:"index:idx_qdt_model_user_name,priority:2;size:64;default:''"`
-	ModelName string `json:"model_name" gorm:"index:idx_qdt_model_user_name,priority:1;size:64;default:''"`
-	CreatedAt int64  `json:"created_at" gorm:"bigint;index:idx_qdt_created_at,priority:2"`
+	ModelName string `json:"model_name" gorm:"index:idx_qdt_model_user_name,priority:1;index:idx_qdt_time_model,priority:2;size:64;default:''"`
+	CreatedAt int64  `json:"created_at" gorm:"bigint;index:idx_qdt_created_at;index:idx_qdt_time_model,priority:1;index:idx_qdt_user_time,priority:2"`
 	TokenUsed int    `json:"token_used" gorm:"default:0"`
 	Count     int    `json:"count" gorm:"default:0"`
 	Quota     int    `json:"quota" gorm:"default:0"`
@@ -84,7 +84,11 @@ func SaveQuotaDataCache() {
 		} else {
 			DB.Table("quota_data").Create(quotaData)
 		}
+		// 使相关用户的缓存失效（依赖 TTL 自动过期，这里只是标记）
+		InvalidateQuotaDataCache(quotaData.UserID)
 	}
+	// 使管理员全局缓存失效
+	InvalidateAllQuotaDataCache()
 	CacheQuotaData = make(map[string]*QuotaData)
 	common.SysLog(fmt.Sprintf("保存数据看板数据成功，共保存%d条数据", size))
 }

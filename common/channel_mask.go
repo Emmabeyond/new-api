@@ -6,6 +6,42 @@ import (
 	"sync"
 )
 
+// ChannelMaskingConfig holds the configuration for channel masking
+type ChannelMaskingConfig struct {
+	EnableChannelMasking bool
+	MaskChannelNames     bool
+	MaskChannelIDs       bool
+	MaskChannelTypes     bool
+}
+
+// channelMaskingConfigProvider is a function that returns the current channel masking configuration
+// This is set by the security_setting package to avoid circular imports
+var channelMaskingConfigProvider func() *ChannelMaskingConfig
+
+// defaultChannelMaskingConfig returns the default configuration (all masking enabled)
+func defaultChannelMaskingConfig() *ChannelMaskingConfig {
+	return &ChannelMaskingConfig{
+		EnableChannelMasking: true,
+		MaskChannelNames:     true,
+		MaskChannelIDs:       true,
+		MaskChannelTypes:     true,
+	}
+}
+
+// SetChannelMaskingConfigProvider sets the function that provides channel masking configuration
+// This should be called by the security_setting package during initialization
+func SetChannelMaskingConfigProvider(provider func() *ChannelMaskingConfig) {
+	channelMaskingConfigProvider = provider
+}
+
+// getChannelMaskingConfig returns the current channel masking configuration
+func getChannelMaskingConfig() *ChannelMaskingConfig {
+	if channelMaskingConfigProvider != nil {
+		return channelMaskingConfigProvider()
+	}
+	return defaultChannelMaskingConfig()
+}
+
 // Generic replacement messages for masked channel information
 const (
 	GenericChannelMessage = "upstream service"
@@ -120,8 +156,11 @@ func MaskChannelInfo(message string) string {
 		return message
 	}
 
+	// Get settings from configuration provider
+	config := getChannelMaskingConfig()
+
 	// Check if masking is enabled
-	if !EnableChannelMasking {
+	if !config.EnableChannelMasking {
 		// Only apply general sensitive info masking when channel masking is disabled
 		return MaskSensitiveInfo(message)
 	}
@@ -145,17 +184,17 @@ func MaskChannelInfo(message string) string {
 	result := message
 
 	// Mask channel IDs (if enabled)
-	if MaskChannelIDs && channelMaskingPatterns.ChannelIDPattern != nil {
+	if config.MaskChannelIDs && channelMaskingPatterns.ChannelIDPattern != nil {
 		result = channelMaskingPatterns.ChannelIDPattern.ReplaceAllString(result, GenericChannelMessage)
 	}
 
 	// Mask channel names (if enabled)
-	if MaskChannelNames && channelMaskingPatterns.ChannelNamePattern != nil {
+	if config.MaskChannelNames && channelMaskingPatterns.ChannelNamePattern != nil {
 		result = channelMaskingPatterns.ChannelNamePattern.ReplaceAllString(result, GenericChannelMessage)
 	}
 
 	// Mask channel types (if enabled)
-	if MaskChannelTypes && channelMaskingPatterns.ChannelTypePattern != nil {
+	if config.MaskChannelTypes && channelMaskingPatterns.ChannelTypePattern != nil {
 		result = channelMaskingPatterns.ChannelTypePattern.ReplaceAllString(result, GenericChannelMessage)
 	}
 

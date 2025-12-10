@@ -128,6 +128,7 @@ func SetApiRouter(router *gin.Engine) {
 			optionRoute.PUT("/", controller.UpdateOption)
 			optionRoute.POST("/rest_model_ratio", controller.ResetModelRatio)
 			optionRoute.POST("/migrate_console_setting", controller.MigrateConsoleSetting) // 用于迁移检测的旧键，下个版本会删除
+			optionRoute.POST("/migrate_linuxdo_setting", controller.MigrateLinuxDOSetting) // 迁移 LinuxDO 配置到新系统
 		}
 		ratioSyncRoute := apiRouter.Group("/ratio_sync")
 		ratioSyncRoute.Use(middleware.RootAuth())
@@ -287,6 +288,17 @@ func SetApiRouter(router *gin.Engine) {
 			modelsRoute.POST("/", controller.CreateModelMeta)
 			modelsRoute.PUT("/", controller.UpdateModelMeta)
 			modelsRoute.DELETE("/:id", controller.DeleteModelMeta)
+		}
+
+		// Security settings routes (root admin only)
+		securityRoute := apiRouter.Group("/security")
+		securityRoute.Use(middleware.RootAuth())
+		{
+			securityRoute.GET("/settings", controller.GetSecuritySettings)
+			securityRoute.PUT("/settings", controller.UpdateSecuritySettings)
+			securityRoute.GET("/penalties", controller.GetActivePenalties)
+			securityRoute.DELETE("/penalties/:token_id", controller.LiftPenalty)
+			securityRoute.GET("/token/:token_id/abuse", controller.GetTokenAbuseInfo)
 		}
 	}
 }

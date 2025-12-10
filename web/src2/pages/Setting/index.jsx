@@ -47,6 +47,7 @@ import ChatsSetting from '../../components/settings/ChatsSetting';
 import DrawingSetting from '../../components/settings/DrawingSetting';
 import PaymentSetting from '../../components/settings/PaymentSetting';
 import CaptchaSetting from '../../components/settings/CaptchaSetting';
+import SecuritySetting from '../../components/settings/SecuritySetting';
 
 const Setting = () => {
   const { t } = useTranslation();
@@ -155,6 +156,16 @@ const Setting = () => {
       ),
       content: <CaptchaSetting />,
       itemKey: 'captcha',
+    });
+    panes.push({
+      tab: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <ShieldCheck size={18} />
+          {t('安全设置')}
+        </span>
+      ),
+      content: <SecuritySetting />,
+      itemKey: 'security',
     });
     panes.push({
       tab: (

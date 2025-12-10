@@ -272,6 +272,7 @@ func migrateDB() error {
 		&Checkin{},
 		&CheckinRecord{},
 		&CheckinAudit{},
+		&TokenPenalty{},
 	)
 	if err != nil {
 		return err
@@ -354,6 +355,7 @@ func migrateDBFast() error {
 		{&Checkin{}, "Checkin"},
 		{&CheckinRecord{}, "CheckinRecord"},
 		{&CheckinAudit{}, "CheckinAudit"},
+		{&TokenPenalty{}, "TokenPenalty"},
 	}
 	// 动态计算migration数量，确保errChan缓冲区足够大
 	errChan := make(chan error, len(migrations))

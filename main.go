@@ -21,6 +21,7 @@ import (
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
+	_ "github.com/QuantumNous/new-api/setting/security_setting" // Initialize security settings
 
 	"github.com/bytedance/gopkg/util/gopool"
 	"github.com/gin-contrib/sessions"
@@ -242,6 +243,9 @@ func InitResources() error {
 
 	// Initialize options, should after model.InitDB()
 	model.InitOptionMap()
+
+	// 自动迁移 LinuxDO 配置到新系统
+	model.MigrateLinuxDOSettingOnStartup()
 
 	// 初始化验证码设置
 	setting.InitCaptchaSettings()

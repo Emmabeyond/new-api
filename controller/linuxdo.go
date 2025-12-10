@@ -13,6 +13,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/setting/system_setting"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,8 @@ type LinuxdoUser struct {
 }
 
 func LinuxDoBind(c *gin.Context) {
-	if !common.LinuxDOOAuthEnabled {
+	linuxdoSettings := system_setting.GetLinuxDOSettings()
+	if !linuxdoSettings.Enabled {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "管理员未开启通过 Linux DO 登录以及注册",
@@ -85,7 +87,8 @@ func getLinuxdoUserInfoByCode(code string, c *gin.Context) (*LinuxdoUser, error)
 
 	// Get access token using Basic auth
 	tokenEndpoint := common.GetEnvOrDefaultString("LINUX_DO_TOKEN_ENDPOINT", "https://connect.linux.do/oauth2/token")
-	credentials := common.LinuxDOClientId + ":" + common.LinuxDOClientSecret
+	linuxdoSettings := system_setting.GetLinuxDOSettings()
+	credentials := linuxdoSettings.ClientId + ":" + linuxdoSettings.ClientSecret
 	basicAuth := "Basic " + base64.StdEncoding.EncodeToString([]byte(credentials))
 
 	// Get redirect URI from request
@@ -183,7 +186,8 @@ func LinuxdoOAuth(c *gin.Context) {
 		return
 	}
 
-	if !common.LinuxDOOAuthEnabled {
+	linuxdoSettings := system_setting.GetLinuxDOSettings()
+	if !linuxdoSettings.Enabled {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "管理员未开启通过 Linux DO 登录以及注册",
@@ -221,7 +225,8 @@ func LinuxdoOAuth(c *gin.Context) {
 		}
 	} else {
 		if common.RegisterEnabled {
-			if linuxdoUser.TrustLevel >= common.LinuxDOMinimumTrustLevel {
+			linuxdoSettings := system_setting.GetLinuxDOSettings()
+			if linuxdoUser.TrustLevel >= linuxdoSettings.MinimumTrustLevel {
 				user.Username = "linuxdo_" + strconv.Itoa(model.GetMaxUserId()+1)
 				user.DisplayName = linuxdoUser.Name
 				user.Role = common.RoleCommonUser

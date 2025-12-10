@@ -11,7 +11,7 @@ import (
 
 var StartTime = time.Now().Unix() // unit: second
 var Version = "v0.0.0"            // this hard coding will be replaced automatically when building, no need to manually change
-var SystemName = "New API"
+var SystemName = "BigAiPro API"
 var Footer = ""
 var Logo = ""
 var TopUpLink = ""
@@ -82,6 +82,7 @@ var SMTPToken = ""
 
 var GitHubClientId = ""
 var GitHubClientSecret = ""
+// LinuxDO 配置已迁移到 system_setting.LinuxDOSettings，以下变量仅用于向后兼容
 var LinuxDOClientId = ""
 var LinuxDOClientSecret = ""
 var LinuxDOMinimumTrustLevel = 0
@@ -109,17 +110,8 @@ var RetryTimes = 0
 
 //var RootUserEmail = ""
 
-// Channel masking configuration
-var (
-	// EnableChannelMasking is the master switch for channel information masking
-	EnableChannelMasking = true
-	// MaskChannelNames controls whether channel names are masked in error messages
-	MaskChannelNames = true
-	// MaskChannelIDs controls whether channel IDs are masked in error messages
-	MaskChannelIDs = true
-	// MaskChannelTypes controls whether channel types are masked in error messages
-	MaskChannelTypes = true
-)
+// Channel masking configuration is now managed by security_setting module
+// See setting/security_setting/security_setting.go for configuration
 
 var IsMasterNode bool
 
