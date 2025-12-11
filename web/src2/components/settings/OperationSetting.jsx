@@ -17,131 +17,269 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useEffect, useState } from 'react';
-import { Card, Spin } from '@douyinfe/semi-ui';
-import SettingsGeneral from '../../pages/Setting/Operation/SettingsGeneral';
-import SettingsHeaderNavModules from '../../pages/Setting/Operation/SettingsHeaderNavModules';
-import SettingsSidebarModulesAdmin from '../../pages/Setting/Operation/SettingsSidebarModulesAdmin';
-import SettingsSensitiveWords from '../../pages/Setting/Operation/SettingsSensitiveWords';
-import SettingsLog from '../../pages/Setting/Operation/SettingsLog';
-import SettingsMonitoring from '../../pages/Setting/Operation/SettingsMonitoring';
-import SettingsCreditLimit from '../../pages/Setting/Operation/SettingsCreditLimit';
-import { API, showError, toBoolean } from '../../helpers';
+import React, { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
+import { Collapse, Spin, Button, Toast, Banner, List, Typography } from '@douyinfe/semi-ui';
+import { IconRefresh } from '@douyinfe/semi-icons';
+import { useTranslation } from 'react-i18next';
+import { CollapsibleSettingPanel } from './CollapsibleSettingPanel';
+import { settingModules } from '../../config/settingModules';
+import { useSettingStore } from '../../hooks/common/useSettingStore';
+import { UnsavedChangesGuard } from '../common/UnsavedChangesGuard';
+
+const { Text } = Typography;
 
 const OperationSetting = () => {
-  let [inputs, setInputs] = useState({
-    /* 额度相关 */
-    QuotaForNewUser: 0,
-    PreConsumedQuota: 0,
-    QuotaForInviter: 0,
-    QuotaForInvitee: 0,
-    'quota_setting.enable_free_model_pre_consume': true,
+  const { t } = useTranslation();
+  const [activeKeys, setActiveKeys] = useState(['general']);
+  const [loadedModules, setLoadedModules] = useState(new Set(['general']));
 
-    /* 通用设置 */
-    TopUpLink: '',
-    'general_setting.docs_link': '',
-    QuotaPerUnit: 0,
-    USDExchangeRate: 0,
-    RetryTimes: 0,
-    'general_setting.quota_display_type': 'USD',
-    DisplayTokenStatEnabled: false,
-    DefaultCollapseSidebar: false,
-    DemoSiteEnabled: false,
-    SelfUseModeEnabled: false,
+  const {
+    current,
+    original,
+    errors,
+    saving,
+    loadSettings,
+    updateSetting,
+    saveSettings,
+    resetSettings,
+    getDirtyKeys,
+    hasUnsavedChanges,
+    isModuleLoading,
+  } = useSettingStore();
 
-    /* 顶栏模块管理 */
-    HeaderNavModules: '',
+  // 初始加载第一个模块的数据
+  useEffect(() => {
+    const firstModule = settingModules[0];
+    if (firstModule) {
+      loadSettings(firstModule.settingKeys, firstModule.key);
+    }
+  }, [loadSettings]);
 
-    /* 左侧边栏模块管理（管理员） */
-    SidebarModulesAdmin: '',
+  // 处理面板展开/折叠
+  const handleCollapseChange = useCallback(
+    (keys) => {
+      setActiveKeys(keys);
 
-    /* 敏感词设置 */
-    CheckSensitiveEnabled: false,
-    CheckSensitiveOnPromptEnabled: false,
-    SensitiveWords: '',
+      // 加载新展开的模块数据
+      keys.forEach((key) => {
+        if (!loadedModules.has(key)) {
+          const module = settingModules.find((m) => m.key === key);
+          if (module) {
+            loadSettings(module.settingKeys, module.key);
+            setLoadedModules((prev) => new Set([...prev, key]));
+          }
+        }
+      });
+    },
+    [loadedModules, loadSettings]
+  );
 
-    /* 日志设置 */
-    LogConsumeEnabled: false,
+  // 检查模块是否有未保存的更改
+  const isModuleDirty = useCallback(
+    (moduleKey) => {
+      const module = settingModules.find((m) => m.key === moduleKey);
+      if (!module) return false;
+      return hasUnsavedChanges(module.settingKeys);
+    },
+    [hasUnsavedChanges]
+  );
 
-    /* 监控设置 */
-    ChannelDisableThreshold: 0,
-    QuotaRemindThreshold: 0,
-    AutomaticDisableChannelEnabled: false,
-    AutomaticEnableChannelEnabled: false,
-    AutomaticDisableKeywords: '',
-    'monitor_setting.auto_test_channel_enabled': false,
-    'monitor_setting.auto_test_channel_minutes': 10,
-  });
+  // 检查模块是否有错误
+  const hasModuleError = useCallback(
+    (moduleKey) => {
+      const module = settingModules.find((m) => m.key === moduleKey);
+      if (!module) return false;
+      return module.settingKeys.some((key) => errors[key]);
+    },
+    [errors]
+  );
 
-  let [loading, setLoading] = useState(false);
+  // 保存所有更改
+  const handleSaveAll = useCallback(async () => {
+    const result = await saveSettings();
+    if (result.success) {
+      Toast.success(t('保存成功'));
+    } else if (result.failureCount > 0) {
+      Toast.error(t('部分保存失败，请检查错误信息'));
+    } else {
+      Toast.error(result.error || t('保存失败'));
+    }
+  }, [saveSettings, t]);
 
-  const getOptions = async () => {
-    const res = await API.get('/api/option/');
-    const { success, message, data } = res.data;
-    if (success) {
-      let newInputs = {};
-      data.forEach((item) => {
-        if (typeof inputs[item.key] === 'boolean') {
-          newInputs[item.key] = toBoolean(item.value);
-        } else {
-          newInputs[item.key] = item.value;
+  // 刷新数据
+  const handleRefresh = useCallback(() => {
+    loadedModules.forEach((moduleKey) => {
+      const module = settingModules.find((m) => m.key === moduleKey);
+      if (module) {
+        loadSettings(module.settingKeys, module.key);
+      }
+    });
+  }, [loadedModules, loadSettings]);
+
+  // 为子组件提供的 props
+  const getModuleProps = useCallback(
+    (moduleKey) => {
+      const module = settingModules.find((m) => m.key === moduleKey);
+      if (!module) return {};
+
+      // 构建 options 对象（兼容旧组件接口）
+      const options = {};
+      module.settingKeys.forEach((key) => {
+        if (current[key] !== undefined) {
+          options[key] = current[key];
         }
       });
 
-      setInputs(newInputs);
-    } else {
-      showError(message);
-    }
-  };
-  async function onRefresh() {
-    try {
-      setLoading(true);
-      await getOptions();
-      // showSuccess('刷新成功');
-    } catch (error) {
-      showError('刷新失败');
-    } finally {
-      setLoading(false);
-    }
-  }
+      return {
+        options,
+        refresh: handleRefresh,
+        // 新接口
+        store: {
+          current,
+          original,
+          updateSetting,
+          saveSettings: () => saveSettings(module.settingKeys),
+          resetSettings: () => resetSettings(module.settingKeys),
+          getDirtyKeys: () => getDirtyKeys(module.settingKeys),
+          hasUnsavedChanges: () => hasUnsavedChanges(module.settingKeys),
+          errors,
+        },
+      };
+    },
+    [
+      current,
+      original,
+      errors,
+      handleRefresh,
+      updateSetting,
+      saveSettings,
+      resetSettings,
+      getDirtyKeys,
+      hasUnsavedChanges,
+    ]
+  );
 
-  useEffect(() => {
-    onRefresh();
-  }, []);
+  const hasAnyUnsavedChanges = hasUnsavedChanges();
+
+  // 获取失败的配置项列表
+  const failedItems = useMemo(() => {
+    return Object.entries(errors).map(([key, error]) => ({ key, error }));
+  }, [errors]);
+
+  // 重试失败的配置项
+  const handleRetryFailed = useCallback(async () => {
+    const failedKeys = Object.keys(errors);
+    if (failedKeys.length === 0) return;
+
+    const result = await saveSettings(failedKeys);
+    if (result.success) {
+      Toast.success(t('重试成功'));
+    } else if (result.failureCount > 0) {
+      Toast.error(t('部分保存仍然失败'));
+    }
+  }, [errors, saveSettings, t]);
 
   return (
-    <>
-      <Spin spinning={loading} size='large'>
-        {/* 通用设置 */}
-        <Card style={{ marginTop: '10px' }}>
-          <SettingsGeneral options={inputs} refresh={onRefresh} />
-        </Card>
-        {/* 顶栏模块管理 */}
-        <div style={{ marginTop: '10px' }}>
-          <SettingsHeaderNavModules options={inputs} refresh={onRefresh} />
+    <UnsavedChangesGuard hasUnsavedChanges={hasAnyUnsavedChanges}>
+    <div style={{ padding: '10px 0' }}>
+      {/* 错误显示区域 */}
+      {failedItems.length > 0 && (
+        <Banner
+          type="danger"
+          description={
+            <div>
+              <div style={{ marginBottom: '8px' }}>
+                {t('以下配置项保存失败：')}
+              </div>
+              <List
+                size="small"
+                dataSource={failedItems}
+                renderItem={(item) => (
+                  <List.Item style={{ padding: '4px 0' }}>
+                    <Text strong>{item.key}</Text>
+                    <Text type="danger" style={{ marginLeft: '8px' }}>
+                      {item.error}
+                    </Text>
+                  </List.Item>
+                )}
+              />
+              <Button
+                icon={<IconRefresh />}
+                size="small"
+                style={{ marginTop: '8px' }}
+                onClick={handleRetryFailed}
+                loading={saving}
+              >
+                {t('重试失败项')}
+              </Button>
+            </div>
+          }
+          style={{ marginBottom: '16px' }}
+          closeIcon={null}
+        />
+      )}
+
+      {/* 全局操作栏 */}
+      {hasAnyUnsavedChanges && (
+        <div
+          style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            background: 'var(--semi-color-warning-light-default)',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>{t('您有未保存的更改')}</span>
+          <Button
+            theme="solid"
+            type="warning"
+            loading={saving}
+            onClick={handleSaveAll}
+          >
+            {t('保存所有更改')}
+          </Button>
         </div>
-        {/* 左侧边栏模块管理（管理员） */}
-        <div style={{ marginTop: '10px' }}>
-          <SettingsSidebarModulesAdmin options={inputs} refresh={onRefresh} />
-        </div>
-        {/* 屏蔽词过滤设置 */}
-        <Card style={{ marginTop: '10px' }}>
-          <SettingsSensitiveWords options={inputs} refresh={onRefresh} />
-        </Card>
-        {/* 日志设置 */}
-        <Card style={{ marginTop: '10px' }}>
-          <SettingsLog options={inputs} refresh={onRefresh} />
-        </Card>
-        {/* 监控设置 */}
-        <Card style={{ marginTop: '10px' }}>
-          <SettingsMonitoring options={inputs} refresh={onRefresh} />
-        </Card>
-        {/* 额度设置 */}
-        <Card style={{ marginTop: '10px' }}>
-          <SettingsCreditLimit options={inputs} refresh={onRefresh} />
-        </Card>
-      </Spin>
-    </>
+      )}
+
+      {/* 折叠面板 */}
+      <Collapse
+        activeKey={activeKeys}
+        onChange={handleCollapseChange}
+        style={{ background: 'transparent' }}
+      >
+        {settingModules.map((module) => {
+          const ModuleComponent = module.Component;
+          const moduleProps = getModuleProps(module.key);
+          const isLoaded = loadedModules.has(module.key);
+
+          return (
+            <CollapsibleSettingPanel
+              key={module.key}
+              itemKey={module.key}
+              title={t(module.title)}
+              icon={module.icon}
+              isDirty={isModuleDirty(module.key)}
+              isLoading={isModuleLoading(module.key)}
+              hasError={hasModuleError(module.key)}
+            >
+              {isLoaded && (
+                <Suspense
+                  fallback={
+                    <Spin style={{ display: 'block', margin: '20px auto' }} />
+                  }
+                >
+                  <ModuleComponent {...moduleProps} />
+                </Suspense>
+              )}
+            </CollapsibleSettingPanel>
+          );
+        })}
+      </Collapse>
+    </div>
+    </UnsavedChangesGuard>
   );
 };
 

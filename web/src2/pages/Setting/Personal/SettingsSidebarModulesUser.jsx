@@ -95,6 +95,7 @@ export default function SettingsSidebarModulesUser() {
         enabled: true,
         topup: isSidebarModuleAllowed('personal', 'topup'),
         personal: isSidebarModuleAllowed('personal', 'personal'),
+        'theme-center': isSidebarModuleAllowed('personal', 'theme-center'),
       };
     }
 
@@ -312,6 +313,11 @@ export default function SettingsSidebarModulesUser() {
           key: 'personal',
           title: t('个人设置'),
           description: t('个人信息设置'),
+        },
+        {
+          key: 'theme-center',
+          title: t('主题中心'),
+          description: t('界面主题切换'),
         },
       ],
     },

@@ -38,7 +38,6 @@ func InitOptionMap() {
 	common.OptionMap["PasswordRegisterEnabled"] = strconv.FormatBool(common.PasswordRegisterEnabled)
 	common.OptionMap["EmailVerificationEnabled"] = strconv.FormatBool(common.EmailVerificationEnabled)
 	common.OptionMap["GitHubOAuthEnabled"] = strconv.FormatBool(common.GitHubOAuthEnabled)
-	common.OptionMap["LinuxDOOAuthEnabled"] = strconv.FormatBool(common.LinuxDOOAuthEnabled)
 	common.OptionMap["TelegramOAuthEnabled"] = strconv.FormatBool(common.TelegramOAuthEnabled)
 	common.OptionMap["WeChatAuthEnabled"] = strconv.FormatBool(common.WeChatAuthEnabled)
 	common.OptionMap["TurnstileCheckEnabled"] = strconv.FormatBool(common.TurnstileCheckEnabled)
@@ -95,8 +94,6 @@ func InitOptionMap() {
 	common.OptionMap["PayMethods"] = operation_setting.PayMethods2JsonString()
 	common.OptionMap["GitHubClientId"] = ""
 	common.OptionMap["GitHubClientSecret"] = ""
-	// LinuxDO 配置已迁移到 linuxdo 配置模块，保留兼容性映射
-	common.OptionMap["LinuxDOOAuthEnabled"] = strconv.FormatBool(common.LinuxDOOAuthEnabled)
 	common.OptionMap["TelegramBotToken"] = ""
 	common.OptionMap["TelegramBotName"] = ""
 	common.OptionMap["WeChatServerAddress"] = ""
@@ -151,20 +148,6 @@ func InitOptionMap() {
 	modelConfigs := config.GlobalConfig.ExportAllConfigs()
 	for k, v := range modelConfigs {
 		common.OptionMap[k] = v
-	}
-
-	// LinuxDO 配置兼容性映射：将新配置映射到旧键名，供前端使用
-	if clientId, ok := modelConfigs["linuxdo.client_id"]; ok {
-		common.OptionMap["LinuxDOClientId"] = clientId
-	}
-	if clientSecret, ok := modelConfigs["linuxdo.client_secret"]; ok {
-		common.OptionMap["LinuxDOClientSecret"] = clientSecret
-	}
-	if trustLevel, ok := modelConfigs["linuxdo.minimum_trust_level"]; ok {
-		common.OptionMap["LinuxDOMinimumTrustLevel"] = trustLevel
-	}
-	if enabled, ok := modelConfigs["linuxdo.enabled"]; ok {
-		common.OptionMap["LinuxDOOAuthEnabled"] = enabled
 	}
 
 	common.OptionMapRWMutex.Unlock()
@@ -240,12 +223,6 @@ func updateOptionMap(key string, value string) (err error) {
 			common.EmailVerificationEnabled = boolValue
 		case "GitHubOAuthEnabled":
 			common.GitHubOAuthEnabled = boolValue
-		case "LinuxDOOAuthEnabled":
-			common.LinuxDOOAuthEnabled = boolValue
-			// 同步到新配置系统
-			if cfg := config.GlobalConfig.Get("linuxdo"); cfg != nil {
-				config.UpdateConfigFromMap(cfg, map[string]string{"enabled": strconv.FormatBool(boolValue)})
-			}
 		case "WeChatAuthEnabled":
 			common.WeChatAuthEnabled = boolValue
 		case "TelegramOAuthEnabled":
@@ -380,22 +357,6 @@ func updateOptionMap(key string, value string) (err error) {
 		common.GitHubClientId = value
 	case "GitHubClientSecret":
 		common.GitHubClientSecret = value
-	// LinuxDO 配置兼容性处理：自动迁移到新配置系统
-	case "LinuxDOClientId":
-		if cfg := config.GlobalConfig.Get("linuxdo"); cfg != nil {
-			config.UpdateConfigFromMap(cfg, map[string]string{"client_id": value})
-		}
-		common.LinuxDOClientId = value // 保持向后兼容
-	case "LinuxDOClientSecret":
-		if cfg := config.GlobalConfig.Get("linuxdo"); cfg != nil {
-			config.UpdateConfigFromMap(cfg, map[string]string{"client_secret": value})
-		}
-		common.LinuxDOClientSecret = value // 保持向后兼容
-	case "LinuxDOMinimumTrustLevel":
-		if cfg := config.GlobalConfig.Get("linuxdo"); cfg != nil {
-			config.UpdateConfigFromMap(cfg, map[string]string{"minimum_trust_level": value})
-		}
-		common.LinuxDOMinimumTrustLevel, _ = strconv.Atoi(value) // 保持向后兼容
 	case "Footer":
 		common.Footer = value
 	case "SystemName":
@@ -518,21 +479,6 @@ func handleConfigUpdate(key, value string) bool {
 		configKey: value,
 	}
 	config.UpdateConfigFromMap(cfg, configMap)
-
-	// LinuxDO 配置特殊处理：同步到旧键名以保持前端兼容性
-	if configName == "linuxdo" {
-		switch configKey {
-		case "client_id":
-			common.OptionMap["LinuxDOClientId"] = value
-		case "client_secret":
-			common.OptionMap["LinuxDOClientSecret"] = value
-		case "minimum_trust_level":
-			common.OptionMap["LinuxDOMinimumTrustLevel"] = value
-		case "enabled":
-			common.OptionMap["LinuxDOOAuthEnabled"] = value
-			common.LinuxDOOAuthEnabled = value == "true"
-		}
-	}
 
 	return true // 已处理
 }

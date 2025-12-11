@@ -51,6 +51,7 @@ import Checkin from './pages/Checkin';
 import AdminCheckin from './pages/AdminCheckin';
 
 const Home = lazy(() => import('./pages/Home'));
+const ThemeCenter = lazy(() => import('./pages/ThemeCenter'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const About = lazy(() => import('./pages/About'));
 const UserAgreement = lazy(() => import('./pages/UserAgreement'));
@@ -244,6 +245,16 @@ function App() {
             <PrivateRoute>
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
                 <PersonalSetting />
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/console/theme-center'
+          element={
+            <PrivateRoute>
+              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+                <ThemeCenter />
               </Suspense>
             </PrivateRoute>
           }

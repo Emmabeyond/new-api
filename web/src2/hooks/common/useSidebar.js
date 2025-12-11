@@ -57,6 +57,7 @@ export const useSidebar = () => {
       topup: true,
       checkin: true,
       personal: true,
+      'theme-center': true,
     },
     admin: {
       enabled: true,
