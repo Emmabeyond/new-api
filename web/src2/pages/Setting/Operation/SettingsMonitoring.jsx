@@ -81,9 +81,19 @@ export default function SettingsMonitoring(props) {
 
   useEffect(() => {
     const currentInputs = {};
+    const booleanFields = [
+      'AutomaticDisableChannelEnabled',
+      'AutomaticEnableChannelEnabled',
+      'monitor_setting.auto_test_channel_enabled',
+    ];
+    
     for (let key in props.options) {
       if (Object.keys(inputs).includes(key)) {
-        currentInputs[key] = props.options[key];
+        if (booleanFields.includes(key)) {
+          currentInputs[key] = props.options[key] === 'true' || props.options[key] === true;
+        } else {
+          currentInputs[key] = props.options[key];
+        }
       }
     }
     setInputs(currentInputs);

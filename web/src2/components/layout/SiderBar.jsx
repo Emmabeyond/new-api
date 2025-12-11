@@ -49,6 +49,7 @@ const routerMap = {
   playground: '/console/playground',
   personal: '/console/personal',
   'admin-checkin': '/console/admin-checkin',
+  'theme-center': '/console/theme-center',
 };
 
 const SiderBar = ({ onNavigate = () => {} }) => {
@@ -138,6 +139,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('个人设置'),
         itemKey: 'personal',
         to: '/personal',
+      },
+      {
+        text: t('主题中心'),
+        itemKey: 'theme-center',
+        to: '/theme-center',
       },
     ];
 

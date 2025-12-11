@@ -94,10 +94,10 @@ const SystemSetting = () => {
     TelegramOAuthEnabled: '',
     TelegramBotToken: '',
     TelegramBotName: '',
-    LinuxDOOAuthEnabled: '',
-    LinuxDOClientId: '',
-    LinuxDOClientSecret: '',
-    LinuxDOMinimumTrustLevel: '',
+    'linuxdo.enabled': '',
+    'linuxdo.client_id': '',
+    'linuxdo.client_secret': '',
+    'linuxdo.minimum_trust_level': '',
     ServerAddress: '',
     // SSRF防护配置
     'fetch_setting.enable_ssrf_protection': true,
@@ -181,7 +181,7 @@ const SystemSetting = () => {
           case 'EmailDomainRestrictionEnabled':
           case 'EmailAliasRestrictionEnabled':
           case 'SMTPSSLEnabled':
-          case 'LinuxDOOAuthEnabled':
+          case 'linuxdo.enabled':
           case 'discord.enabled':
           case 'oidc.enabled':
           case 'passkey.enabled':
@@ -212,8 +212,9 @@ const SystemSetting = () => {
         }
         newInputs[item.key] = item.value;
       });
-      setInputs(newInputs);
-      setOriginInputs(newInputs);
+      // 合并初始值和后端返回的数据，确保所有键都存在
+      setInputs((prevInputs) => ({ ...prevInputs, ...newInputs }));
+      setOriginInputs((prevInputs) => ({ ...prevInputs, ...newInputs }));
       // 同步模式布尔到本地状态
       if (
         typeof newInputs['fetch_setting.domain_filter_mode'] !== 'undefined'
@@ -605,25 +606,25 @@ const SystemSetting = () => {
   const submitLinuxDOOAuth = async () => {
     const options = [];
 
-    if (originInputs['LinuxDOClientId'] !== inputs.LinuxDOClientId) {
-      options.push({ key: 'LinuxDOClientId', value: inputs.LinuxDOClientId });
+    if (originInputs['linuxdo.client_id'] !== inputs['linuxdo.client_id']) {
+      options.push({ key: 'linuxdo.client_id', value: inputs['linuxdo.client_id'] });
     }
     if (
-      originInputs['LinuxDOClientSecret'] !== inputs.LinuxDOClientSecret &&
-      inputs.LinuxDOClientSecret !== ''
+      originInputs['linuxdo.client_secret'] !== inputs['linuxdo.client_secret'] &&
+      inputs['linuxdo.client_secret'] !== ''
     ) {
       options.push({
-        key: 'LinuxDOClientSecret',
-        value: inputs.LinuxDOClientSecret,
+        key: 'linuxdo.client_secret',
+        value: inputs['linuxdo.client_secret'],
       });
     }
     if (
-      originInputs['LinuxDOMinimumTrustLevel'] !==
-      inputs.LinuxDOMinimumTrustLevel
+      originInputs['linuxdo.minimum_trust_level'] !==
+      inputs['linuxdo.minimum_trust_level']
     ) {
       options.push({
-        key: 'LinuxDOMinimumTrustLevel',
-        value: inputs.LinuxDOMinimumTrustLevel,
+        key: 'linuxdo.minimum_trust_level',
+        value: inputs['linuxdo.minimum_trust_level'],
       });
     }
 
@@ -679,7 +680,7 @@ const SystemSetting = () => {
     } else {
       await updateOptions([{ key: optionKey, value }]);
     }
-    if (optionKey === 'LinuxDOOAuthEnabled') {
+    if (optionKey === 'linuxdo.enabled') {
       setLinuxDOOAuthEnabled(value);
     }
   };
@@ -1049,10 +1050,10 @@ const SystemSetting = () => {
                         {t('允许通过 Discord 账户登录 & 注册')}
                       </Form.Checkbox>
                       <Form.Checkbox
-                        field='LinuxDOOAuthEnabled'
+                        field="['linuxdo.enabled']"
                         noLabel
                         onChange={(e) =>
-                          handleCheckboxChange('LinuxDOOAuthEnabled', e)
+                          handleCheckboxChange('linuxdo.enabled', e)
                         }
                       >
                         {t('允许通过 Linux DO 账户登录 & 注册')}
@@ -1503,14 +1504,14 @@ const SystemSetting = () => {
                   >
                     <Col xs={24} sm={24} md={10} lg={10} xl={10}>
                       <Form.Input
-                        field='LinuxDOClientId'
+                        field="['linuxdo.client_id']"
                         label={t('Linux DO Client ID')}
                         placeholder={t('输入你注册的 LinuxDO OAuth APP 的 ID')}
                       />
                     </Col>
                     <Col xs={24} sm={24} md={10} lg={10} xl={10}>
                       <Form.Input
-                        field='LinuxDOClientSecret'
+                        field="['linuxdo.client_secret']"
                         label={t('Linux DO Client Secret')}
                         type='password'
                         placeholder={t('敏感信息不会发送到前端显示')}
@@ -1518,7 +1519,7 @@ const SystemSetting = () => {
                     </Col>
                     <Col xs={24} sm={24} md={4} lg={4} xl={4}>
                       <Form.Input
-                        field='LinuxDOMinimumTrustLevel'
+                        field="['linuxdo.minimum_trust_level']"
                         label='LinuxDO Minimum Trust Level'
                         placeholder='允许注册的最低信任等级'
                       />

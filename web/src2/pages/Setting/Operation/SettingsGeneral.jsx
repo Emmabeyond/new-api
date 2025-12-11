@@ -127,9 +127,21 @@ export default function GeneralSettings(props) {
 
   useEffect(() => {
     const currentInputs = {};
+    const booleanFields = [
+      'DisplayTokenStatEnabled',
+      'DefaultCollapseSidebar',
+      'DemoSiteEnabled',
+      'SelfUseModeEnabled',
+    ];
+    
     for (let key in props.options) {
       if (Object.keys(inputs).includes(key)) {
-        currentInputs[key] = props.options[key];
+        // 对布尔类型字段进行类型转换
+        if (booleanFields.includes(key)) {
+          currentInputs[key] = props.options[key] === 'true' || props.options[key] === true;
+        } else {
+          currentInputs[key] = props.options[key];
+        }
       }
     }
     // 若旧字段存在且新字段缺失，则做一次兜底映射

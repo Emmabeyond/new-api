@@ -95,6 +95,11 @@ export default function SettingGlobalModel(props) {
 
   useEffect(() => {
     const currentInputs = {};
+    const booleanFields = [
+      'global.pass_through_request_enabled',
+      'general_setting.ping_interval_enabled',
+    ];
+    
     for (const key of Object.keys(defaultGlobalSettingInputs)) {
       if (props.options[key] !== undefined) {
         let value = props.options[key];
@@ -107,6 +112,8 @@ export default function SettingGlobalModel(props) {
           } catch (error) {
             value = defaultGlobalSettingInputs[key];
           }
+        } else if (booleanFields.includes(key)) {
+          value = value === 'true' || value === true;
         }
         currentInputs[key] = value;
       } else {

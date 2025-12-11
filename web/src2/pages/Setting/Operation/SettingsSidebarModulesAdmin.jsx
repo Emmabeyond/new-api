@@ -57,6 +57,7 @@ export default function SettingsSidebarModulesAdmin(props) {
       enabled: true,
       topup: true,
       personal: true,
+      'theme-center': true,
     },
     admin: {
       enabled: true,
@@ -183,7 +184,7 @@ export default function SettingsSidebarModulesAdmin(props) {
             midjourney: true,
             task: true,
           },
-          personal: { enabled: true, topup: true, personal: true },
+          personal: { enabled: true, topup: true, personal: true, 'theme-center': true },
           admin: {
             enabled: true,
             channel: true,
@@ -239,6 +240,11 @@ export default function SettingsSidebarModulesAdmin(props) {
           key: 'personal',
           title: t('个人设置'),
           description: t('个人信息设置'),
+        },
+        {
+          key: 'theme-center',
+          title: t('主题中心'),
+          description: t('界面主题切换'),
         },
       ],
     },

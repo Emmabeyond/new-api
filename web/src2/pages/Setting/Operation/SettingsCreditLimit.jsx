@@ -78,9 +78,15 @@ export default function SettingsCreditLimit(props) {
 
   useEffect(() => {
     const currentInputs = {};
+    const booleanFields = ['quota_setting.enable_free_model_pre_consume'];
+    
     for (let key in props.options) {
       if (Object.keys(inputs).includes(key)) {
-        currentInputs[key] = props.options[key];
+        if (booleanFields.includes(key)) {
+          currentInputs[key] = props.options[key] === 'true' || props.options[key] === true;
+        } else {
+          currentInputs[key] = props.options[key];
+        }
       }
     }
     setInputs(currentInputs);

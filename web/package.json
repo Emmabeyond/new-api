@@ -83,7 +83,7 @@
     ]
   },
   "devDependencies": {
-    "@douyinfe/vite-plugin-semi": "2.74.3-alpha.2",
+    "@douyinfe/vite-plugin-semi": "2.74.3-alpha.0",
     "@so1ve/prettier-config": "^3.1.0",
     "@vitejs/plugin-react-swc": "^3.7.0",
     "autoprefixer": "^10.4.21",

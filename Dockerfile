@@ -1,10 +1,15 @@
-FROM oven/bun:latest AS builder
+FROM node:alpine AS builder
+
+ENV CI=true
 
 WORKDIR /build
 COPY ./web .
 COPY ./VERSION .
-RUN bun install
-RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm && \
+    pnpm config set registry https://registry.npmmirror.com && \
+    pnpm install
+RUN NODE_OPTIONS="--max-old-space-size=4096" DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) pnpm run build
 
 FROM golang:alpine AS builder2
 ENV GO111MODULE=on CGO_ENABLED=0 GOPROXY=https://goproxy.cn,direct

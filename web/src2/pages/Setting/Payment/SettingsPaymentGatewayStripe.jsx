@@ -66,7 +66,7 @@ export default function SettingsPaymentGateway(props) {
             : 1,
         StripePromotionCodesEnabled:
           props.options.StripePromotionCodesEnabled !== undefined
-            ? props.options.StripePromotionCodesEnabled
+            ? (props.options.StripePromotionCodesEnabled === 'true' || props.options.StripePromotionCodesEnabled === true)
             : false,
       };
       setInputs(currentInputs);

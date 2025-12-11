@@ -96,9 +96,18 @@ export default function SettingGeminiModel(props) {
 
   useEffect(() => {
     const currentInputs = { ...DEFAULT_GEMINI_INPUTS };
+    const booleanFields = [
+      'gemini.thinking_adapter_enabled',
+      'gemini.function_call_thought_signature_enabled',
+    ];
+    
     for (let key in props.options) {
       if (Object.prototype.hasOwnProperty.call(DEFAULT_GEMINI_INPUTS, key)) {
-        currentInputs[key] = props.options[key];
+        if (booleanFields.includes(key)) {
+          currentInputs[key] = props.options[key] === 'true' || props.options[key] === true;
+        } else {
+          currentInputs[key] = props.options[key];
+        }
       }
     }
     setInputs(currentInputs);

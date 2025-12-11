@@ -801,6 +801,37 @@ html.dark .with-pastel-balls::before {
   padding: 10px !important;
 }
 
+/* ==================== 主题切换过渡动画 ==================== */
+:root {
+  /* Theme transition duration */
+  --theme-transition-duration: 300ms;
+  --theme-transition-timing: ease-in-out;
+}
+
+/* Apply smooth transitions to theme-related CSS variables */
+body,
+.semi-layout,
+.semi-card,
+.semi-button,
+.semi-input-wrapper,
+.semi-select,
+.semi-navigation,
+.semi-tabs,
+.semi-modal,
+.semi-sidesheet {
+  transition: 
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Ensure text color transitions smoothly */
+.semi-typography,
+.semi-button-content,
+.semi-navigation-item-text {
+  transition: color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
 /* ==================== 自定义圆角样式 ==================== */
 .semi-radio,
 .semi-tagInput,

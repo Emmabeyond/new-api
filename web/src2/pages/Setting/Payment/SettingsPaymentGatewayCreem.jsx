@@ -50,7 +50,7 @@ export default function SettingsPaymentGatewayCreem(props) {
                 CreemApiKey: props.options.CreemApiKey || '',
                 CreemWebhookSecret: props.options.CreemWebhookSecret || '',
                 CreemProducts: props.options.CreemProducts || '[]',
-                CreemTestMode: props.options.CreemTestMode === 'true',
+                CreemTestMode: props.options.CreemTestMode === 'true' || props.options.CreemTestMode === true,
             };
             setInputs(currentInputs);
             setOriginInputs({ ...currentInputs });

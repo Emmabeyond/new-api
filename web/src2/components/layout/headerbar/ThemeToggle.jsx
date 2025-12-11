@@ -19,11 +19,44 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React, { useMemo } from 'react';
 import { Button, Dropdown } from '@douyinfe/semi-ui';
-import { Sun, Moon, Monitor } from 'lucide-react';
-import { useActualTheme } from '../../../context/Theme';
+import { Sun, Moon, Monitor, Palette, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  useActualTheme,
+  useCurrentThemeId,
+  usePresetThemes,
+  useThemeActions,
+} from '../../../context/Theme';
+
+// Color preview dot component
+const ColorDot = ({ color, size = 12 }) => (
+  <div
+    className="rounded-full border border-[var(--semi-color-border)]"
+    style={{
+      backgroundColor: color,
+      width: size,
+      height: size,
+      minWidth: size,
+    }}
+  />
+);
 
 const ThemeToggle = ({ theme, onThemeToggle, t }) => {
+  const navigate = useNavigate();
   const actualTheme = useActualTheme();
+  const currentThemeId = useCurrentThemeId();
+  const presetThemes = usePresetThemes();
+  const { applyTheme } = useThemeActions();
+
+  // Get current theme object
+  const currentTheme = useMemo(() => {
+    return presetThemes?.find((t) => t.id === currentThemeId) || presetThemes?.[0];
+  }, [currentThemeId, presetThemes]);
+
+  // Get quick access themes (first 5)
+  const quickThemes = useMemo(() => {
+    return presetThemes?.slice(0, 5) || [];
+  }, [presetThemes]);
 
   const themeOptions = useMemo(
     () => [
@@ -62,11 +95,20 @@ const ThemeToggle = ({ theme, onThemeToggle, t }) => {
     return currentOption?.buttonIcon || themeOptions[2].buttonIcon;
   }, [theme, themeOptions]);
 
+  const handleThemeSelect = (themeId) => {
+    applyTheme(themeId);
+  };
+
+  const handleMoreThemes = () => {
+    navigate('/console/theme-center');
+  };
+
   return (
     <Dropdown
       position='bottomRight'
       render={
         <Dropdown.Menu>
+          {/* Mode selection section */}
           {themeOptions.map((option) => (
             <Dropdown.Item
               key={option.key}
@@ -92,6 +134,44 @@ const ThemeToggle = ({ theme, onThemeToggle, t }) => {
               </div>
             </>
           )}
+
+          {/* Theme selection section */}
+          <Dropdown.Divider />
+          <div className='px-3 py-2 text-xs text-semi-color-text-2 font-medium'>
+            {t('theme.center')}
+          </div>
+          
+          {quickThemes.map((themeItem) => (
+            <Dropdown.Item
+              key={themeItem.id}
+              onClick={() => handleThemeSelect(themeItem.id)}
+              className={getItemClassName(currentThemeId === themeItem.id)}
+            >
+              <div className='flex items-center gap-2 w-full'>
+                <ColorDot color={themeItem.colors[actualTheme]?.primary} />
+                <span className='flex-1'>
+                  {t(themeItem.nameKey, { defaultValue: themeItem.name })}
+                </span>
+                {currentThemeId === themeItem.id && (
+                  <span className='text-xs text-semi-color-primary'>
+                    {t('theme.current')}
+                  </span>
+                )}
+              </div>
+            </Dropdown.Item>
+          ))}
+
+          <Dropdown.Divider />
+          <Dropdown.Item
+            icon={<Palette size={18} />}
+            onClick={handleMoreThemes}
+            className='hover:!bg-semi-color-fill-1'
+          >
+            <div className='flex items-center justify-between w-full'>
+              <span>{t('theme.moreThemes')}</span>
+              <ChevronRight size={16} className='text-semi-color-text-2' />
+            </div>
+          </Dropdown.Item>
         </Dropdown.Menu>
       }
     >

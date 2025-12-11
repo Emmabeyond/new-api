@@ -92,9 +92,15 @@ export default function SettingClaudeModel(props) {
 
   useEffect(() => {
     const currentInputs = {};
+    const booleanFields = ['claude.thinking_adapter_enabled'];
+    
     for (let key in props.options) {
       if (Object.keys(inputs).includes(key)) {
-        currentInputs[key] = props.options[key];
+        if (booleanFields.includes(key)) {
+          currentInputs[key] = props.options[key] === 'true' || props.options[key] === true;
+        } else {
+          currentInputs[key] = props.options[key];
+        }
       }
     }
     setInputs(currentInputs);
