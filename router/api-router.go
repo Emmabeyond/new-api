@@ -301,5 +301,27 @@ func SetApiRouter(router *gin.Engine) {
 			securityRoute.DELETE("/penalties/:token_id", controller.LiftPenalty)
 			securityRoute.GET("/token/:token_id/abuse", controller.GetTokenAbuseInfo)
 		}
+
+		// Help center routes (public)
+		helpRoute := apiRouter.Group("/help")
+		{
+			helpRoute.GET("/categories", controller.GetHelpCategories)
+			helpRoute.GET("/documents/:id", controller.GetHelpDocument)
+			helpRoute.GET("/search", controller.SearchHelpDocuments)
+
+			// Admin routes
+			helpAdminRoute := helpRoute.Group("/admin")
+			helpAdminRoute.Use(middleware.AdminAuth())
+			{
+				helpAdminRoute.GET("/categories", controller.AdminGetHelpCategories)
+				helpAdminRoute.POST("/categories", controller.AdminCreateHelpCategory)
+				helpAdminRoute.PUT("/categories/:id", controller.AdminUpdateHelpCategory)
+				helpAdminRoute.DELETE("/categories/:id", controller.AdminDeleteHelpCategory)
+				helpAdminRoute.GET("/documents", controller.AdminGetHelpDocuments)
+				helpAdminRoute.POST("/documents", controller.AdminCreateHelpDocument)
+				helpAdminRoute.PUT("/documents/:id", controller.AdminUpdateHelpDocument)
+				helpAdminRoute.DELETE("/documents/:id", controller.AdminDeleteHelpDocument)
+			}
+		}
 	}
 }

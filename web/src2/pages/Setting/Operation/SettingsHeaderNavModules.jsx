@@ -47,6 +47,7 @@ export default function SettingsHeaderNavModules(props) {
       requireAuth: false, // 默认不需要登录鉴权
     },
     docs: true,
+    help: true,
     about: true,
   });
 
@@ -87,6 +88,7 @@ export default function SettingsHeaderNavModules(props) {
         requireAuth: false,
       },
       docs: true,
+      help: true,
       about: true,
     };
     setHeaderNavModules(defaultModules);
@@ -153,6 +155,7 @@ export default function SettingsHeaderNavModules(props) {
             requireAuth: false,
           },
           docs: true,
+          help: true,
           about: true,
         };
         setHeaderNavModules(defaultModules);
@@ -182,6 +185,11 @@ export default function SettingsHeaderNavModules(props) {
       key: 'docs',
       title: t('文档'),
       description: t('系统文档和帮助信息'),
+    },
+    {
+      key: 'help',
+      title: t('帮助中心'),
+      description: t('用户帮助文档和常见问题'),
     },
     {
       key: 'about',

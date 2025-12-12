@@ -33,6 +33,7 @@ import {
   Palette,
   CreditCard,
   ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 
 import SystemSetting from '../../components/settings/SystemSetting';
@@ -48,6 +49,7 @@ import DrawingSetting from '../../components/settings/DrawingSetting';
 import PaymentSetting from '../../components/settings/PaymentSetting';
 import CaptchaSetting from '../../components/settings/CaptchaSetting';
 import SecuritySetting from '../../components/settings/SecuritySetting';
+import HelpSetting from '../../components/settings/HelpSetting';
 
 const Setting = () => {
   const { t } = useTranslation();
@@ -166,6 +168,16 @@ const Setting = () => {
       ),
       content: <SecuritySetting />,
       itemKey: 'security',
+    });
+    panes.push({
+      tab: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <HelpCircle size={18} />
+          {t('帮助中心')}
+        </span>
+      ),
+      content: <HelpSetting />,
+      itemKey: 'help',
     });
     panes.push({
       tab: (

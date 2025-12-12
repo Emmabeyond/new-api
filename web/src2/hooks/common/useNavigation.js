@@ -27,6 +27,7 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
       console: true,
       pricing: true,
       docs: true,
+      help: true,
       about: true,
     };
 
@@ -49,6 +50,7 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
         itemKey: 'pricing',
         to: '/pricing',
       },
+      // 文档：外部链接
       ...(docsLink
         ? [
             {
@@ -59,6 +61,12 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
             },
           ]
         : []),
+      // 帮助中心：内部页面
+      {
+        text: t('帮助中心'),
+        itemKey: 'help',
+        to: '/help',
+      },
       {
         text: t('关于'),
         itemKey: 'about',
@@ -76,6 +84,9 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
         return typeof modules.pricing === 'object'
           ? modules.pricing.enabled
           : modules.pricing;
+      }
+      if (link.itemKey === 'help') {
+        return modules.help === true;
       }
       return modules[link.itemKey] === true;
     });

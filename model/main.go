@@ -273,6 +273,8 @@ func migrateDB() error {
 		&CheckinRecord{},
 		&CheckinAudit{},
 		&TokenPenalty{},
+		&HelpCategory{},
+		&HelpDocument{},
 	)
 	if err != nil {
 		return err
