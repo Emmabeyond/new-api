@@ -182,8 +182,10 @@ const LoginForm = () => {
   // 微信第三方登录成功处理
   const onWeChatThirdPartyLoginSuccess = (data) => {
     setShowWeChatThirdPartyModal(false);
-    userDispatch({ type: 'login', payload: data });
-    setUserData(data);
+    // 从响应数据中提取用户信息（排除 status 字段）
+    const { status, ...userData } = data;
+    userDispatch({ type: 'login', payload: userData });
+    setUserData(userData);
     updateAPI();
     navigate('/console');
   };

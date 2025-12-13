@@ -289,8 +289,35 @@ func handleWeChatThirdPartyLogin(c *gin.Context, userInfo *service.UserInfo) {
 		return
 	}
 
-	// 设置登录状态
-	setupLogin(&user, c)
+	// 设置登录会话
+	session := sessions.Default(c)
+	session.Set("id", user.Id)
+	session.Set("username", user.Username)
+	session.Set("role", user.Role)
+	session.Set("status", user.Status)
+	session.Set("group", user.Group)
+	err := session.Save()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "无法保存会话信息，请重试",
+			"success": false,
+		})
+		return
+	}
+
+	// 返回登录成功响应，包含 status: confirmed 以匹配前端期望的格式
+	c.JSON(http.StatusOK, gin.H{
+		"message": "",
+		"success": true,
+		"data": gin.H{
+			"status":      "confirmed",
+			"id":          user.Id,
+			"username":    user.Username,
+			"displayName": user.DisplayName,
+			"role":        user.Role,
+			"group":       user.Group,
+		},
+	})
 }
 
 // handleWeChatThirdPartyBind 处理微信第三方绑定
