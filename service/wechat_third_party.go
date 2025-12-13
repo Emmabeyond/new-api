@@ -45,13 +45,7 @@ type UserInfo struct {
 	Avatar   string `json:"avatar"`
 }
 
-// apiResponse 平台 API 通用响应结构
-type apiResponse struct {
-	Success bool            `json:"success"`
-	Data    json.RawMessage `json:"data,omitempty"`
-	Message string          `json:"message,omitempty"`
-	Error   string          `json:"error,omitempty"`
-}
+
 
 // generateRequest 生成二维码请求体
 type generateRequest struct {
@@ -89,6 +83,17 @@ func NewWeChatThirdPartyClient() (*WeChatThirdPartyClient, error) {
 func (c *WeChatThirdPartyClient) buildAuthToken() string {
 	credentials := c.clientKey + ":" + c.clientSecret
 	return base64.StdEncoding.EncodeToString([]byte(credentials))
+}
+
+// qrCodeDirectResponse 平台直接返回的二维码响应（不包装在 success/data 中）
+type qrCodeDirectResponse struct {
+	SessionId string `json:"sessionId"`
+	QRCodeUrl string `json:"qrCodeUrl"`
+	ExpiresAt string `json:"expiresAt"`
+	ExpiresIn int    `json:"expiresIn"`
+	// 错误情况
+	Error   string `json:"error,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // GenerateQRCode 生成登录二维码
@@ -147,31 +152,51 @@ func (c *WeChatThirdPartyClient) GenerateQRCode(callbackUrl, state string) (*QRC
 		return nil, fmt.Errorf("读取响应失败: %w", err)
 	}
 
-	// 解析响应
-	var apiResp apiResponse
-	if err := json.Unmarshal(respBody, &apiResp); err != nil {
+	// 平台直接返回数据对象，不包装在 success/data 中
+	var directResp qrCodeDirectResponse
+	if err := json.Unmarshal(respBody, &directResp); err != nil {
 		return nil, fmt.Errorf("解析响应失败: %w", err)
 	}
 
-	// 检查响应状态
-	if !apiResp.Success {
-		errMsg := apiResp.Message
+	// 检查是否有错误
+	if directResp.Error != "" || directResp.Message != "" {
+		errMsg := directResp.Message
 		if errMsg == "" {
-			errMsg = apiResp.Error
-		}
-		if errMsg == "" {
-			errMsg = "未知错误"
+			errMsg = directResp.Error
 		}
 		return nil, fmt.Errorf("生成二维码失败: %s", errMsg)
 	}
 
-	// 解析数据
-	var qrResp QRCodeResponse
-	if err := json.Unmarshal(apiResp.Data, &qrResp); err != nil {
-		return nil, fmt.Errorf("解析二维码数据失败: %w", err)
+	// 检查必要字段
+	if directResp.SessionId == "" || directResp.QRCodeUrl == "" {
+		return nil, fmt.Errorf("响应数据不完整")
 	}
 
-	return &qrResp, nil
+	// 解析过期时间
+	expiresAt, err := time.Parse(time.RFC3339, directResp.ExpiresAt)
+	if err != nil {
+		// 如果解析失败，使用 ExpiresIn 计算
+		expiresAt = time.Now().Add(time.Duration(directResp.ExpiresIn) * time.Second)
+	}
+
+	return &QRCodeResponse{
+		SessionId: directResp.SessionId,
+		QRCodeUrl: directResp.QRCodeUrl,
+		ExpiresAt: expiresAt,
+	}, nil
+}
+
+// statusDirectResponse 平台直接返回的状态响应
+type statusDirectResponse struct {
+	SessionId string `json:"sessionId"`
+	Status    string `json:"status"` // pending, scanned, confirmed, expired
+	State     string `json:"state,omitempty"`
+	ExpiresAt string `json:"expiresAt,omitempty"`
+	// 用户信息（confirmed 时返回）
+	UserInfo *UserInfo `json:"userInfo,omitempty"`
+	// 错误情况
+	Error   string `json:"error,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // GetLoginStatus 查询登录状态
@@ -218,31 +243,34 @@ func (c *WeChatThirdPartyClient) GetLoginStatus(sessionId string) (*LoginStatusR
 		return nil, fmt.Errorf("读取响应失败: %w", err)
 	}
 
-	// 解析响应
-	var apiResp apiResponse
-	if err := json.Unmarshal(respBody, &apiResp); err != nil {
+	// 平台直接返回数据对象
+	var directResp statusDirectResponse
+	if err := json.Unmarshal(respBody, &directResp); err != nil {
 		return nil, fmt.Errorf("解析响应失败: %w", err)
 	}
 
-	// 检查响应状态
-	if !apiResp.Success {
-		errMsg := apiResp.Message
+	// 检查是否有错误
+	if directResp.Error != "" || directResp.Message != "" {
+		errMsg := directResp.Message
 		if errMsg == "" {
-			errMsg = apiResp.Error
-		}
-		if errMsg == "" {
-			errMsg = "未知错误"
+			errMsg = directResp.Error
 		}
 		return nil, fmt.Errorf("查询状态失败: %s", errMsg)
 	}
 
-	// 解析数据
-	var statusResp LoginStatusResponse
-	if err := json.Unmarshal(apiResp.Data, &statusResp); err != nil {
-		return nil, fmt.Errorf("解析状态数据失败: %w", err)
+	// 解析过期时间
+	var expiresAt time.Time
+	if directResp.ExpiresAt != "" {
+		expiresAt, _ = time.Parse(time.RFC3339, directResp.ExpiresAt)
 	}
 
-	return &statusResp, nil
+	return &LoginStatusResponse{
+		SessionId: directResp.SessionId,
+		Status:    directResp.Status,
+		UserInfo:  directResp.UserInfo,
+		State:     directResp.State,
+		ExpiresAt: expiresAt,
+	}, nil
 }
 
 // IsValidStatus 检查状态是否有效
@@ -254,3 +282,5 @@ func IsValidStatus(status string) bool {
 		return false
 	}
 }
+
+

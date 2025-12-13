@@ -21,6 +21,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Modal, Button, Spin, Typography } from '@douyinfe/semi-ui';
 import { IconRefresh } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
+import { QRCodeSVG } from 'qrcode.react';
 import { API, showError, showSuccess, setUserData, updateAPI } from '../../helpers';
 
 const { Text, Title } = Typography;
@@ -277,15 +278,22 @@ const WeChatThirdPartyLoginModal = ({
           <>
             {/* 二维码区域 */}
             <div className="relative mb-4">
-              <img
-                src={qrCodeUrl}
-                alt="WeChat QR Code"
-                className="w-48 h-48 rounded-lg"
+              <div
+                className="w-48 h-48 rounded-lg bg-white p-2 flex items-center justify-center"
                 style={{
                   opacity: status === 'expired' ? 0.3 : 1,
                   transition: 'opacity 0.3s',
                 }}
-              />
+              >
+                {qrCodeUrl && (
+                  <QRCodeSVG
+                    value={qrCodeUrl}
+                    size={176}
+                    level="M"
+                    includeMargin={false}
+                  />
+                )}
+              </div>
               
               {/* 过期遮罩 */}
               {status === 'expired' && (
