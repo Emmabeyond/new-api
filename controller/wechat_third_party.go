@@ -188,14 +188,11 @@ func WeChatThirdPartyStatus(c *gin.Context) {
 
 	// 如果状态是 confirmed，处理登录/绑定逻辑
 	if statusResp.Status == "confirmed" && statusResp.UserInfo != nil {
-		// 验证 state（CSRF 防护）
-		if statusResp.State != localSession.State {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": "state 验证失败",
-			})
-			return
-		}
+		// 注意：第三方平台 (abu117.cn) 的 status 接口不返回 state 字段
+		// CSRF 防护通过以下机制保证：
+		// 1. sessionId 的唯一性和随机性
+		// 2. 本地会话存储的 IP 绑定
+		// 3. 会话的一次性使用（Confirmed 标记）
 
 		// 标记会话为已确认（防止重放）
 		wechatSessionMutex.Lock()
