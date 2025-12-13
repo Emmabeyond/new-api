@@ -41,6 +41,7 @@ import AccountManagement from './personal/cards/AccountManagement';
 import NotificationSettings from './personal/cards/NotificationSettings';
 import EmailBindModal from './personal/modals/EmailBindModal';
 import WeChatBindModal from './personal/modals/WeChatBindModal';
+import WeChatThirdPartyLoginModal from '../auth/WeChatThirdPartyLoginModal';
 import AccountDeleteModal from './personal/modals/AccountDeleteModal';
 import ChangePasswordModal from './personal/modals/ChangePasswordModal';
 
@@ -61,6 +62,7 @@ const PersonalSetting = () => {
   const [status, setStatus] = useState({});
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showWeChatBindModal, setShowWeChatBindModal] = useState(false);
+  const [showWeChatThirdPartyBindModal, setShowWeChatThirdPartyBindModal] = useState(false);
   const [showEmailBindModal, setShowEmailBindModal] = useState(false);
   const [showAccountDeleteModal, setShowAccountDeleteModal] = useState(false);
   const [turnstileEnabled, setTurnstileEnabled] = useState(false);
@@ -457,6 +459,7 @@ const PersonalSetting = () => {
               systemToken={systemToken}
               setShowEmailBindModal={setShowEmailBindModal}
               setShowWeChatBindModal={setShowWeChatBindModal}
+              setShowWeChatThirdPartyBindModal={setShowWeChatThirdPartyBindModal}
               generateAccessToken={generateAccessToken}
               handleSystemTokenClick={handleSystemTokenClick}
               setShowChangePasswordModal={setShowChangePasswordModal}
@@ -505,6 +508,16 @@ const PersonalSetting = () => {
         handleInputChange={handleInputChange}
         bindWeChat={bindWeChat}
         status={status}
+      />
+
+      <WeChatThirdPartyLoginModal
+        visible={showWeChatThirdPartyBindModal}
+        onCancel={() => setShowWeChatThirdPartyBindModal(false)}
+        onSuccess={() => {
+          setShowWeChatThirdPartyBindModal(false);
+          getUserData();
+        }}
+        action="bind"
       />
 
       <AccountDeleteModal

@@ -56,6 +56,7 @@ const AccountManagement = ({
   systemToken,
   setShowEmailBindModal,
   setShowWeChatBindModal,
+  setShowWeChatThirdPartyBindModal,
   generateAccessToken,
   handleSystemTokenClick,
   setShowChangePasswordModal,
@@ -166,7 +167,7 @@ const AccountManagement = ({
                 </div>
               </Card>
 
-              {/* 微信绑定 */}
+              {/* 微信绑定 - 优先使用第三方微信登录，其次使用公众号验证码方式 */}
               <Card className='!rounded-xl'>
                 <div className='flex items-center justify-between gap-3'>
                   <div className='flex items-center flex-1 min-w-0'>
@@ -181,7 +182,7 @@ const AccountManagement = ({
                         {t('微信')}
                       </div>
                       <div className='text-sm text-gray-500 truncate'>
-                        {!status.wechat_login
+                        {!(status.wechat_third_party_login || status.wechat_login)
                           ? t('未启用')
                           : isBound(userState.user?.wechat_id)
                             ? t('已绑定')
@@ -194,12 +195,19 @@ const AccountManagement = ({
                       type='primary'
                       theme='outline'
                       size='small'
-                      disabled={!status.wechat_login}
-                      onClick={() => setShowWeChatBindModal(true)}
+                      disabled={!(status.wechat_third_party_login || status.wechat_login)}
+                      onClick={() => {
+                        // 优先使用第三方微信登录，其次使用公众号验证码方式
+                        if (status.wechat_third_party_login) {
+                          setShowWeChatThirdPartyBindModal(true);
+                        } else {
+                          setShowWeChatBindModal(true);
+                        }
+                      }}
                     >
                       {isBound(userState.user?.wechat_id)
                         ? t('修改绑定')
-                        : status.wechat_login
+                        : (status.wechat_third_party_login || status.wechat_login)
                           ? t('绑定')
                           : t('未启用')}
                     </Button>
