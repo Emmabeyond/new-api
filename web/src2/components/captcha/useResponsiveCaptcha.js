@@ -27,7 +27,7 @@ export const ORIGINAL_PUZZLE_SIZE = 50;
 // 最小触摸目标尺寸
 export const MIN_TOUCH_TARGET_SIZE = 44;
 
-// Debounce 延迟时间 (ms)
+// Debounce 延迟时间 (ms) - 仅用于 resize 事件，初始化不使用
 const RESIZE_DEBOUNCE_DELAY = 100;
 
 /**
@@ -105,6 +105,9 @@ const useResponsiveCaptcha = (containerRef) => {
     MIN_TOUCH_TARGET_SIZE
   );
 
+  // 标记是否已完成初始化
+  const initializedRef = useRef(false);
+
   /**
    * 监听容器尺寸变化
    */
@@ -112,10 +115,11 @@ const useResponsiveCaptcha = (containerRef) => {
     const container = containerRef?.current;
     if (!container) return;
 
-    // 初始化尺寸
+    // 初始化尺寸 - 立即执行，不使用 debounce
     const initialWidth = container.offsetWidth;
     if (initialWidth > 0) {
       updateDimensions(initialWidth);
+      initializedRef.current = true;
     }
 
     // 创建 ResizeObserver
@@ -123,7 +127,14 @@ const useResponsiveCaptcha = (containerRef) => {
       for (const entry of entries) {
         const newWidth = entry.contentRect.width;
         
-        // Debounce resize 事件
+        // 首次回调也立即执行（确保初始化）
+        if (!initializedRef.current) {
+          updateDimensions(newWidth);
+          initializedRef.current = true;
+          return;
+        }
+        
+        // 后续 resize 事件使用 debounce
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
@@ -139,6 +150,7 @@ const useResponsiveCaptcha = (containerRef) => {
     // 清理
     return () => {
       resizeObserver.disconnect();
+      initializedRef.current = false;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }

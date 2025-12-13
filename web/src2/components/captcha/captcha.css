@@ -193,6 +193,8 @@ Slider Captcha Styles
 .slider-track {
   position: relative;
   width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
   height: 44px;
   background: var(--semi-color-bg-3);
   border-radius: 22px;

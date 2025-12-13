@@ -88,14 +88,27 @@ const CaptchaDialog = ({
   const handleDragEnd = useCallback(async (displayX) => {
     if (!challenge || verifying) return;
 
+    // 获取容器实际宽度，确保坐标转换正确
+    // 这是一个安全措施，防止 scaleRatio 还未更新的情况
+    let actualScaleRatio = scaleRatio;
+    if (imageContainerRef.current) {
+      const containerWidth = imageContainerRef.current.offsetWidth;
+      if (containerWidth > 0) {
+        actualScaleRatio = containerWidth / 300; // ORIGINAL_IMAGE_WIDTH = 300
+      }
+    }
+
     // 将显示坐标转换为原始坐标
-    const originalX = toOriginalCoord(displayX);
+    const originalX = actualScaleRatio > 0 
+      ? Math.round(displayX / actualScaleRatio)
+      : toOriginalCoord(displayX);
     
     if (process.env.NODE_ENV === 'development') {
       console.log('[CaptchaDialog] Verify coordinates:', {
         displayX,
         originalX,
-        scaleRatio
+        scaleRatio,
+        actualScaleRatio
       });
     }
 
