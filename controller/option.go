@@ -134,6 +134,15 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "wechat_third_party.enabled":
+		wechatThirdPartySettings := system_setting.GetWeChatThirdPartySettings()
+		if option.Value == "true" && (wechatThirdPartySettings.ClientKey == "" || wechatThirdPartySettings.ClientSecret == "") {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "无法启用微信第三方登录，请先填入 ClientKey 以及 ClientSecret！",
+			})
+			return
+		}
 	case "EmailDomainRestrictionEnabled":
 		if option.Value == "true" && len(common.EmailDomainWhitelist) == 0 {
 			c.JSON(http.StatusOK, gin.H{
@@ -354,6 +363,11 @@ func validateOption(key, value string) error {
 		linuxdoSettings := system_setting.GetLinuxDOSettings()
 		if value == "true" && linuxdoSettings.ClientId == "" {
 			return fmt.Errorf("无法启用 LinuxDO OAuth，请先填入 LinuxDO Client Id 以及 LinuxDO Client Secret！")
+		}
+	case "wechat_third_party.enabled":
+		wechatThirdPartySettings := system_setting.GetWeChatThirdPartySettings()
+		if value == "true" && (wechatThirdPartySettings.ClientKey == "" || wechatThirdPartySettings.ClientSecret == "") {
+			return fmt.Errorf("无法启用微信第三方登录，请先填入 ClientKey 以及 ClientSecret！")
 		}
 	case "EmailDomainRestrictionEnabled":
 		if value == "true" && len(common.EmailDomainWhitelist) == 0 {

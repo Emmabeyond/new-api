@@ -104,6 +104,9 @@ func main() {
 
 	go controller.AutomaticallyTestChannels()
 
+	// 启动微信第三方登录会话清理定时任务
+	controller.StartWeChatThirdPartySessionCleaner()
+
 	if common.IsMasterNode && constant.UpdateTask {
 		gopool.Go(func() {
 			controller.UpdateMidjourneyTaskBulk()

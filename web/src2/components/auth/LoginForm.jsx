@@ -53,6 +53,7 @@ import OIDCIcon from '../common/logo/OIDCIcon';
 import WeChatIcon from '../common/logo/WeChatIcon';
 import LinuxDoIcon from '../common/logo/LinuxDoIcon';
 import TwoFAVerification from './TwoFAVerification';
+import WeChatThirdPartyLoginModal from './WeChatThirdPartyLoginModal';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord }from 'react-icons/si';
 import { SliderCaptcha } from '../captcha';
@@ -73,8 +74,10 @@ const LoginForm = () => {
   const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
   const [showWeChatLoginModal, setShowWeChatLoginModal] = useState(false);
+  const [showWeChatThirdPartyModal, setShowWeChatThirdPartyModal] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [wechatLoading, setWechatLoading] = useState(false);
+  const [wechatThirdPartyLoading, setWechatThirdPartyLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [discordLoading, setDiscordLoading] = useState(false);
   const [oidcLoading, setOidcLoading] = useState(false);
@@ -163,6 +166,26 @@ const LoginForm = () => {
     setWechatLoading(true);
     setShowWeChatLoginModal(true);
     setWechatLoading(false);
+  };
+
+  // 微信第三方登录点击处理
+  const onWeChatThirdPartyLoginClicked = () => {
+    if ((hasUserAgreement || hasPrivacyPolicy) && !agreedToTerms) {
+      showInfo(t('请先阅读并同意用户协议和隐私政策'));
+      return;
+    }
+    setWechatThirdPartyLoading(true);
+    setShowWeChatThirdPartyModal(true);
+    setWechatThirdPartyLoading(false);
+  };
+
+  // 微信第三方登录成功处理
+  const onWeChatThirdPartyLoginSuccess = (data) => {
+    setShowWeChatThirdPartyModal(false);
+    userDispatch({ type: 'login', payload: data });
+    setUserData(data);
+    updateAPI();
+    navigate('/console');
   };
 
   const onSubmitWeChatVerificationCode = async () => {
@@ -510,6 +533,21 @@ const LoginForm = () => {
                   </Button>
                 )}
 
+                {status.wechat_third_party_login && (
+                  <Button
+                    theme='outline'
+                    className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
+                    type='tertiary'
+                    icon={
+                      <Icon svg={<WeChatIcon />} style={{ color: '#07C160' }} />
+                    }
+                    onClick={onWeChatThirdPartyLoginClicked}
+                    loading={wechatThirdPartyLoading}
+                  >
+                    <span className='ml-3'>{t('使用 微信扫码 登录')}</span>
+                  </Button>
+                )}
+
                 {status.github_oauth && (
                   <Button
                     theme='outline'
@@ -792,6 +830,7 @@ const LoginForm = () => {
                 status.discord_oauth ||
                 status.oidc_enabled ||
                 status.wechat_login ||
+                status.wechat_third_party_login ||
                 status.linuxdo_oauth ||
                 status.telegram_oauth) && (
                 <>
@@ -928,6 +967,7 @@ const LoginForm = () => {
           status.discord_oauth ||
           status.oidc_enabled ||
           status.wechat_login ||
+          status.wechat_third_party_login ||
           status.linuxdo_oauth ||
           status.telegram_oauth
         )
@@ -935,6 +975,14 @@ const LoginForm = () => {
           : renderOAuthOptions()}
         {renderWeChatLoginModal()}
         {render2FAModal()}
+        
+        {/* 微信第三方扫码登录弹窗 */}
+        <WeChatThirdPartyLoginModal
+          visible={showWeChatThirdPartyModal}
+          onCancel={() => setShowWeChatThirdPartyModal(false)}
+          onSuccess={onWeChatThirdPartyLoginSuccess}
+          action="login"
+        />
 
         {turnstileEnabled && (
           <div className='flex justify-center mt-6'>

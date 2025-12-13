@@ -98,6 +98,10 @@ const SystemSetting = () => {
     'linuxdo.client_id': '',
     'linuxdo.client_secret': '',
     'linuxdo.minimum_trust_level': '',
+    'wechat_third_party.enabled': '',
+    'wechat_third_party.client_key': '',
+    'wechat_third_party.client_secret': '',
+    'wechat_third_party.base_url': '',
     ServerAddress: '',
     // SSRF防护配置
     'fetch_setting.enable_ssrf_protection': true,
@@ -187,6 +191,7 @@ const SystemSetting = () => {
           case 'passkey.enabled':
           case 'passkey.allow_insecure_origin':
           case 'WorkerAllowHttpImageRequestEnabled':
+          case 'wechat_third_party.enabled':
             item.value = toBoolean(item.value);
             break;
           case 'passkey.origins':
@@ -633,6 +638,33 @@ const SystemSetting = () => {
     }
   };
 
+  const submitWeChatThirdParty = async () => {
+    const options = [];
+
+    if (originInputs['wechat_third_party.client_key'] !== inputs['wechat_third_party.client_key']) {
+      options.push({ key: 'wechat_third_party.client_key', value: inputs['wechat_third_party.client_key'] });
+    }
+    if (
+      originInputs['wechat_third_party.client_secret'] !== inputs['wechat_third_party.client_secret'] &&
+      inputs['wechat_third_party.client_secret'] !== ''
+    ) {
+      options.push({
+        key: 'wechat_third_party.client_secret',
+        value: inputs['wechat_third_party.client_secret'],
+      });
+    }
+    if (originInputs['wechat_third_party.base_url'] !== inputs['wechat_third_party.base_url']) {
+      options.push({
+        key: 'wechat_third_party.base_url',
+        value: removeTrailingSlash(inputs['wechat_third_party.base_url']),
+      });
+    }
+
+    if (options.length > 0) {
+      await updateOptions(options);
+    }
+  };
+
   const submitPasskeySettings = async () => {
     // 使用formApi直接获取当前表单值
     const formValues = formApiRef.current?.getValues() || {};
@@ -1066,6 +1098,15 @@ const SystemSetting = () => {
                         }
                       >
                         {t('允许通过微信登录 & 注册')}
+                      </Form.Checkbox>
+                      <Form.Checkbox
+                        field="['wechat_third_party.enabled']"
+                        noLabel
+                        onChange={(e) =>
+                          handleCheckboxChange('wechat_third_party.enabled', e)
+                        }
+                      >
+                        {t('允许通过微信扫码登录 & 注册（第三方平台）')}
                       </Form.Checkbox>
                       <Form.Checkbox
                         field='TelegramOAuthEnabled'
@@ -1560,6 +1601,60 @@ const SystemSetting = () => {
                   </Row>
                   <Button onClick={submitWeChat}>
                     {t('保存 WeChat Server 设置')}
+                  </Button>
+                </Form.Section>
+              </Card>
+
+              <Card>
+                <Form.Section text={t('配置微信第三方登录')}>
+                  <Text>{t('用以支持通过第三方微信认证平台进行扫码登录注册')}</Text>
+                  <Banner
+                    type='info'
+                    description={
+                      <>
+                        {t('请在微信认证平台配置允许的域名为：')}{' '}
+                        {inputs.ServerAddress ? (
+                          <Text copyable strong>
+                            {inputs.ServerAddress}
+                          </Text>
+                        ) : (
+                          <Text type='warning' strong>
+                            {t('（请先配置服务器地址）')}
+                          </Text>
+                        )}
+                      </>
+                    }
+                    style={{ marginBottom: 20, marginTop: 16 }}
+                  />
+                  <Row
+                    gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
+                  >
+                    <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                      <Form.Input
+                        field="['wechat_third_party.client_key']"
+                        label={t('Client Key')}
+                        placeholder={t('格式：wac_xxxxxxxxxxxx')}
+                      />
+                    </Col>
+                    <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                      <Form.Input
+                        field="['wechat_third_party.client_secret']"
+                        label={t('Client Secret')}
+                        type='password'
+                        placeholder={t('敏感信息不会发送到前端显示')}
+                      />
+                    </Col>
+                    <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+                      <Form.Input
+                        field="['wechat_third_party.base_url']"
+                        label={t('平台地址')}
+                        placeholder='https://www.abu117.cn'
+                        extraText={t('默认为 https://www.abu117.cn')}
+                      />
+                    </Col>
+                  </Row>
+                  <Button onClick={submitWeChatThirdParty}>
+                    {t('保存微信第三方登录设置')}
                   </Button>
                 </Form.Section>
               </Card>
