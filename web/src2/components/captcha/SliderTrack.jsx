@@ -24,18 +24,22 @@ import './captcha.css';
 /**
  * SliderTrack 滑块轨道组件
  * @param {Object} props
- * @param {Function} props.onDrag - 拖动回调
- * @param {Function} props.onDragEnd - 拖动结束回调
+ * @param {Function} props.onDrag - 拖动回调，返回显示坐标
+ * @param {Function} props.onDragEnd - 拖动结束回调，返回显示坐标
  * @param {boolean} props.disabled - 是否禁用
  * @param {string} props.status - 状态: idle, dragging, success, error
- * @param {number} props.maxX - 最大 X 位置
+ * @param {number} props.maxX - 原始坐标系的最大 X 位置
+ * @param {number} props.scaleRatio - 缩放比例
+ * @param {number} props.displayedWidth - 显示宽度
  */
 const SliderTrack = ({
   onDrag,
   onDragEnd,
   disabled = false,
   status = 'idle',
-  maxX = 250
+  maxX = 250,
+  scaleRatio = 1,
+  displayedWidth = 300
 }) => {
   const trackRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -43,8 +47,8 @@ const SliderTrack = ({
   const startXRef = useRef(0);
   const startPosRef = useRef(0);
 
-  // 计算位置
-  const calculatePosition = useCallback((clientX) => {
+  // 计算显示坐标位置
+  const calculateDisplayPosition = useCallback((clientX) => {
     if (!trackRef.current) return 0;
     
     const rect = trackRef.current.getBoundingClientRect();
@@ -54,10 +58,11 @@ const SliderTrack = ({
     let newX = clientX - rect.left - handleWidth / 2;
     newX = Math.max(0, Math.min(newX, trackWidth));
     
-    // 映射到实际图片宽度
+    // 映射到显示坐标系（基于缩放后的图片宽度）
     const ratio = newX / trackWidth;
-    return Math.round(ratio * maxX);
-  }, [maxX]);
+    const displayMaxX = maxX * scaleRatio;
+    return Math.round(ratio * displayMaxX);
+  }, [maxX, scaleRatio]);
 
   // 鼠标按下
   const handleMouseDown = useCallback((e) => {
@@ -73,19 +78,19 @@ const SliderTrack = ({
   const handleMouseMove = useCallback((e) => {
     if (!isDragging || disabled) return;
     
-    const newPos = calculatePosition(e.clientX);
+    const newPos = calculateDisplayPosition(e.clientX);
     setPosition(newPos);
     onDrag(newPos);
-  }, [isDragging, disabled, calculatePosition, onDrag]);
+  }, [isDragging, disabled, calculateDisplayPosition, onDrag]);
 
   // 鼠标释放
   const handleMouseUp = useCallback((e) => {
     if (!isDragging) return;
     
     setIsDragging(false);
-    const finalPos = calculatePosition(e.clientX);
+    const finalPos = calculateDisplayPosition(e.clientX);
     onDragEnd(finalPos);
-  }, [isDragging, calculatePosition, onDragEnd]);
+  }, [isDragging, calculateDisplayPosition, onDragEnd]);
 
   // 触摸开始
   const handleTouchStart = useCallback((e) => {
@@ -102,10 +107,10 @@ const SliderTrack = ({
     if (!isDragging || disabled) return;
     
     const touch = e.touches[0];
-    const newPos = calculatePosition(touch.clientX);
+    const newPos = calculateDisplayPosition(touch.clientX);
     setPosition(newPos);
     onDrag(newPos);
-  }, [isDragging, disabled, calculatePosition, onDrag]);
+  }, [isDragging, disabled, calculateDisplayPosition, onDrag]);
 
   // 触摸结束
   const handleTouchEnd = useCallback((e) => {
@@ -143,7 +148,8 @@ const SliderTrack = ({
   const getHandlePosition = () => {
     if (!trackRef.current) return 0;
     const trackWidth = trackRef.current.offsetWidth - 44;
-    return (position / maxX) * trackWidth;
+    const displayMaxX = maxX * scaleRatio;
+    return displayMaxX > 0 ? (position / displayMaxX) * trackWidth : 0;
   };
 
   return (

@@ -92,8 +92,9 @@ Slider Captcha Styles
 /* ==================== 图片区域样式 ==================== */
 .captcha-image-container {
   position: relative;
-  width: 300px;
-  height: 150px;
+  width: 100%;
+  max-width: 300px;
+  /* 高度由 JS 动态设置，保持 2:1 宽高比 */
   margin: 0 auto;
   border-radius: 8px;
   overflow: hidden;
@@ -135,8 +136,10 @@ Slider Captcha Styles
 
 .captcha-puzzle-piece {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  /* 尺寸由 JS 动态设置，基于 scaleRatio */
+  /* width 和 height 通过 inline style 设置 */
+  min-width: 44px;
+  min-height: 44px;
   transition: none;
   /* 3D 立体阴影效果 */
   filter: 
@@ -146,6 +149,8 @@ Slider Captcha Styles
   z-index: 10;
   /* 轻微的 3D 变换效果 */
   transform-style: preserve-3d;
+  /* 确保图片缩放时保持清晰 */
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .captcha-puzzle-piece.dragging {
@@ -356,19 +361,16 @@ Slider Captcha Styles
 @media (max-width: 480px) {
   .captcha-image-container {
     width: 100%;
-    height: auto;
-    aspect-ratio: 2 / 1;
+    /* 高度由 JS 动态计算，保持 2:1 宽高比 */
   }
   
-  /* 确保拼图块触摸目标至少 44x44px (Requirements 9.3) */
+  /* 拼图块尺寸由 JS 动态设置，但确保最小触摸目标 44x44px */
   .captcha-puzzle-piece {
-    width: 44px;
-    height: 44px;
     min-width: 44px;
     min-height: 44px;
   }
   
-  /* 确保滑块手柄触摸目标至少 44x44px (Requirements 9.3) */
+  /* 确保滑块手柄触摸目标至少 44x44px (Requirements 6.1) */
   .slider-handle {
     width: 48px;
     height: 48px;

@@ -17,11 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Spin, Button, Toast } from '@douyinfe/semi-ui';
 import { IconRefresh, IconClose } from '@douyinfe/semi-icons';
 import SliderTrack from './SliderTrack';
+import useResponsiveCaptcha, { ORIGINAL_PUZZLE_SIZE } from './useResponsiveCaptcha';
 import './captcha.css';
 
 /**
@@ -45,33 +46,62 @@ const CaptchaDialog = ({
   onRefresh
 }) => {
   const { t } = useTranslation();
-  const [puzzleX, setPuzzleX] = useState(0);
+  const [puzzleX, setPuzzleX] = useState(0); // 显示坐标
   const [status, setStatus] = useState('idle'); // idle, dragging, success, error
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [bgImageLoaded, setBgImageLoaded] = useState(false);
+  const [puzzleImageLoaded, setPuzzleImageLoaded] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  
+  // 图片容器 ref
+  const imageContainerRef = useRef(null);
+  
+  // 响应式缩放 Hook
+  const {
+    scaleRatio,
+    displayedWidth,
+    displayedHeight,
+    puzzleDisplaySize,
+    toDisplayCoord,
+    toOriginalCoord
+  } = useResponsiveCaptcha(imageContainerRef);
+  
+  // 计算是否两张图片都已加载
+  const imageLoaded = bgImageLoaded && puzzleImageLoaded;
 
   // 重置状态
   useEffect(() => {
     if (open) {
       setPuzzleX(0);
       setStatus('idle');
-      setImageLoaded(false);
+      setBgImageLoaded(false);
+      setPuzzleImageLoaded(false);
     }
   }, [open, challenge?.session_id]);
 
-  // 处理拖动
-  const handleDrag = useCallback((x) => {
-    setPuzzleX(x);
+  // 处理拖动 - x 是显示坐标
+  const handleDrag = useCallback((displayX) => {
+    setPuzzleX(displayX);
     setStatus('dragging');
   }, []);
 
-  // 处理拖动结束
-  const handleDragEnd = useCallback(async (x) => {
+  // 处理拖动结束 - 转换为原始坐标后发送到后端
+  const handleDragEnd = useCallback(async (displayX) => {
     if (!challenge || verifying) return;
+
+    // 将显示坐标转换为原始坐标
+    const originalX = toOriginalCoord(displayX);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[CaptchaDialog] Verify coordinates:', {
+        displayX,
+        originalX,
+        scaleRatio
+      });
+    }
 
     setVerifying(true);
     try {
-      const result = await onVerify(x);
+      const result = await onVerify(originalX);
       
       if (result.success) {
         setStatus('success');
@@ -95,18 +125,24 @@ const CaptchaDialog = ({
     } finally {
       setVerifying(false);
     }
-  }, [challenge, verifying, onVerify, t]);
+  }, [challenge, verifying, onVerify, toOriginalCoord, scaleRatio, t]);
 
-  // 处理图片加载完成
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
+  // 处理背景图加载完成
+  const handleBgImageLoad = useCallback(() => {
+    setBgImageLoaded(true);
+  }, []);
+
+  // 处理拼图块加载完成
+  const handlePuzzleImageLoad = useCallback(() => {
+    setPuzzleImageLoaded(true);
   }, []);
 
   // 处理刷新
   const handleRefresh = useCallback(() => {
     setPuzzleX(0);
     setStatus('idle');
-    setImageLoaded(false);
+    setBgImageLoaded(false);
+    setPuzzleImageLoaded(false);
     onRefresh();
   }, [onRefresh]);
 
@@ -136,7 +172,15 @@ const CaptchaDialog = ({
         </div>
 
         {/* 图片区域 */}
-        <div className="captcha-image-container">
+        <div 
+          ref={imageContainerRef}
+          className="captcha-image-container"
+          style={{
+            width: '100%',
+            height: displayedHeight,
+            maxWidth: 300
+          }}
+        >
           {(loading || !imageLoaded) && (
             <div className="captcha-loading-skeleton">
               <Spin />
@@ -159,20 +203,37 @@ const CaptchaDialog = ({
                 src={challenge.bg_image}
                 alt="captcha background"
                 className="captcha-bg-image"
-                onLoad={handleImageLoad}
-                style={{ display: imageLoaded ? 'block' : 'none' }}
+                onLoad={handleBgImageLoad}
+                style={{ 
+                  display: bgImageLoaded ? 'block' : 'none',
+                  width: '100%',
+                  height: '100%'
+                }}
               />
               
-              {/* 拼图块 */}
+              {/* 拼图块 - 使用缩放后的坐标和尺寸 */}
               {imageLoaded && (
                 <img
                   src={challenge.puzzle_image}
                   alt="puzzle piece"
                   className={`captcha-puzzle-piece ${status} ${status === 'idle' ? 'idle' : ''}`}
+                  onLoad={handlePuzzleImageLoad}
                   style={{
                     left: puzzleX,
-                    top: challenge.puzzle_y
+                    top: toDisplayCoord(challenge.puzzle_y),
+                    width: puzzleDisplaySize,
+                    height: puzzleDisplaySize
                   }}
+                />
+              )}
+              
+              {/* 隐藏的拼图块用于预加载 */}
+              {!puzzleImageLoaded && (
+                <img
+                  src={challenge.puzzle_image}
+                  alt=""
+                  onLoad={handlePuzzleImageLoad}
+                  style={{ display: 'none' }}
                 />
               )}
             </>
@@ -196,7 +257,9 @@ const CaptchaDialog = ({
           onDragEnd={handleDragEnd}
           disabled={loading || !imageLoaded || verifying || status === 'success'}
           status={status}
-          maxX={challenge ? challenge.width - 50 : 250}
+          maxX={challenge ? challenge.width - ORIGINAL_PUZZLE_SIZE : 250}
+          scaleRatio={scaleRatio}
+          displayedWidth={displayedWidth}
         />
       </div>
     </Modal>

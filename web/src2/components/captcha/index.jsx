@@ -21,3 +21,4 @@ export { default as SliderCaptcha } from './SliderCaptcha';
 export { default as CaptchaDialog } from './CaptchaDialog';
 export { default as SliderTrack } from './SliderTrack';
 export { default as useCaptcha } from './useCaptcha';
+export { default as useResponsiveCaptcha, ORIGINAL_IMAGE_WIDTH, ORIGINAL_IMAGE_HEIGHT, ORIGINAL_PUZZLE_SIZE, MIN_TOUCH_TARGET_SIZE } from './useResponsiveCaptcha';
