@@ -31,7 +31,7 @@ services:
       # HTTP 连接池优化 HTTP Connection Pool
       - RELAY_MAX_IDLE_CONNS=1000  # 最大空闲连接数
       - RELAY_MAX_IDLE_CONNS_PER_HOST=200  # 每主机最大空闲连接
-      - RELAY_TIMEOUT=120  # 请求超时（秒），0=无限制
+      - RELAY_TIMEOUT=360  # 请求超时（秒），0=无限制，增加到5分钟以支持长时间思考的模型
       - STREAMING_TIMEOUT=600  # 流式响应超时（秒）
       # 数据库连接池优化 Database Connection Pool
       - SQL_MAX_IDLE_CONNS=100  # 数据库最大空闲连接

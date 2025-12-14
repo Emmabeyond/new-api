@@ -39,7 +39,7 @@ func InitHttpClient() {
 		MaxIdleConnsPerHost:   common.RelayMaxIdleConnsPerHost,
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 30 * time.Second,
+		ResponseHeaderTimeout: 120 * time.Second, // 增加到120秒以支持长时间思考的模型
 		ExpectContinueTimeout: 1 * time.Second,
 		ForceAttemptHTTP2:     true,
 	}
@@ -100,7 +100,7 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 				MaxIdleConnsPerHost:   common.RelayMaxIdleConnsPerHost,
 				IdleConnTimeout:       90 * time.Second,
 				TLSHandshakeTimeout:   10 * time.Second,
-				ResponseHeaderTimeout: 30 * time.Second,
+				ResponseHeaderTimeout: 120 * time.Second, // 增加到120秒以支持长时间思考的模型
 				ExpectContinueTimeout: 1 * time.Second,
 				ForceAttemptHTTP2:     true,
 				Proxy:                 http.ProxyURL(parsedURL),
@@ -154,7 +154,7 @@ func NewProxyHttpClient(proxyURL string) (*http.Client, error) {
 				MaxIdleConnsPerHost:   common.RelayMaxIdleConnsPerHost,
 				IdleConnTimeout:       90 * time.Second,
 				TLSHandshakeTimeout:   10 * time.Second,
-				ResponseHeaderTimeout: 30 * time.Second,
+				ResponseHeaderTimeout: 120 * time.Second, // 增加到120秒以支持长时间思考的模型
 				ExpectContinueTimeout: 1 * time.Second,
 				ForceAttemptHTTP2:     true,
 				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
