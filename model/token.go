@@ -143,12 +143,26 @@ func GetTokenById(id int) (*Token, error) {
 }
 
 func GetTokenByKey(key string, fromDB bool) (token *Token, err error) {
+	// 优先使用新的多级缓存服务
+	if !fromDB && tokenCacheServiceInstance != nil {
+		token, err := tokenCacheServiceInstance.GetByKey(key)
+		if err == nil {
+			return token, nil
+		}
+		// 如果缓存服务返回错误，降级到原有逻辑
+	}
+
+	// 原有逻辑作为降级方案
 	defer func() {
 		// Update Redis cache asynchronously on successful DB read
 		if shouldUpdateRedis(fromDB, err) && token != nil {
 			gopool.Go(func() {
 				if err := cacheSetToken(*token); err != nil {
 					common.SysLog("failed to update user status cache: " + err.Error())
+				}
+				// 同时更新新缓存服务
+				if tokenCacheServiceInstance != nil {
+					tokenCacheServiceInstance.Set(token)
 				}
 			})
 		}
@@ -183,6 +197,10 @@ func (token *Token) Update() (err error) {
 				}
 			})
 		}
+		// 使新缓存服务的缓存失效
+		if tokenCacheServiceInstance != nil && token.Key != "" {
+			tokenCacheServiceInstance.Invalidate(token.Key)
+		}
 	}()
 	err = DB.Model(token).Select("name", "status", "expired_time", "remain_quota", "unlimited_quota",
 		"model_limits_enabled", "model_limits", "allow_ips", "group").Updates(token).Error
@@ -199,6 +217,10 @@ func (token *Token) SelectUpdate() (err error) {
 				}
 			})
 		}
+		// 使新缓存服务的缓存失效
+		if tokenCacheServiceInstance != nil && token.Key != "" {
+			tokenCacheServiceInstance.Invalidate(token.Key)
+		}
 	}()
 	// This can update zero values
 	return DB.Model(token).Select("accessed_time", "status").Updates(token).Error
@@ -213,6 +235,10 @@ func (token *Token) Delete() (err error) {
 					common.SysLog("failed to delete token cache: " + err.Error())
 				}
 			})
+		}
+		// 使新缓存服务的缓存失效
+		if tokenCacheServiceInstance != nil && token.Key != "" {
+			tokenCacheServiceInstance.Invalidate(token.Key)
 		}
 	}()
 	err = DB.Delete(token).Error
@@ -266,6 +292,10 @@ func IncreaseTokenQuota(id int, key string, quota int) (err error) {
 	if quota < 0 {
 		return errors.New("quota 不能为负数！")
 	}
+	// 使新缓存服务的缓存失效
+	if tokenCacheServiceInstance != nil && key != "" {
+		tokenCacheServiceInstance.Invalidate(key)
+	}
 	if common.RedisEnabled {
 		gopool.Go(func() {
 			err := cacheIncrTokenQuota(key, int64(quota))
@@ -295,6 +325,10 @@ func increaseTokenQuota(id int, quota int) (err error) {
 func DecreaseTokenQuota(id int, key string, quota int) (err error) {
 	if quota < 0 {
 		return errors.New("quota 不能为负数！")
+	}
+	// 使新缓存服务的缓存失效
+	if tokenCacheServiceInstance != nil && key != "" {
+		tokenCacheServiceInstance.Invalidate(key)
 	}
 	if common.RedisEnabled {
 		gopool.Go(func() {

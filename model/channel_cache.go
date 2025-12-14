@@ -18,6 +18,15 @@ var group2model2channels map[string]map[string][]int // enabled channel
 var channelsIDM map[int]*Channel                     // all channels include disabled
 var channelSyncLock sync.RWMutex
 
+// optimizedSelectorRebuildFunc 优化选择器重建函数
+// 由 service 包注入，避免循环依赖
+var optimizedSelectorRebuildFunc func(channels []*Channel, abilities []*Ability)
+
+// SetOptimizedSelectorRebuildFunc 设置优化选择器重建函数
+func SetOptimizedSelectorRebuildFunc(f func(channels []*Channel, abilities []*Ability)) {
+	optimizedSelectorRebuildFunc = f
+}
+
 func InitChannelCache() {
 	if !common.MemoryCacheEnabled {
 		return
@@ -82,6 +91,12 @@ func InitChannelCache() {
 	}
 	channelsIDM = newChannelId2channel
 	channelSyncLock.Unlock()
+
+	// 重建优化选择器数据结构
+	if optimizedSelectorRebuildFunc != nil {
+		optimizedSelectorRebuildFunc(channels, abilities)
+	}
+
 	common.SysLog("channels synced from database")
 }
 

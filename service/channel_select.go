@@ -11,6 +11,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// useOptimizedSelector 是否使用优化选择器
+// 可通过环境变量 USE_OPTIMIZED_CHANNEL_SELECTOR 控制
+var useOptimizedSelector = true
+
+func init() {
+	// 注册优化选择器重建函数到 model 包
+	model.SetOptimizedSelectorRebuildFunc(func(channels []*model.Channel, abilities []*model.Ability) {
+		GetOptimizedSelector().Rebuild(channels, abilities)
+	})
+}
+
+// getChannelWithOptimizedSelector 使用优化选择器获取渠道
+func getChannelWithOptimizedSelector(group string, modelName string, retry int) (*model.Channel, error) {
+	selector := GetOptimizedSelector()
+	if !selector.IsInitialized() {
+		// 优化选择器未初始化，降级到原有逻辑
+		return model.GetRandomSatisfiedChannel(group, modelName, retry)
+	}
+	return selector.Select(group, modelName, retry)
+}
+
 func CacheGetRandomSatisfiedChannel(c *gin.Context, group string, modelName string, retry int) (*model.Channel, string, error) {
 	var channel *model.Channel
 	var err error
@@ -22,7 +43,12 @@ func CacheGetRandomSatisfiedChannel(c *gin.Context, group string, modelName stri
 		}
 		for _, autoGroup := range GetUserAutoGroup(userGroup) {
 			logger.LogDebug(c, "Auto selecting group:", autoGroup)
-			channel, _ = model.GetRandomSatisfiedChannel(autoGroup, modelName, retry)
+			// 优先使用优化选择器
+			if useOptimizedSelector {
+				channel, _ = getChannelWithOptimizedSelector(autoGroup, modelName, retry)
+			} else {
+				channel, _ = model.GetRandomSatisfiedChannel(autoGroup, modelName, retry)
+			}
 			if channel == nil {
 				continue
 			} else {
@@ -33,7 +59,12 @@ func CacheGetRandomSatisfiedChannel(c *gin.Context, group string, modelName stri
 			}
 		}
 	} else {
-		channel, err = model.GetRandomSatisfiedChannel(group, modelName, retry)
+		// 优先使用优化选择器
+		if useOptimizedSelector {
+			channel, err = getChannelWithOptimizedSelector(group, modelName, retry)
+		} else {
+			channel, err = model.GetRandomSatisfiedChannel(group, modelName, retry)
+		}
 		if err != nil {
 			return nil, group, err
 		}

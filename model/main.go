@@ -204,7 +204,14 @@ func InitDB() (err error) {
 		}
 		common.SysLog("database migration started")
 		err = migrateDB()
-		return err
+		if err != nil {
+			return err
+		}
+
+		// 初始化 Token 多级缓存服务
+		InitTokenCacheService()
+
+		return nil
 	} else {
 		common.FatalLog(err)
 	}
