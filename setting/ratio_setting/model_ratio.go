@@ -446,6 +446,41 @@ func GetModelRatio(name string) (float64, bool, string) {
 	return ratio, true, name
 }
 
+// GetModelRatioWithFallback 返回模型倍率，支持分层兜底策略
+// 查找优先级：精确匹配 → 通配符匹配 → 全局默认值
+// 返回值：ratio, success, matchedName, fallbackUsed
+// - ratio: 模型倍率
+// - success: 是否成功获取倍率（考虑兜底配置）
+// - matchedName: 匹配到的模型名或通配符模式
+// - fallbackUsed: 是否使用了兜底倍率
+func GetModelRatioWithFallback(name string) (float64, bool, string, bool) {
+	modelRatioMapMutex.RLock()
+	defer modelRatioMapMutex.RUnlock()
+
+	name = FormatMatchingModelName(name)
+
+	// Step 1: 精确匹配
+	if ratio, ok := modelRatioMap[name]; ok {
+		return ratio, true, name, false
+	}
+
+	// Step 2: 通配符匹配
+	if pattern, ratio, found := MatchWildcard(name, modelRatioMap); found {
+		return ratio, true, pattern, false
+	}
+
+	// Step 3: 全局默认值
+	defaultRatio := GetEffectiveDefaultRatio()
+
+	// 判断是否允许使用兜底倍率
+	if IsFallbackRatioEnabled() || operation_setting.SelfUseModeEnabled {
+		return defaultRatio, true, name, true
+	}
+
+	// 不允许兜底，返回失败
+	return defaultRatio, false, name, true
+}
+
 func DefaultModelRatio2JSONString() string {
 	jsonBytes, err := common.Marshal(defaultModelRatio)
 	if err != nil {

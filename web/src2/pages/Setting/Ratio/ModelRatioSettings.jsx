@@ -48,6 +48,8 @@ export default function ModelRatioSettings(props) {
     AudioRatio: '',
     AudioCompletionRatio: '',
     ExposeRatioEnabled: false,
+    'ratio_fallback_setting.enable_fallback_ratio': false,
+    'ratio_fallback_setting.default_ratio': '37.5',
   });
   const refForm = useRef();
   const [inputsRow, setInputsRow] = useState(inputs);
@@ -123,8 +125,18 @@ export default function ModelRatioSettings(props) {
 
   useEffect(() => {
     const currentInputs = {};
-    const booleanFields = ['ExposeRatioEnabled'];
+    const booleanFields = ['ExposeRatioEnabled', 'ratio_fallback_setting.enable_fallback_ratio'];
+    const defaultValues = {
+      'ratio_fallback_setting.enable_fallback_ratio': false,
+      'ratio_fallback_setting.default_ratio': '37.5',
+    };
     
+    // 先设置默认值
+    for (let key in defaultValues) {
+      currentInputs[key] = defaultValues[key];
+    }
+    
+    // 再从 props.options 中读取已有的值
     for (let key in props.options) {
       if (Object.keys(inputs).includes(key)) {
         if (booleanFields.includes(key)) {
@@ -296,6 +308,32 @@ export default function ModelRatioSettings(props) {
               ]}
               onChange={(value) =>
                 setInputs({ ...inputs, AudioCompletionRatio: value })
+              }
+            />
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={16}>
+            <Form.Switch
+              label={t('启用兜底倍率')}
+              extraText={t('启用后，未配置倍率的模型将使用默认倍率，而不是报错')}
+              field={'ratio_fallback_setting.enable_fallback_ratio'}
+              onChange={(value) =>
+                setInputs({ ...inputs, 'ratio_fallback_setting.enable_fallback_ratio': value })
+              }
+            />
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col xs={24} sm={8}>
+            <Form.InputNumber
+              label={t('默认兜底倍率')}
+              extraText={t('未配置倍率的模型将使用此倍率，默认为 37.5')}
+              field={'ratio_fallback_setting.default_ratio'}
+              min={0}
+              step={0.1}
+              onChange={(value) =>
+                setInputs({ ...inputs, 'ratio_fallback_setting.default_ratio': String(value) })
               }
             />
           </Col>

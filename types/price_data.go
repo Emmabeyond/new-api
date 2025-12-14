@@ -24,6 +24,7 @@ type PriceData struct {
 	UsePrice             bool
 	QuotaToPreConsume    int // 预消耗额度
 	GroupRatioInfo       GroupRatioInfo
+	FallbackUsed         bool // 是否使用了兜底倍率
 }
 
 type PerCallPriceData struct {
