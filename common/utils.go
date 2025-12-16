@@ -228,6 +228,13 @@ func GetUUID() string {
 	return code
 }
 
+// GenerateStandardRequestId 生成标准化的请求ID
+// 使用UUID格式，不包含时间戳或部署信息
+// 防止通过请求ID格式探测代理层级
+func GenerateStandardRequestId() string {
+	return "req-" + GetUUID()[:24]
+}
+
 const keyChars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func GenerateRandomCharsKey(length int) (string, error) {

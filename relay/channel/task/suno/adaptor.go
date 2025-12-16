@@ -109,9 +109,8 @@ func (a *TaskAdaptor) DoResponse(c *gin.Context, resp *http.Response, info *rela
 		return
 	}
 
-	for k, v := range resp.Header {
-		c.Writer.Header().Set(k, v[0])
-	}
+	// 使用安全的响应头复制，过滤敏感头信息
+	service.SafeCopyResponseHeaders(c, resp)
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(resp.StatusCode)
 

@@ -1,0 +1,12 @@
+2025-12-16 07:02:44.742 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:02:44.742 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 07:02:44.744 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 07:03:32.548 [eventLoopGroupProxy-4-8] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:03:32.548 [eventLoopGroupProxy-4-8] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 07:03:32.556 [eventLoopGroupProxy-4-8] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 07:04:15.274 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:04:15.274 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 07:04:15.275 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 18:49:15.718 [eventLoopGroupProxy-4-4] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 18:49:15.718 [eventLoopGroupProxy-4-4] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 18:49:15.724 [eventLoopGroupProxy-4-4] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话

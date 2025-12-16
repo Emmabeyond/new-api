@@ -1,0 +1,430 @@
+2025-12-16 07:02:43.872 [DefaultDispatcher-worker-46] INFO  STDOUT - 📝 [StandaloneLogging] WebSocket log: /Users/abu/IdeaProjects/new-api/.log/ws.log (async)
+2025-12-16 07:02:43.872 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 📝 Logging configured to: /Users/abu/IdeaProjects/new-api/.log/
+2025-12-16 07:02:43.872 [DefaultDispatcher-worker-46] INFO  STDOUT - 📝 Logging configured.
+2025-12-16 07:02:43.872 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 🚀 Initializing HTTP Server Project Service
+2025-12-16 07:02:43.872 [DefaultDispatcher-worker-46] INFO  STDOUT -    - Server logs (all): /Users/abu/IdeaProjects/new-api/.log/server.log
+2025-12-16 07:02:43.872 [DefaultDispatcher-worker-46] INFO  STDOUT -    - SDK logs: /Users/abu/IdeaProjects/new-api/.log/sdk.log
+2025-12-16 07:02:43.872 [DefaultDispatcher-worker-46] INFO  STDOUT -    - WebSocket logs: /Users/abu/IdeaProjects/new-api/.log/ws.log
+2025-12-16 07:02:43.872 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 📦 Extracting frontend resources to: /var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/claude-frontend-12775397031307260766
+2025-12-16 07:02:43.872 [DefaultDispatcher-worker-26] INFO  STDOUT - Do not use URL connection as JarURLConnection
+2025-12-16 07:02:44.089 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - ✅ Frontend extracted successfully
+2025-12-16 07:02:44.089 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 📂 Frontend directory: /var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/claude-frontend-12775397031307260766
+2025-12-16 07:02:44.092 [DefaultDispatcher-worker-26] INFO  #.a.plugin.theme.IdeaThemeAdapter - 已注册 IDEA 主题变化监听器
+2025-12-16 07:02:44.120 [AWT-EventQueue-0] INFO  io.ktor.server.Application - Autoreload is disabled because the development mode is off.
+2025-12-16 07:02:44.237 [AWT-EventQueue-0] INFO  io.ktor.server.Application - Application started in 0.124 seconds.
+2025-12-16 07:02:44.283 [AWT-EventQueue-0] INFO  com.asakii.server.HttpApiServer - 🚀 Ktor server started at: http://127.0.0.1:58974 (configured: 0, actual: 58974)
+2025-12-16 07:02:44.283 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 🚀 HTTP Server started at: http://127.0.0.1:58974
+2025-12-16 07:02:44.283 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - ✅ HTTP Server Project Service initialized successfully
+2025-12-16 07:02:44.283 [DefaultDispatcher-worker-32] INFO  io.ktor.server.Application - Responding at http://127.0.0.1:58974
+2025-12-16 07:02:44.289 [DefaultDispatcher-worker-32] INFO  #.a.p.ui.NativeToolWindowFactory - 🔗 Loading URL with initial theme: http://127.0.0.1:58974?ide=true&initialTheme=%7B%22background%22%3A%22%23191a1c%22%2C%22foreground%2...
+2025-12-16 07:02:44.315 [DefaultDispatcher-worker-32] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Loading global entities com.intellij.platform.workspace.jps.entities.SdkEntity from files
+2025-12-16 07:02:44.319 [DefaultDispatcher-worker-62] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Loading global entities com.intellij.platform.workspace.jps.entities.LibraryEntity from files
+2025-12-16 07:02:44.325 [DefaultDispatcher-worker-47] INFO  #.i.w.ide.impl.EntitiesOrphanageImpl - Update orphanage. 0 modules added
+2025-12-16 07:02:44.327 [DefaultDispatcher-worker-47] INFO  #.i.w.ide.impl.WorkspaceModelImpl - Project model updated to version 3 in 4 ms: Sync global entities with project: new-api
+2025-12-16 07:02:44.327 [DefaultDispatcher-worker-47] INFO  #.i.w.ide.impl.GlobalWorkspaceModel - Global model updated to version 2 in 7 ms: Sync global entities with state
+2025-12-16 07:02:44.673 [eventLoopGroupProxy-3-3] INFO  com.asakii.server.HttpApiServer - 🔌 [JetBrains RSocket] 客户端连接: d5757921-7c1c-49b8-9ed5-0c69d7fab0fa
+2025-12-16 07:02:44.673 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🔗 [JetBrains RSocket] 客户端已连接: d5757921-7c1c-49b8-9ed5-0c69d7fab0fa
+2025-12-16 07:02:44.673 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🔌 [JetBrains RSocket] 创建请求处理器
+2025-12-16 07:02:44.725 [DefaultDispatcher-worker-46] INFO  #.i.o.p.InitialVfsRefreshService - def5600: initial VFS refresh finished in 1512 ms
+2025-12-16 07:02:44.735 [eventLoopGroupProxy-4-6] INFO  com.asakii.server.HttpApiServer - 📋 [HTTP] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:02:44.740 [eventLoopGroupProxy-3-5] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.reportSessionState
+2025-12-16 07:02:44.740 [eventLoopGroupProxy-3-1] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.getLocale
+2025-12-16 07:02:44.740 [eventLoopGroupProxy-3-6] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.reportSessionState
+2025-12-16 07:02:44.741 [eventLoopGroupProxy-3-1] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🌐 [JetBrains] getLocale: en-
+2025-12-16 07:02:44.742 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:02:44.742 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 07:02:44.744 [eventLoopGroupProxy-4-6] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 项目目录不存在: /Users/abu/.claude/projects/-Users-abu-IdeaProjects-new-api
+2025-12-16 07:02:44.744 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 07:02:44.756 [eventLoopGroupProxy-3-5] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📊 [JetBrains] reportSessionState: 0 sessions
+2025-12-16 07:02:44.757 [eventLoopGroupProxy-3-5] INFO  c.a.plugin.bridge.JetBrainsApiImpl - [JetBrainsApi.session] Received state: 0 sessions, active=null
+2025-12-16 07:02:44.759 [eventLoopGroupProxy-3-6] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📊 [JetBrains] reportSessionState: 1 sessions
+2025-12-16 07:02:44.759 [eventLoopGroupProxy-3-6] INFO  c.a.plugin.bridge.JetBrainsApiImpl - [JetBrainsApi.session] Received state: 1 sessions, active=tab-1765839764726-qe1if7
+2025-12-16 07:02:44.772 [eventLoopGroupProxy-4-6] INFO  com.asakii.server.HttpApiServer - 📥 Received request: {"action":"ide.getProjectPath","data":{}}
+2025-12-16 07:02:45.067 [DefaultDispatcher-worker-66] INFO  #.i.l.t.t.TypeScriptCompilerEvaluationFacadeImpl - 'Use types from server' option for VueClassicTypeScriptService state: false
+2025-12-16 07:02:45.067 [DefaultDispatcher-worker-66] INFO  #.i.l.t.t.TypeScriptCompilerEvaluationFacadeImpl - 'Use types from server' option for VuePluginTypeScriptService state: false
+2025-12-16 07:02:45.073 [DefaultDispatcher-worker-52] INFO  #.i.l.t.t.TypeScriptCompilerEvaluationFacadeImpl - 'Use types from server' option for Angular2TypeScriptService state: false
+2025-12-16 07:02:45.073 [DefaultDispatcher-worker-52] INFO  #.i.l.t.t.TypeScriptCompilerEvaluationFacadeImpl - 'Use types from server' option for TypeScriptServerServiceImpl state: false
+2025-12-16 07:02:45.548 [DefaultDispatcher-worker-4] INFO  #.j.j.b.index.CompilerReferenceIndex - backward reference index version doesn't exist
+2025-12-16 07:02:45.548 [DefaultDispatcher-worker-4] INFO  #.i.c.b.IsUpToDateCheckStartupActivity - suitable consumer is not found
+2025-12-16 07:02:45.548 [DefaultDispatcher-worker-40] INFO  #.i.w.ide.impl.EntitiesOrphanageImpl - Update orphanage. 0 modules added
+2025-12-16 07:02:45.548 [DefaultDispatcher-worker-40] INFO  #.i.w.ide.impl.WorkspaceModelImpl - Project model updated to version 4 in 0 ms: Add project root /Users/abu/IdeaProjects/new-api to project new-api
+2025-12-16 07:02:45.592 [DefaultDispatcher-worker-8] WARN  #.i.g.c.license.GrazieLoginManager - Need explicit activation dialog agreement, so skipping cloud login
+2025-12-16 07:02:45.736 [DefaultDispatcher-worker-59] INFO  #.i.w.ide.impl.GlobalWorkspaceModel - Sync global entities with mutable entity storage
+2025-12-16 07:02:45.741 [DefaultDispatcher-worker-10] INFO  #.i.w.i.i.j.s.JpsProjectModelSynchronizer - Attempt 1: Apply JPS storage (iml files)
+2025-12-16 07:02:45.750 [DefaultDispatcher-worker-35] INFO  #.i.w.ide.impl.EntitiesOrphanageImpl - Update orphanage. 0 modules added
+2025-12-16 07:02:45.752 [DefaultDispatcher-worker-4] INFO  #.i.w.ide.impl.WorkspaceModelImpl - Project model updated to version 5
+2025-12-16 07:02:45.762 [DefaultDispatcher-worker-28] INFO  #.i.w.i.i.j.s.JpsProjectModelSynchronizer - Attempt 1: Changes were successfully applied
+2025-12-16 07:02:45.764 [DefaultDispatcher-worker-26] INFO  #.i.w.i.i.j.s.DelayedProjectSynchronizer$Util - Workspace model loaded from cache. Syncing real project state into workspace model in 235 ms. Thread[#134,DefaultDispatcher-worker-67,5,main]
+2025-12-16 07:02:45.940 [DefaultDispatcher-worker-4] WARN  #.i.g.c.license.GrazieLoginManager - Need explicit activation dialog agreement, so skipping cloud login
+2025-12-16 07:02:46.054 [DefaultDispatcher-worker-4] INFO  #.i.j.n.p.n.PackageVersionRangeMatcher - Matching 55 done in 36 ms
+2025-12-16 07:02:48.916 [DefaultDispatcher-worker-10] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 3 finished gracefully
+2025-12-16 07:02:48.917 [DefaultDispatcher-worker-29] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 8 finished gracefully
+2025-12-16 07:02:48.921 [DefaultDispatcher-worker-66] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 6 finished gracefully
+2025-12-16 07:02:48.923 [DefaultDispatcher-worker-40] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 5 finished gracefully
+2025-12-16 07:02:48.947 [DefaultDispatcher-worker-52] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 1 finished gracefully
+2025-12-16 07:02:48.957 [DefaultDispatcher-worker-8] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 7 finished gracefully
+2025-12-16 07:02:48.957 [DefaultDispatcher-worker-8] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 0 finished gracefully
+2025-12-16 07:02:48.958 [DefaultDispatcher-worker-19] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 4 finished gracefully
+2025-12-16 07:02:48.960 [DefaultDispatcher-worker-38] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 2 finished gracefully
+2025-12-16 07:02:48.989 [DefaultDispatcher-worker-40] INFO  #.i.u.i.ProjectChangedFilesScanner - Retrieving changed during indexing files of new-api : 3 to update, calculated in 2ms
+2025-12-16 07:02:48.993 [DefaultDispatcher-worker-42] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 1 finished gracefully
+2025-12-16 07:02:48.993 [DefaultDispatcher-worker-42] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 5 finished gracefully
+2025-12-16 07:02:48.993 [DefaultDispatcher-worker-42] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 8 finished gracefully
+2025-12-16 07:02:48.993 [DefaultDispatcher-worker-42] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 7 finished gracefully
+2025-12-16 07:02:48.993 [DefaultDispatcher-worker-42] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 4 finished gracefully
+2025-12-16 07:02:48.993 [DefaultDispatcher-worker-42] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 6 finished gracefully
+2025-12-16 07:02:48.996 [DefaultDispatcher-worker-52] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 2 finished gracefully
+2025-12-16 07:02:48.996 [DefaultDispatcher-worker-52] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 3 finished gracefully
+2025-12-16 07:02:48.996 [DefaultDispatcher-worker-19] INFO  #.i.u.i.c.IndexUpdateRunner - Coroutine 0 finished gracefully
+2025-12-16 07:02:49.021 [DefaultDispatcher-worker-42] INFO  #.i.u.indexing.UnindexedFilesIndexer - Finished for new-api. Unindexed files update took 5803ms; general responsiveness: ok; EDT responsiveness: ok
+2025-12-16 07:02:49.022 [DefaultDispatcher-worker-52] INFO  #.i.o.p.MergingQueueGuiExecutor - Task finished: (dumb mode task) UnindexedFilesIndexer[new-api, reasons: [On project open]]
+2025-12-16 07:02:49.022 [DefaultDispatcher-worker-45] INFO  #.i.o.p.MergingQueueGuiExecutor - Running task: (dumb mode task) com.intellij.openapi.roots.impl.PushedFilePropertiesUpdaterImpl$MyDumbModeTask@1b4f0422 (reason: Push on VFS changes)
+2025-12-16 07:02:49.026 [DefaultDispatcher-worker-19] INFO  #.i.o.p.MergingQueueGuiExecutor - Task finished: (dumb mode task) com.intellij.openapi.roots.impl.PushedFilePropertiesUpdaterImpl$MyDumbModeTask@1b4f0422 (reason: Push on VFS changes)
+2025-12-16 07:02:49.026 [DefaultDispatcher-worker-52] INFO  #.i.openapi.project.DumbServiceImpl - exit dumb mode [new-api]
+2025-12-16 07:03:10.466 [DefaultDispatcher-worker-70] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - Plugin is running, keeping current UI content
+2025-12-16 07:03:10.467 [DefaultDispatcher-worker-70] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - Theme change listener added successfully
+2025-12-16 07:03:10.474 [DefaultDispatcher-worker-38] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - Adding WebView component to UI: claudix.chatView/36b4cd1c-d445-47b3-8bf0-1e0960ce23a6
+2025-12-16 07:03:10.474 [DefaultDispatcher-worker-38] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - Setting up drag and drop support for WebView
+2025-12-16 07:03:10.474 [DefaultDispatcher-worker-38] INFO  #.h.claudix.webview.DragDropHandler - Setting up drag and drop support for WebView (VSCode-compatible)
+2025-12-16 07:03:10.475 [DefaultDispatcher-worker-38] INFO  #.h.claudix.webview.DragDropHandler - Drag and drop setup completed
+2025-12-16 07:03:10.475 [DefaultDispatcher-worker-38] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - Drag and drop support enabled
+2025-12-16 07:03:10.475 [DefaultDispatcher-worker-38] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - WebView component added to tool window
+2025-12-16 07:03:10.527 [DefaultDispatcher-worker-35] INFO  #.h.claudix.webview.WebViewInstance - WebView loading state changed: isLoading=true, canGoBack=false, canGoForward=false
+2025-12-16 07:03:10.527 [DefaultDispatcher-worker-35] INFO  #.h.claudix.webview.WebViewInstance - onBeforeBrowse,url:http://localhost:12345/index.html
+2025-12-16 07:03:10.530 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT START ===
+2025-12-16 07:03:10.530 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - Resource base path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix
+2025-12-16 07:03:10.530 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - Request URL: http://localhost:12345/index.html
+2025-12-16 07:03:10.532 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - Extracted request path: index.html
+2025-12-16 07:03:10.532 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - Constructed file path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/index.html
+2025-12-16 07:03:10.532 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - File object created: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/index.html
+2025-12-16 07:03:10.532 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - File content loaded successfully, size: 4375 bytes
+2025-12-16 07:03:10.532 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - Final state: file=/Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/index.html, exists=true, content size=4375
+2025-12-16 07:03:10.532 [DefaultDispatcher-worker-38] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT END ===
+2025-12-16 07:03:10.564 [DefaultDispatcher-worker-58] INFO  #.h.claudix.webview.WebViewInstance - WebView started loading: http://localhost:12345/index.html, transition type: TT_EXPLICIT
+2025-12-16 07:03:10.571 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT START ===
+2025-12-16 07:03:10.571 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - Resource base path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix
+2025-12-16 07:03:10.571 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - Request URL: http://localhost:12345/dist/media/style.css
+2025-12-16 07:03:10.571 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - Extracted request path: dist/media/style.css
+2025-12-16 07:03:10.571 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - Constructed file path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/style.css
+2025-12-16 07:03:10.571 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - File object created: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/style.css
+2025-12-16 07:03:10.572 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - File content loaded successfully, size: 457602 bytes
+2025-12-16 07:03:10.573 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - Final state: file=/Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/style.css, exists=true, content size=457602
+2025-12-16 07:03:10.573 [DefaultDispatcher-worker-58] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT END ===
+2025-12-16 07:03:10.582 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT START ===
+2025-12-16 07:03:10.582 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Resource base path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix
+2025-12-16 07:03:10.582 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Request URL: http://localhost:12345/dist/media/main.js
+2025-12-16 07:03:10.582 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Extracted request path: dist/media/main.js
+2025-12-16 07:03:10.582 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Constructed file path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/main.js
+2025-12-16 07:03:10.582 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - File object created: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/main.js
+2025-12-16 07:03:10.584 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - File content loaded successfully, size: 1486532 bytes
+2025-12-16 07:03:10.584 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Final state: file=/Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/main.js, exists=true, content size=1486532
+2025-12-16 07:03:10.584 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT END ===
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT START ===
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Resource base path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Request URL: http://localhost:12345/dist/media/codicon.ttf?0a3cacc32b1287fa99b52a31880127dd
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Extracted request path: dist/media/codicon.ttf
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Constructed file path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/codicon.ttf
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - File object created: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/codicon.ttf
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - File content loaded successfully, size: 126092 bytes
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - Final state: file=/Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/dist/media/codicon.ttf, exists=true, content size=126092
+2025-12-16 07:03:10.630 [DefaultDispatcher-worker-36] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT END ===
+2025-12-16 07:03:10.647 [DefaultDispatcher-worker-59] INFO  #.h.claudix.webview.WebViewInstance - WebView finished loading: http://localhost:12345/index.html, status code: 200
+2025-12-16 07:03:10.658 [DefaultDispatcher-worker-28] INFO  #.h.claudix.webview.WebViewInstance - Injecting theme style into WebView(36b4cd1c-d445-47b3-8bf0-1e0960ce23a6), size: 40428 bytes
+2025-12-16 07:03:10.659 [DefaultDispatcher-worker-28] INFO  #.h.claudix.webview.WebViewInstance - Theme config without cssContent has been sent to WebView
+2025-12-16 07:03:10.659 [DefaultDispatcher-worker-28] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - Hiding system info placeholder
+2025-12-16 07:03:10.659 [DefaultDispatcher-worker-28] INFO  #.h.claudix.webview.WebViewInstance - WebView loading state changed: isLoading=false, canGoBack=false, canGoForward=false
+2025-12-16 07:03:10.661 [DefaultDispatcher-worker-58] INFO  #.h.c.u.ClaudixToolWindowFactory$ClaudixToolWindowContent - System info placeholder hidden
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT START ===
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - Resource base path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - Request URL: http://localhost:12345/favicon.ico
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - Extracted request path: favicon.ico
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - Constructed file path: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/favicon.ico
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - File object created: /Users/abu/Library/Application Support/JetBrains/IntelliJIdea2025.3/plugins/Claudix/claudix/favicon.ico
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] WARN  #.h.c.webview.LocalCefResHandle - File does not exist or is not a file: exists=false, isFile=false
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - Final state: file=null, exists=null, content size=null
+2025-12-16 07:03:10.678 [DefaultDispatcher-worker-47] INFO  #.h.c.webview.LocalCefResHandle - === LocalCefResHandle INIT END ===
+2025-12-16 07:03:12.461 [DefaultDispatcher-worker-70] INFO  #.h.claudix.webview.WebViewInstance - WebView loading state changed: isLoading=true, canGoBack=false, canGoForward=false
+2025-12-16 07:03:12.481 [DefaultDispatcher-worker-36] INFO  #.h.claudix.webview.WebViewInstance - WebView loading state changed: isLoading=false, canGoBack=false, canGoForward=false
+2025-12-16 07:03:12.481 [DefaultDispatcher-worker-36] INFO  #.h.claudix.webview.WebViewInstance - WebView loading state changed: isLoading=true, canGoBack=false, canGoForward=false
+2025-12-16 07:03:12.499 [DefaultDispatcher-worker-36] INFO  #.h.claudix.webview.WebViewInstance - WebView loading state changed: isLoading=false, canGoBack=false, canGoForward=false
+2025-12-16 07:03:28.615 [DefaultDispatcher-worker-29] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.SdkEntity to files
+2025-12-16 07:03:28.618 [DefaultDispatcher-worker-66] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.LibraryEntity to files
+2025-12-16 07:03:32.548 [eventLoopGroupProxy-4-8] INFO  com.asakii.server.HttpApiServer - 📋 [HTTP] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:03:32.548 [eventLoopGroupProxy-4-8] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:03:32.548 [eventLoopGroupProxy-4-8] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 07:03:32.549 [eventLoopGroupProxy-4-8] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 找到 6 个会话文件，开始分批扫描...
+2025-12-16 07:03:32.549 [eventLoopGroupProxy-4-9] INFO  com.asakii.server.HttpApiServer - 📥 Received request: {"action":"ide.getProjectPath","data":{}}
+2025-12-16 07:03:32.556 [eventLoopGroupProxy-4-8] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 已扫描 6 个文件，有效会话数: 0
+2025-12-16 07:03:32.556 [eventLoopGroupProxy-4-8] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 扫描完成，有效会话数: 0
+2025-12-16 07:03:32.556 [eventLoopGroupProxy-4-8] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 07:03:40.021 [DefaultDispatcher-worker-66] INFO  #.i.u.gist.storage.GistStorageImpl - Cleaning old huge-gists dirs from [/Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/caches/huge-gists] ...
+2025-12-16 07:03:40.022 [DefaultDispatcher-worker-66] INFO  #.i.u.gist.storage.GistStorageImpl - Cleaning old huge-gists dirs finished
+2025-12-16 07:03:58.453 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.reportSessionState
+2025-12-16 07:03:58.454 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📊 [JetBrains] reportSessionState: 1 sessions
+2025-12-16 07:03:58.454 [eventLoopGroupProxy-3-3] INFO  c.a.plugin.bridge.JetBrainsApiImpl - [JetBrainsApi.session] Received state: 1 sessions, active=tab-1765839764726-qe1if7
+2025-12-16 07:04:15.274 [eventLoopGroupProxy-4-6] INFO  com.asakii.server.HttpApiServer - 📋 [HTTP] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:04:15.274 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 07:04:15.274 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 07:04:15.274 [eventLoopGroupProxy-4-6] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 找到 6 个会话文件，开始分批扫描...
+2025-12-16 07:04:15.275 [eventLoopGroupProxy-4-6] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 已扫描 6 个文件，有效会话数: 0
+2025-12-16 07:04:15.275 [eventLoopGroupProxy-4-6] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 扫描完成，有效会话数: 0
+2025-12-16 07:04:15.275 [eventLoopGroupProxy-4-6] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 07:04:54.504 [DefaultDispatcher-worker-12] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.SdkEntity to files
+2025-12-16 07:04:54.506 [DefaultDispatcher-worker-22] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.LibraryEntity to files
+2025-12-16 07:05:36.398 [eventLoopGroupProxy-3-6] INFO  com.asakii.server.HttpApiServer - 🔌 [JetBrains RSocket] 客户端断开: d5757921-7c1c-49b8-9ed5-0c69d7fab0fa
+2025-12-16 07:05:36.398 [eventLoopGroupProxy-3-6] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🔌 [JetBrains RSocket] 客户端已断开: d5757921-7c1c-49b8-9ed5-0c69d7fab0fa
+2025-12-16 07:05:38.789 [DefaultDispatcher-worker-31] INFO  #.i.i.s.e.c.EventLogStatisticsService - Statistics. Configuration options: {groupDataThreshold=10000, dataThreshold=15000, groupAlertThreshold=6000, basic_logs=analyzed_triggered_filters,cache_extension_length,cache_hit_length,cloud_filter_model_probability,cloud_filter_model_response_type,completion_client,context_assemble_time,editor_type,experiment_group,file_language,fim_cache_hit,fim_cache_line_difference,fim_context_size,final_proposal_length,final_proposal_line,finish_type,first_proposal_len_generated,full_inference_time,full_insert_actions,generated_proposals,generation_id,incompatible_ux_mode,inline_api_provider,invalidation_event,lines_count,local_filter_model_pass,local_filter_model_response,local_filter_model_score,local_filter_model_time,next_line_actions,next_word_actions,proposal_id,proposal_length,proposal_next_line_similarity,proposal_prev_line_similarity,rag_context_computation_time,rag_context_size,rag_suggestion_similarity,raw_triggered_filters,received_proposal_length,received_proposal_lines,recent_context_computation_time,recent_context_number_of_chunks,recent_context_size,request_id,result_proposals,semantic_state,showing_time,silent_completion,time_to_start_showing,total_inserted_length,total_inserted_lines,used_generation_id,was_shown, local_logs_share=1, cloud_logs_share=1}
+2025-12-16 07:05:38.790 [DefaultDispatcher-worker-31] INFO  #.i.i.s.e.c.EventLogStatisticsService - Statistics. Configuration metadata product url: https://resources.jetbrains.com.cn/storage/ap/fus/metadata/tiger/ML/groups/253/IU.json
+2025-12-16 07:05:38.862 [DefaultDispatcher-worker-31] INFO  #.i.i.s.e.c.EventLogStatisticsService - Statistics. Configuration metadata product url: https://resources.jetbrains.com.cn/storage/ap/fus/metadata/tiger/ML/groups/253/IU.json
+2025-12-16 07:05:39.009 [DefaultDispatcher-worker-33] INFO  #.i.i.s.e.c.EventLogStatisticsService - Statistics. Configuration dictionary service url: https://resources.jetbrains.com.cn/storage/ap/fus/metadata/dictionaries/
+2025-12-16 07:52:12.683 [DefaultDispatcher-worker-14] INFO  #.i.u.i.PersistentDirtyFilesQueue - Dirty file ids stored. Size: 1. Index: 34558 Path: /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/dirty-file-queues/def5600
+2025-12-16 07:52:12.689 [DefaultDispatcher-worker-18] INFO  #.i.p.project.ProjectEntitiesStorage - Project ProjectId(id=mdgh4u6a0rtq8cqstfof) is disposed, removing entity
+2025-12-16 07:52:12.690 [DefaultDispatcher-worker-3] INFO  #.intellij.vcs.log.data.VcsLogData - Disposing log data
+2025-12-16 07:52:12.691 [DefaultDispatcher-worker-12] INFO  #.i.p.d.i.f.FrontendXBreakpointManager - Breakpoint removed for XBreakpointId(uid=1)
+2025-12-16 07:52:12.691 [DefaultDispatcher-worker-12] INFO  #.i.p.d.i.f.FrontendXBreakpointManager - Breakpoint removed for XBreakpointId(uid=2)
+2025-12-16 07:52:12.692 [DefaultDispatcher-worker-7] INFO  #.i.j.d.b.r.HostToClientMessagingSession - Shutting down client ClientId(value=Host) communication
+2025-12-16 07:52:12.693 [DefaultDispatcher-worker-1] INFO  #.h.claudix.plugin.ClaudixPlugin - Disposing Claudix plugin for project: new-api
+2025-12-16 07:52:12.693 [DefaultDispatcher-worker-1] INFO  #.h.c.plugin.ClaudixPluginService - Disposing ClaudixPluginService
+2025-12-16 07:52:12.693 [DefaultDispatcher-worker-1] INFO  #.h.claudix.webview.WebViewManager - Releasing WebViewManager resources...
+2025-12-16 07:52:12.693 [DefaultDispatcher-worker-1] INFO  #.h.claudix.theme.ThemeManager - Removed theme change listener, remaining listener count: 0
+2025-12-16 07:52:12.693 [DefaultDispatcher-worker-1] INFO  #.h.claudix.webview.WebViewManager - index.html file deleted
+2025-12-16 07:52:12.696 [DefaultDispatcher-worker-2] INFO  #.h.claudix.webview.WebViewInstance - WebView instance released: claudix.chatView/36b4cd1c-d445-47b3-8bf0-1e0960ce23a6
+2025-12-16 07:52:12.696 [DefaultDispatcher-worker-2] INFO  #.h.claudix.webview.WebViewManager - WebViewManager released
+2025-12-16 07:52:12.696 [DefaultDispatcher-worker-2] INFO  #.h.c.core.ExtensionProcessManager - Stopping extension process
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Read EOF, triggering onEndReceived()
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.h.c.core.ExtensionProcessManager - Extension process exited with code: 143
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.h.c.core.ExtensionProcessManager - Extension process stopped
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - Stopping UDS socket server
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Received END event, disabling write operations
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.h.c.core.ExtensionHostManager - Disposing ExtensionHostManager
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Will execute delayed close after 30000ms
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Releasing resources
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Resource release completed
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-2] INFO  #.h.c.core.ExtensionHostManager - ExtensionHostManager disposed
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - UDS socket server stopped
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.w.WorkspaceFileChangeManager - Release workspace file change manager resources
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.w.WorkspaceFileChangeManager - Unregister file listener for project new-api
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.plugin.ClaudixPluginService - ClaudixPluginService disposed
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.e.core.ExtensionManager - Disposing extension manager
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.plugin.SystemObjectProvider - Disposing SystemObjectProvider
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.claudix.webview.WebViewManager - WebViewManager has already been disposed, ignoring repeated call
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - [UDS] Client handler interrupted, exiting loop
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.core.ExtensionHostManager - Disposing ExtensionHostManager
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.core.ExtensionHostManager - ExtensionHostManager disposed
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - [UDS] Client channel closed and removed.
+2025-12-16 07:52:12.700 [DefaultDispatcher-worker-1] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - [UDS] Accept loop terminated.
+2025-12-16 07:52:12.702 [DefaultDispatcher-worker-12] INFO  #.i.o.wm.impl.WindowManagerImpl - === Release(true) frame on closed project ===
+2025-12-16 07:52:12.756 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 🛑 Disposing HTTP Server Project Service
+2025-12-16 07:52:13.802 [AWT-EventQueue-0] INFO  com.asakii.server.HttpApiServer - 🛑 Server stopped
+2025-12-16 07:52:13.866 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - ✅ HTTP Server Project Service disposed
+2025-12-16 07:52:13.866 [DefaultDispatcher-worker-4] INFO  #.h.c.w.WorkspaceFileChangeManager - Release workspace file change manager resources
+2025-12-16 07:52:13.866 [DefaultDispatcher-worker-4] INFO  #.h.c.t.TerminalInstanceManager - 🧹 Disposing terminal instance manager
+2025-12-16 07:52:13.866 [DefaultDispatcher-worker-4] INFO  #.h.c.t.TerminalInstanceManager - ✅ Terminal instance manager disposed
+2025-12-16 07:52:13.871 [DefaultDispatcher-worker-4] INFO  #.i.c.b.CompilerReferenceServiceBase - backward reference index reader is closed (didn't exist)
+2025-12-16 07:52:15.811 [DefaultDispatcher-worker-13] INFO  #.i.o.util.registry.RegistryValue - Registry value 'i18n.locale' has changed to '' by SYSTEM
+2025-12-16 07:52:15.814 [DefaultDispatcher-worker-13] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.SdkEntity to files
+2025-12-16 07:52:15.815 [DefaultDispatcher-worker-4] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.LibraryEntity to files
+2025-12-16 07:52:15.828 [DefaultDispatcher-worker-4] INFO  #.i.a.options.PathMacrosImpl - Saved path macros: {MAVEN_REPOSITORY=/Users/abu/.m2/lanlv}
+2025-12-16 07:52:15.838 [DefaultDispatcher-worker-15] INFO  #.i.i.s.EventLogApplicationLifecycleListener - Statistics. Don't start external uploader because there are no enabled logger providers
+2025-12-16 07:52:15.838 [DefaultDispatcher-worker-18] INFO  #.i.i.s.e.u.EventLogExternalUploader - Statistics. Don't start external uploader because sending logs is disabled for all recorders
+2025-12-16 07:52:15.842 [DefaultDispatcher-worker-16] INFO  c.i.s.c.c.n.s.NettyServicesServerBase$Companion - Shutting down services server
+2025-12-16 07:52:15.843 [DefaultDispatcher-worker-19] INFO  #.i.o.f.i.FileTypeDetectionService - 8 auto-detected files. Detection took 425 ms
+2025-12-16 07:52:15.843 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase$Companion - Services server shut down
+2025-12-16 07:52:15.843 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase - [id: 0x69feaf21, L:/var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/jb.station.ij.27750.sock] CLOSE
+2025-12-16 07:52:15.844 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase - [id: 0x69feaf21, L:/var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/jb.station.ij.27750.sock] INACTIVE
+2025-12-16 07:52:15.844 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase - [id: 0x69feaf21, L:/var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/jb.station.ij.27750.sock] UNREGISTERED
+2025-12-16 07:52:17.938 [DefaultDispatcher-worker-7] INFO  #.i.o.v.i.l.NativeFileWatcherImpl - Watcher terminated with exit code 0
+2025-12-16 07:52:17.939 [DefaultDispatcher-worker-7] INFO  #org.jetbrains.io.BuiltInServer - web server stopped
+2025-12-16 07:52:17.941 [DefaultDispatcher-worker-7] INFO  #.i.d.JVMResponsivenessMonitor - Sampling thread interrupted -> stop sampling
+2025-12-16 07:52:17.941 [DefaultDispatcher-worker-7] INFO  #.i.d.JVMResponsivenessMonitor - Sampling thread exiting normally
+2025-12-16 07:52:17.944 [DefaultDispatcher-worker-1] INFO  #.i.util.indexing.FileBasedIndexImpl - Index dispose started
+2025-12-16 07:52:17.958 [DefaultDispatcher-worker-1] INFO  #.i.u.i.PersistentDirtyFilesQueue - Dirty file ids stored. Size: 34559. Index: 34559 Path: /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/dirty-file-ids
+2025-12-16 07:52:17.962 [DefaultDispatcher-worker-15] WARN  #.i.u.net.AppShutdownProxySelector - network access during/after app shutdown
+java.lang.Throwable: null
+	at com.intellij.util.net.AppShutdownProxySelector.select(JdkProxyProvider.kt:114)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:316)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at java.base/sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:304)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:178)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:531)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:636)
+	at java.base/sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:264)
+	at java.base/sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:377)
+	at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:193)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:1298)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:1139)
+	at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:179)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1691)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1615)
+	at java.base/java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:531)
+	at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.getResponseCode(HttpsURLConnectionImpl.java:307)
+	at com.intellij.util.io.HttpRequests.openConnection(HttpRequests.java:641)
+	at com.intellij.util.io.HttpRequests$RequestImpl.getConnection(HttpRequests.java:381)
+	at com.intellij.ide.plugins.marketplace.MarketplaceRequests$Companion.readOrUpdateFile$lambda$2(MarketplaceRequests.kt:391)
+	at com.intellij.util.io.HttpRequests.doProcess(HttpRequests.java:544)
+	at com.intellij.util.io.HttpRequests.process(HttpRequests.java:526)
+	at com.intellij.util.io.HttpRequests$RequestBuilderImpl.connect(HttpRequests.java:355)
+	at com.intellij.ide.plugins.marketplace.MarketplaceRequests$Companion.readOrUpdateFile(MarketplaceRequests.kt:388)
+	at com.intellij.ide.plugins.marketplace.MarketplaceRequests$Companion.loadPluginModel(MarketplaceRequests.kt:312)
+	at com.intellij.openapi.updateSettings.impl.UpdateChecker.findUpdatesInJetBrainsRepository(UpdateChecker.kt:479)
+	at com.intellij.openapi.updateSettings.impl.UpdateChecker.getInternalPluginUpdates(UpdateChecker.kt:372)
+	at com.intellij.openapi.updateSettings.impl.UpdateCheckerFacadeImpl.getInternalPluginUpdates(UpdateChecker.kt:111)
+	at com.intellij.ide.plugins.newui.PluginUpdatesService.lambda$calculateUpdates$9(PluginUpdatesService.java:280)
+	at com.intellij.util.concurrency.ChildContext$runInChildContext$1.invoke(propagation.kt:167)
+	at com.intellij.util.concurrency.ChildContext$runInChildContext$1.invoke(propagation.kt:167)
+	at com.intellij.util.concurrency.ChildContext.runInChildContext(propagation.kt:173)
+	at com.intellij.util.concurrency.ChildContext.runInChildContext(propagation.kt:167)
+	at com.intellij.util.concurrency.ContextRunnable.lambda$run$0(ContextRunnable.java:26)
+	at com.intellij.concurrency.ThreadContext.resetThreadContext(threadContext.kt:294)
+	at com.intellij.util.concurrency.ContextRunnable.run(ContextRunnable.java:25)
+	at com.intellij.util.concurrency.BoundedTaskExecutor.doRun(BoundedTaskExecutor.java:248)
+	at com.intellij.util.concurrency.BoundedTaskExecutor.access$200(BoundedTaskExecutor.java:27)
+	at com.intellij.util.concurrency.BoundedTaskExecutor$1.executeFirstTaskAndHelpQueue(BoundedTaskExecutor.java:226)
+	at com.intellij.util.concurrency.BoundedTaskExecutor$1.run(BoundedTaskExecutor.java:214)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.util.concurrent.Executors$PrivilegedThreadFactory$1$1.run(Executors.java:735)
+	at java.base/java.util.concurrent.Executors$PrivilegedThreadFactory$1$1.run(Executors.java:732)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.util.concurrent.Executors$PrivilegedThreadFactory$1.run(Executors.java:732)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2025-12-16 07:52:17.971 [DefaultDispatcher-worker-24] INFO  #.intellij.psi.stubs.StubIndexImpl - StubIndexExtension-s were unloaded
+2025-12-16 07:52:17.971 [DefaultDispatcher-worker-24] INFO  #.i.p.stubs.SerializationManagerImpl - Start shutting down /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/rep.names
+2025-12-16 07:52:17.971 [DefaultDispatcher-worker-24] INFO  #.i.p.stubs.SerializationManagerImpl - Finished shutting down /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/rep.names
+2025-12-16 07:52:17.971 [DefaultDispatcher-worker-8] INFO  #.i.util.indexing.FileBasedIndexImpl - Index dispose completed in 27ms.
+2025-12-16 07:52:17.978 [DefaultDispatcher-worker-8] INFO  #.i.o.v.n.p.PersistentFSImpl - VFS dispose started
+2025-12-16 07:52:17.978 [DefaultDispatcher-worker-8] INFO  #.i.o.v.n.persistent.FSRecordsImpl - VFS closing
+2025-12-16 07:52:17.979 [DefaultDispatcher-worker-8] INFO  #.i.o.v.n.p.PersistentFSImpl - VFS dispose completed in 1 ms.
+2025-12-16 07:52:17.991 [DefaultDispatcher-worker-24] INFO  #.i.p.ide.bootstrap.AppStarter - ------------------------------------------------------ IDE SHUTDOWN ------------------------------------------------------
+2025-12-16 18:49:15.166 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 📝 Logging configured to: /Users/abu/IdeaProjects/new-api/.log/
+2025-12-16 18:49:15.166 [DefaultDispatcher-worker-53] INFO  STDOUT - 📝 Logging configured.
+2025-12-16 18:49:15.166 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 🚀 Initializing HTTP Server Project Service
+2025-12-16 18:49:15.166 [DefaultDispatcher-worker-53] INFO  STDOUT -    - Server logs (all): /Users/abu/IdeaProjects/new-api/.log/server.log
+2025-12-16 18:49:15.166 [DefaultDispatcher-worker-53] INFO  STDOUT -    - SDK logs: /Users/abu/IdeaProjects/new-api/.log/sdk.log
+2025-12-16 18:49:15.166 [DefaultDispatcher-worker-53] INFO  STDOUT -    - WebSocket logs: /Users/abu/IdeaProjects/new-api/.log/ws.log
+2025-12-16 18:49:15.166 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 📦 Extracting frontend resources to: /var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/claude-frontend-9225679629345339243
+2025-12-16 18:49:15.166 [DefaultDispatcher-worker-53] INFO  STDOUT - Do not use URL connection as JarURLConnection
+2025-12-16 18:49:15.276 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - ✅ Frontend extracted successfully
+2025-12-16 18:49:15.276 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 📂 Frontend directory: /var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/claude-frontend-9225679629345339243
+2025-12-16 18:49:15.279 [DefaultDispatcher-worker-40] INFO  #.a.plugin.theme.IdeaThemeAdapter - 已注册 IDEA 主题变化监听器
+2025-12-16 18:49:15.312 [AWT-EventQueue-0] INFO  io.ktor.server.Application - Autoreload is disabled because the development mode is off.
+2025-12-16 18:49:15.345 [AWT-EventQueue-0] INFO  io.ktor.server.Application - Application started in 0.04 seconds.
+2025-12-16 18:49:15.384 [DefaultDispatcher-worker-8] INFO  io.ktor.server.Application - Responding at http://127.0.0.1:62122
+2025-12-16 18:49:15.384 [AWT-EventQueue-0] INFO  com.asakii.server.HttpApiServer - 🚀 Ktor server started at: http://127.0.0.1:62122 (configured: 0, actual: 62122)
+2025-12-16 18:49:15.384 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 🚀 HTTP Server started at: http://127.0.0.1:62122
+2025-12-16 18:49:15.384 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - ✅ HTTP Server Project Service initialized successfully
+2025-12-16 18:49:15.389 [DefaultDispatcher-worker-8] INFO  #.a.p.ui.NativeToolWindowFactory - 🔗 Loading URL with initial theme: http://127.0.0.1:62122?ide=true&initialTheme=%7B%22background%22%3A%22%23191a1c%22%2C%22foreground%2...
+2025-12-16 18:49:15.554 [DefaultDispatcher-worker-65] INFO  #.i.w.ide.impl.EntitiesOrphanageImpl - Update orphanage. 0 modules added
+2025-12-16 18:49:15.554 [DefaultDispatcher-worker-65] INFO  #.i.w.ide.impl.WorkspaceModelImpl - Project model updated to version 4 in 0 ms: Add project root /Users/abu/IdeaProjects/new-api to project new-api
+2025-12-16 18:49:15.558 [DefaultDispatcher-worker-65] INFO  #.j.j.b.index.CompilerReferenceIndex - backward reference index version doesn't exist
+2025-12-16 18:49:15.558 [DefaultDispatcher-worker-65] INFO  #.i.c.b.IsUpToDateCheckStartupActivity - suitable consumer is not found
+2025-12-16 18:49:15.568 [DefaultDispatcher-worker-36] INFO  #.j.p.g.j.IdeVersionedDataUpdater - Updating version compatibility for org.jetbrains.plugins.gradle.jvmcompat.GradleCompatibilitySupportUpdater. Last update was: 1765794522197. Update interval: 1d Url to update https://download.jetbrains.com/resources/intellij/plugins/gradle/v1/compatibility.json
+2025-12-16 18:49:15.569 [DefaultDispatcher-worker-1] WARN  #.i.g.c.license.GrazieLoginManager - Need explicit activation dialog agreement, so skipping cloud login
+2025-12-16 18:49:15.597 [DefaultDispatcher-worker-3] INFO  #.i.w.ide.impl.GlobalWorkspaceModel - Sync global entities with mutable entity storage
+2025-12-16 18:49:15.617 [DefaultDispatcher-worker-35] INFO  #.i.w.i.i.j.s.JpsProjectModelSynchronizer - Attempt 1: Apply JPS storage (iml files)
+2025-12-16 18:49:15.624 [DefaultDispatcher-worker-12] INFO  #.i.w.ide.impl.EntitiesOrphanageImpl - Update orphanage. 0 modules added
+2025-12-16 18:49:15.625 [DefaultDispatcher-worker-12] INFO  #.i.w.ide.impl.WorkspaceModelImpl - Project model updated to version 5
+2025-12-16 18:49:15.625 [DefaultDispatcher-worker-64] INFO  #.i.w.i.i.j.s.JpsProjectModelSynchronizer - Attempt 1: Changes were successfully applied
+2025-12-16 18:49:15.626 [DefaultDispatcher-worker-64] INFO  #.i.w.i.i.j.s.DelayedProjectSynchronizer$Util - Workspace model loaded from cache. Syncing real project state into workspace model in 75 ms. Thread[#26,DefaultDispatcher-worker-7,5,main]
+2025-12-16 18:49:15.642 [eventLoopGroupProxy-3-3] INFO  com.asakii.server.HttpApiServer - 🔌 [JetBrains RSocket] 客户端连接: 487ba782-0845-404c-a745-4197beae1814
+2025-12-16 18:49:15.642 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🔗 [JetBrains RSocket] 客户端已连接: 487ba782-0845-404c-a745-4197beae1814
+2025-12-16 18:49:15.642 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🔌 [JetBrains RSocket] 创建请求处理器
+2025-12-16 18:49:15.701 [eventLoopGroupProxy-3-5] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.reportSessionState
+2025-12-16 18:49:15.701 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.reportSessionState
+2025-12-16 18:49:15.709 [eventLoopGroupProxy-3-5] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📊 [JetBrains] reportSessionState: 0 sessions
+2025-12-16 18:49:15.709 [eventLoopGroupProxy-3-5] INFO  c.a.plugin.bridge.JetBrainsApiImpl - [JetBrainsApi.session] Received state: 0 sessions, active=null
+2025-12-16 18:49:15.711 [eventLoopGroupProxy-3-3] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📊 [JetBrains] reportSessionState: 1 sessions
+2025-12-16 18:49:15.711 [eventLoopGroupProxy-3-3] INFO  c.a.plugin.bridge.JetBrainsApiImpl - [JetBrainsApi.session] Received state: 1 sessions, active=tab-1765882155698-7bpu3d
+2025-12-16 18:49:15.711 [eventLoopGroupProxy-3-2] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 📨 [JetBrains RSocket] ← jetbrains.getLocale
+2025-12-16 18:49:15.712 [eventLoopGroupProxy-3-2] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🌐 [JetBrains] getLocale: en-
+2025-12-16 18:49:15.712 [eventLoopGroupProxy-4-4] INFO  com.asakii.server.HttpApiServer - 📋 [HTTP] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 18:49:15.718 [eventLoopGroupProxy-4-1] INFO  com.asakii.server.HttpApiServer - 📥 Received request: {"action":"ide.getProjectPath","data":{}}
+2025-12-16 18:49:15.718 [eventLoopGroupProxy-4-4] INFO  com.asakii.sdk - 📋 [AI-Agent] 获取历史会话列表 (offset=0, maxResults=10)
+2025-12-16 18:49:15.718 [eventLoopGroupProxy-4-4] INFO  com.asakii.sdk - 📋 [AI-Agent] 项目路径: /Users/abu/IdeaProjects/new-api
+2025-12-16 18:49:15.719 [eventLoopGroupProxy-4-4] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 找到 6 个会话文件，开始分批扫描...
+2025-12-16 18:49:15.724 [eventLoopGroupProxy-4-4] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 已扫描 6 个文件，有效会话数: 0
+2025-12-16 18:49:15.724 [eventLoopGroupProxy-4-4] INFO  c.a.c.a.s.utils.ClaudeSessionScanner - [SessionScanner] 扫描完成，有效会话数: 0
+2025-12-16 18:49:15.724 [eventLoopGroupProxy-4-4] INFO  com.asakii.sdk - 📋 [AI-Agent] 找到 0 个历史会话
+2025-12-16 18:49:15.950 [DefaultDispatcher-worker-18] WARN  #.i.g.c.license.GrazieLoginManager - Need explicit activation dialog agreement, so skipping cloud login
+2025-12-16 18:49:15.980 [DefaultDispatcher-worker-18] INFO  #.i.j.n.p.n.PackageVersionRangeMatcher - Matching 55 done in 30 ms
+2025-12-16 18:49:16.002 [DefaultDispatcher-worker-35] INFO  #.j.p.g.j.IdeVersionedDataUpdater - IDE versioned data for org.jetbrains.plugins.gradle.jvmcompat.GradleCompatibilitySupportUpdater was updated
+2025-12-16 18:49:18.915 [DefaultDispatcher-worker-38] WARN  #.i.o.o.e.ConfigurableExtensionPointUtil - ignore deprecated groupId: tools for id: org.haleclipse.claudix.ClaudixSettingsConfigurable
+2025-12-16 18:49:19.413 [DefaultDispatcher-worker-18] INFO  #.i.i.p.n.PluginsGroupComponentWithProgress - Marketplace tab: loading stopped
+2025-12-16 18:49:19.413 [DefaultDispatcher-worker-18] INFO  #.i.i.p.n.PluginsGroupComponentWithProgress - Marketplace tab: loading started
+2025-12-16 18:49:19.534 [DefaultDispatcher-worker-6] INFO  #.i.i.p.n.PluginsGroupComponentWithProgress - Marketplace tab: loading stopped
+2025-12-16 18:49:21.328 [DefaultDispatcher-worker-23] INFO  #.i.i.p.n.PluginsGroupComponentWithProgress - Marketplace tab: loading started
+2025-12-16 18:49:21.333 [DefaultDispatcher-worker-68] INFO  #.i.i.p.n.PluginsGroupComponentWithProgress - Marketplace tab: loading stopped
+2025-12-16 18:49:28.202 [DefaultDispatcher-worker-41] INFO  #.i.ide.plugins.DynamicPlugins - Plugin com.claudecodeplus is not unload-safe because of unresolved extension com.intellij.toolWindow.listener
+2025-12-16 18:49:31.535 [DefaultDispatcher-worker-58] WARN  #.i.o.o.ex.ConfigurableCardPanel - auto-dispose 'Plugins' id=preferences.pluginManager
+2025-12-16 18:49:31.574 [DefaultDispatcher-worker-66] INFO  #.i.o.util.registry.RegistryValue - Registry value 'i18n.locale' has changed to '' by SYSTEM
+2025-12-16 18:49:31.578 [DefaultDispatcher-worker-58] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.SdkEntity to files
+2025-12-16 18:49:31.580 [DefaultDispatcher-worker-58] INFO  #.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Saving global entities com.intellij.platform.workspace.jps.entities.LibraryEntity to files
+2025-12-16 18:49:31.627 [DefaultDispatcher-worker-36] INFO  #.i.a.options.PathMacrosImpl - Saved path macros: {MAVEN_REPOSITORY=/Users/abu/.m2/lanlv}
+2025-12-16 18:49:31.648 [DefaultDispatcher-worker-58] INFO  #.i.i.s.EventLogApplicationLifecycleListener - Statistics. Don't start external uploader because there is restarted
+2025-12-16 18:49:31.689 [DefaultDispatcher-worker-23] INFO  #.i.o.v.i.l.NativeFileWatcherImpl - Watcher terminated with exit code 0
+2025-12-16 18:49:31.703 [DefaultDispatcher-worker-11] INFO  #.i.u.i.PersistentDirtyFilesQueue - Dirty file ids stored. Size: 1. Index: 34559 Path: /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/dirty-file-queues/def5600
+2025-12-16 18:49:31.710 [DefaultDispatcher-worker-23] INFO  #.i.p.project.ProjectEntitiesStorage - Project ProjectId(id=5mvikeble7vrrmi2nfcl) is disposed, removing entity
+2025-12-16 18:49:31.710 [DefaultDispatcher-worker-6] INFO  #.i.p.d.i.f.FrontendXBreakpointManager - Breakpoint removed for XBreakpointId(uid=1)
+2025-12-16 18:49:31.710 [DefaultDispatcher-worker-6] INFO  #.i.p.d.i.f.FrontendXBreakpointManager - Breakpoint removed for XBreakpointId(uid=2)
+2025-12-16 18:49:31.711 [DefaultDispatcher-worker-65] INFO  #.intellij.vcs.log.data.VcsLogData - Disposing log data
+2025-12-16 18:49:31.713 [DefaultDispatcher-worker-36] INFO  #.i.j.d.b.r.HostToClientMessagingSession - Shutting down client ClientId(value=Host) communication
+2025-12-16 18:49:31.715 [DefaultDispatcher-worker-3] INFO  #.h.claudix.plugin.ClaudixPlugin - Disposing Claudix plugin for project: new-api
+2025-12-16 18:49:31.715 [DefaultDispatcher-worker-3] INFO  #.h.c.plugin.ClaudixPluginService - Disposing ClaudixPluginService
+2025-12-16 18:49:31.715 [DefaultDispatcher-worker-3] INFO  #.h.claudix.webview.WebViewManager - Releasing WebViewManager resources...
+2025-12-16 18:49:31.715 [DefaultDispatcher-worker-3] INFO  #.h.claudix.theme.ThemeManager - Removed theme change listener, remaining listener count: 0
+2025-12-16 18:49:31.715 [DefaultDispatcher-worker-3] INFO  #.h.claudix.webview.WebViewManager - index.html file deleted
+2025-12-16 18:49:31.716 [DefaultDispatcher-worker-3] INFO  #.h.claudix.webview.WebViewInstance - WebView instance released: claudix.chatView/31ccab31-fd40-4d2c-aa57-376051466959
+2025-12-16 18:49:31.716 [DefaultDispatcher-worker-3] INFO  #.h.claudix.webview.WebViewManager - WebViewManager released
+2025-12-16 18:49:31.716 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionProcessManager - Stopping extension process
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionProcessManager - Extension process exited with code: 143
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Read EOF, triggering onEndReceived()
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionProcessManager - Extension process stopped
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - Stopping UDS socket server
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionHostManager - Disposing ExtensionHostManager
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Received END event, disabling write operations
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Releasing resources
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Will execute delayed close after 30000ms
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.haleclipse.claudix.ipc.NodeSocket - Socket[extension-host] Resource release completed
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionHostManager - ExtensionHostManager disposed
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - UDS socket server stopped
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.w.WorkspaceFileChangeManager - Release workspace file change manager resources
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - [UDS] Client handler interrupted, exiting loop
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionHostManager - Disposing ExtensionHostManager
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.w.WorkspaceFileChangeManager - Unregister file listener for project new-api
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.core.ExtensionHostManager - ExtensionHostManager disposed
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - [UDS] Client channel closed and removed.
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.c.ExtensionUnixDomainSocketServer - [UDS] Accept loop terminated.
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.plugin.ClaudixPluginService - ClaudixPluginService disposed
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.e.core.ExtensionManager - Disposing extension manager
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.c.plugin.SystemObjectProvider - Disposing SystemObjectProvider
+2025-12-16 18:49:31.719 [DefaultDispatcher-worker-3] INFO  #.h.claudix.webview.WebViewManager - WebViewManager has already been disposed, ignoring repeated call
+2025-12-16 18:49:31.721 [DefaultDispatcher-worker-16] INFO  #.i.o.wm.impl.WindowManagerImpl - === Release(true) frame on closed project ===
+2025-12-16 18:49:31.748 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - 🛑 Disposing HTTP Server Project Service
+2025-12-16 18:49:32.995 [eventLoopGroupProxy-3-1] INFO  com.asakii.server.HttpApiServer - 🔌 [JetBrains RSocket] 客户端断开: 487ba782-0845-404c-a745-4197beae1814
+2025-12-16 18:49:32.995 [eventLoopGroupProxy-3-1] INFO  c.a.p.bridge.JetBrainsRSocketHandler - 🔌 [JetBrains RSocket] 客户端已断开: 487ba782-0845-404c-a745-4197beae1814
+2025-12-16 18:49:34.234 [AWT-EventQueue-0] INFO  com.asakii.server.HttpApiServer - 🛑 Server stopped
+2025-12-16 18:49:34.292 [AWT-EventQueue-0] INFO  c.a.server.HttpServerProjectService - ✅ HTTP Server Project Service disposed
+2025-12-16 18:49:34.293 [DefaultDispatcher-worker-60] INFO  #.h.c.w.WorkspaceFileChangeManager - Release workspace file change manager resources
+2025-12-16 18:49:34.293 [DefaultDispatcher-worker-60] INFO  #.h.c.t.TerminalInstanceManager - 🧹 Disposing terminal instance manager
+2025-12-16 18:49:34.293 [DefaultDispatcher-worker-60] INFO  #.h.c.t.TerminalInstanceManager - ✅ Terminal instance manager disposed
+2025-12-16 18:49:34.298 [DefaultDispatcher-worker-37] INFO  #.i.c.b.CompilerReferenceServiceBase - backward reference index reader is closed (didn't exist)
+2025-12-16 18:49:34.302 [DefaultDispatcher-worker-19] INFO  c.i.s.c.c.n.s.NettyServicesServerBase$Companion - Shutting down services server
+2025-12-16 18:49:34.303 [DefaultDispatcher-worker-16] INFO  #.i.o.f.i.FileTypeDetectionService - 3 auto-detected files. Detection took 16 ms
+2025-12-16 18:49:34.304 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase$Companion - Services server shut down
+2025-12-16 18:49:34.304 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase - [id: 0x9b9c0321, L:/var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/jb.station.ij.29239.sock] CLOSE
+2025-12-16 18:49:34.304 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase - [id: 0x9b9c0321, L:/var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/jb.station.ij.29239.sock] INACTIVE
+2025-12-16 18:49:34.304 [Netty Station Server 1-1] INFO  c.i.s.c.c.n.s.NettyServicesServerBase - [id: 0x9b9c0321, L:/var/folders/g_/kc4wlsgs6hnf39rn6txrf_wr0000gn/T/jb.station.ij.29239.sock] UNREGISTERED
+2025-12-16 18:49:36.384 [DefaultDispatcher-worker-33] INFO  #org.jetbrains.io.BuiltInServer - web server stopped
+2025-12-16 18:49:36.388 [DefaultDispatcher-worker-33] INFO  #.i.d.JVMResponsivenessMonitor - Sampling thread interrupted -> stop sampling
+2025-12-16 18:49:36.388 [DefaultDispatcher-worker-33] INFO  #.i.d.JVMResponsivenessMonitor - Sampling thread exiting normally
+2025-12-16 18:49:36.391 [DefaultDispatcher-worker-33] INFO  #.i.util.indexing.FileBasedIndexImpl - Index dispose started
+2025-12-16 18:49:36.409 [DefaultDispatcher-worker-33] INFO  #.i.u.i.PersistentDirtyFilesQueue - Dirty file ids stored. Size: 34560. Index: 34560 Path: /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/dirty-file-ids
+2025-12-16 18:49:36.421 [DefaultDispatcher-worker-55] INFO  #.intellij.psi.stubs.StubIndexImpl - StubIndexExtension-s were unloaded
+2025-12-16 18:49:36.421 [DefaultDispatcher-worker-55] INFO  #.i.p.stubs.SerializationManagerImpl - Start shutting down /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/rep.names
+2025-12-16 18:49:36.421 [DefaultDispatcher-worker-55] INFO  #.i.p.stubs.SerializationManagerImpl - Finished shutting down /Users/abu/Library/Caches/JetBrains/IntelliJIdea2025.3/index/rep.names
+2025-12-16 18:49:36.421 [DefaultDispatcher-worker-43] INFO  #.i.util.indexing.FileBasedIndexImpl - Index dispose completed in 30ms.
+2025-12-16 18:49:36.430 [DefaultDispatcher-worker-43] INFO  #.i.o.v.n.p.PersistentFSImpl - VFS dispose started
+2025-12-16 18:49:36.430 [DefaultDispatcher-worker-43] INFO  #.i.o.v.n.persistent.FSRecordsImpl - VFS closing
+2025-12-16 18:49:36.431 [DefaultDispatcher-worker-43] INFO  #.i.o.v.n.p.PersistentFSImpl - VFS dispose completed in 1 ms.
+2025-12-16 18:49:36.437 [DefaultDispatcher-worker-43] INFO  #com.intellij.util.Restarter - run restarter: [/Applications/IntelliJ IDEA.app/Contents/bin/restarter, 29239, 1, /Applications/IntelliJ IDEA.app/Contents/MacOS/idea]
+2025-12-16 18:49:36.450 [DefaultDispatcher-worker-43] INFO  #.i.p.ide.bootstrap.AppStarter - ------------------------------------------------------ IDE SHUTDOWN ------------------------------------------------------

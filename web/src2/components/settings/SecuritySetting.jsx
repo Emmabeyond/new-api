@@ -35,7 +35,7 @@ import {
 } from '@douyinfe/semi-ui';
 import { API, showError, showSuccess, timestamp2string } from '../../helpers';
 import { useTranslation } from 'react-i18next';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Shield, AlertTriangle, Filter } from 'lucide-react';
 
 const { Text, Title } = Typography;
 
@@ -49,6 +49,14 @@ const SecuritySetting = () => {
     mask_channel_names: true,
     mask_channel_ids: true,
     mask_channel_types: true,
+    // 响应头过滤配置
+    enable_header_filter: true,
+    header_filter_mode: 'blacklist',
+    header_blacklist: '',
+    header_whitelist: '',
+    standardize_request_id: true,
+    log_filtered_headers: false,
+    // 反滥用配置
     enable_anti_abuse: false,
     model_switch_window_minutes: 5,
     model_switch_threshold: 10,
@@ -251,6 +259,94 @@ const SecuritySetting = () => {
               >
                 {t('脱敏渠道类型')}
               </Checkbox>
+            </Col>
+          </Row>
+
+          <Divider margin='24px' />
+
+          {/* 响应头过滤 */}
+          <Row gutter={16}>
+            <Col span={24}>
+              <div className='flex items-center gap-2 mb-4'>
+                <Filter size={20} className='text-green-500' />
+                <Title heading={6}>{t('响应头过滤')}</Title>
+              </div>
+              <Text size='small' type='tertiary' style={{ marginBottom: 16, display: 'block' }}>
+                {t('过滤上游 API 返回的响应头，防止泄露敏感信息（如供应商标识、内部请求ID等）')}
+              </Text>
+              <Checkbox
+                checked={settings.enable_header_filter}
+                onChange={(e) => handleChange('enable_header_filter', e.target.checked)}
+              >
+                {t('启用响应头过滤')}
+              </Checkbox>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Label>{t('过滤模式')}</Form.Label>
+              <Form.Select
+                value={settings.header_filter_mode}
+                onChange={(value) => handleChange('header_filter_mode', value)}
+                style={{ width: '100%' }}
+                disabled={!settings.enable_header_filter}
+              >
+                <Form.Select.Option value='blacklist'>{t('黑名单模式')}</Form.Select.Option>
+                <Form.Select.Option value='whitelist'>{t('白名单模式')}</Form.Select.Option>
+              </Form.Select>
+              <Text size='small' type='tertiary'>{t('黑名单：过滤匹配的头；白名单：只保留匹配的头')}</Text>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col xs={24} sm={12}>
+              <Form.Label>{t('黑名单模式 - 要过滤的响应头（每行一个，支持 * 通配符）')}</Form.Label>
+              <Form.TextArea
+                value={settings.header_blacklist}
+                onChange={(value) => handleChange('header_blacklist', value)}
+                rows={6}
+                placeholder='X-Request-Id&#10;X-Ratelimit-*&#10;CF-*&#10;X-OpenAI-*&#10;X-Claude-*'
+                disabled={!settings.enable_header_filter || settings.header_filter_mode !== 'blacklist'}
+              />
+              <Text size='small' type='tertiary'>{t('匹配这些模式的响应头将被过滤')}</Text>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Label>{t('白名单模式 - 要保留的响应头（每行一个，支持 * 通配符）')}</Form.Label>
+              <Form.TextArea
+                value={settings.header_whitelist}
+                onChange={(value) => handleChange('header_whitelist', value)}
+                rows={6}
+                placeholder='Content-Type&#10;Content-Length&#10;Transfer-Encoding&#10;Cache-Control'
+                disabled={!settings.enable_header_filter || settings.header_filter_mode !== 'whitelist'}
+              />
+              <Text size='small' type='tertiary'>{t('只有匹配这些模式的响应头会被保留')}</Text>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col span={24}>
+              <Checkbox
+                checked={settings.standardize_request_id}
+                onChange={(e) => handleChange('standardize_request_id', e.target.checked)}
+                disabled={!settings.enable_header_filter}
+              >
+                {t('标准化请求 ID')}
+              </Checkbox>
+              <Text size='small' type='tertiary' style={{ marginLeft: 24, display: 'block' }}>
+                {t('将上游返回的请求 ID 替换为系统生成的标准化 ID，防止泄露上游信息')}
+              </Text>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 8 }}>
+            <Col span={24}>
+              <Checkbox
+                checked={settings.log_filtered_headers}
+                onChange={(e) => handleChange('log_filtered_headers', e.target.checked)}
+                disabled={!settings.enable_header_filter}
+              >
+                {t('记录被过滤的响应头（调试用）')}
+              </Checkbox>
+              <Text size='small' type='tertiary' style={{ marginLeft: 24, display: 'block' }}>
+                {t('在日志中记录被过滤的响应头名称（不记录值），用于调试')}
+              </Text>
             </Col>
           </Row>
 

@@ -10,6 +10,7 @@ import (
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -161,11 +162,8 @@ func VideoProxy(c *gin.Context) {
 		return
 	}
 
-	for key, values := range resp.Header {
-		for _, value := range values {
-			c.Writer.Header().Add(key, value)
-		}
-	}
+	// 使用安全的响应头复制，过滤敏感头信息
+	service.SafeCopyResponseHeaders(c, resp)
 
 	c.Writer.Header().Set("Cache-Control", "public, max-age=86400") // Cache for 24 hours
 	c.Writer.WriteHeader(resp.StatusCode)

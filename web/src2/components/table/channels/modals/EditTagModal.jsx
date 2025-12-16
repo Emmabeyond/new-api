@@ -56,6 +56,95 @@ const MODEL_MAPPING_EXAMPLE = {
   'gpt-3.5-turbo': 'gpt-3.5-turbo-0125',
 };
 
+// 客户端伪装预设
+const CLIENT_DISGUISE_PRESETS = {
+  none: {
+    label: '无伪装',
+    headers: null,
+  },
+  claude_code: {
+    label: 'Claude Code',
+    headers: {
+      'User-Agent': 'claude-code/1.0.32',
+      'x-client-name': 'claude-code',
+      'x-client-version': '1.0.32',
+    },
+  },
+  codex_cli: {
+    label: 'Codex CLI',
+    headers: {
+      'User-Agent': 'codex-cli/0.1.0',
+      'x-client-name': 'codex',
+      'x-client-version': '0.1.0',
+    },
+  },
+  cursor: {
+    label: 'Cursor',
+    headers: {
+      'User-Agent': 'Cursor/0.45.0',
+      'x-client-name': 'cursor',
+      'x-client-version': '0.45.0',
+    },
+  },
+  windsurf: {
+    label: 'Windsurf',
+    headers: {
+      'User-Agent': 'Windsurf/1.0.0',
+      'x-client-name': 'windsurf',
+      'x-client-version': '1.0.0',
+    },
+  },
+  continue: {
+    label: 'Continue',
+    headers: {
+      'User-Agent': 'Continue/0.9.0',
+      'x-client-name': 'continue',
+      'x-client-version': '0.9.0',
+    },
+  },
+  cline: {
+    label: 'Cline',
+    headers: {
+      'User-Agent': 'Cline/3.0.0',
+      'x-client-name': 'cline',
+      'x-client-version': '3.0.0',
+    },
+  },
+  aider: {
+    label: 'Aider',
+    headers: {
+      'User-Agent': 'Aider/0.50.0',
+      'x-client-name': 'aider',
+      'x-client-version': '0.50.0',
+    },
+  },
+  gemini_web: {
+    label: 'Gemini Web',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'x-goog-api-client': 'genai-js/0.1.0',
+    },
+  },
+  ai_studio: {
+    label: 'Google AI Studio',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'x-goog-api-client': 'gl-web/0.0.0 fire/0.0.0',
+      'Origin': 'https://aistudio.google.com',
+    },
+  },
+  browser_chrome: {
+    label: '浏览器 (Chrome)',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    },
+  },
+  custom: {
+    label: '自定义',
+    headers: null,
+  },
+};
+
 const EditTagModal = (props) => {
   const { t } = useTranslation();
   const { visible, tag, handleClose, refresh } = props;
@@ -620,6 +709,33 @@ const EditTagModal = (props) => {
                     }
                   />
 
+                  <Form.Select
+                    field='client_disguise_preset'
+                    label={t('客户端伪装预设')}
+                    placeholder={t('选择预设快速填充请求头')}
+                    optionList={Object.entries(CLIENT_DISGUISE_PRESETS).map(
+                      ([key, preset]) => ({
+                        value: key,
+                        label: preset.label,
+                      }),
+                    )}
+                    onChange={(value) => {
+                      const preset = CLIENT_DISGUISE_PRESETS[value];
+                      if (preset && preset.headers) {
+                        handleInputChange(
+                          'header_override',
+                          JSON.stringify(preset.headers, null, 2),
+                        );
+                      } else if (value === 'none') {
+                        handleInputChange('header_override', '');
+                      }
+                    }}
+                    showClear
+                    extraText={t(
+                      '选择预设后会自动填充请求头，用于伪装成特定客户端绕过上游检测',
+                    )}
+                  />
+
                   <Form.TextArea
                     field='header_override'
                     label={t('请求头覆盖')}
@@ -637,25 +753,23 @@ const EditTagModal = (props) => {
                     extraText={
                       <div className='flex flex-col gap-1'>
                         <div className='flex gap-2 flex-wrap items-center'>
-                          <Text
-                            className='!text-semi-color-primary cursor-pointer'
-                            onClick={() =>
-                              handleInputChange(
-                                'header_override',
-                                JSON.stringify(
-                                  {
-                                    'User-Agent':
-                                      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
-                                    Authorization: 'Bearer {api_key}',
-                                  },
-                                  null,
-                                  2,
-                                ),
-                              )
-                            }
-                          >
-                            {t('填入模板')}
-                          </Text>
+                          {Object.entries(CLIENT_DISGUISE_PRESETS)
+                            .filter(([key]) => key !== 'none' && key !== 'custom')
+                            .slice(0, 5)
+                            .map(([key, preset]) => (
+                              <Text
+                                key={key}
+                                className='!text-semi-color-primary cursor-pointer'
+                                onClick={() =>
+                                  handleInputChange(
+                                    'header_override',
+                                    JSON.stringify(preset.headers, null, 2),
+                                  )
+                                }
+                              >
+                                {preset.label}
+                              </Text>
+                            ))}
                           <Text
                             className='!text-semi-color-primary cursor-pointer'
                             onClick={() =>

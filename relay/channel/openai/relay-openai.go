@@ -338,10 +338,8 @@ func OpenaiTTSHandler(c *gin.Context, resp *http.Response, info *relaycommon.Rel
 	usage := &dto.Usage{}
 	usage.PromptTokens = info.GetEstimatePromptTokens()
 	usage.TotalTokens = info.GetEstimatePromptTokens()
-	for k, v := range resp.Header {
-		c.Writer.Header().Set(k, v[0])
-	}
-	c.Writer.WriteHeader(resp.StatusCode)
+	// 使用安全的响应头复制，过滤敏感头信息
+	service.SafeCopyResponseHeadersWithStatus(c, resp)
 
 	isStreaming := resp.ContentLength == -1 || resp.Header.Get("Content-Length") == ""
 	if isStreaming {

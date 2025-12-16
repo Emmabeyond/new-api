@@ -11,6 +11,7 @@ import (
 
 	"github.com/QuantumNous/new-api/dto"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/types"
 	"github.com/gin-gonic/gin"
 )
@@ -182,12 +183,8 @@ func handleChatCompletionResponse(c *gin.Context, resp *http.Response, info *rel
 	}
 	defer resp.Body.Close()
 
-	// Set response headers
-	for key, values := range resp.Header {
-		for _, value := range values {
-			c.Header(key, value)
-		}
-	}
+	// 使用安全的响应头复制，过滤敏感头信息
+	service.SafeCopyResponseHeaders(c, resp)
 
 	c.Data(resp.StatusCode, "application/json", body)
 	return nil, nil

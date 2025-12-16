@@ -31,7 +31,7 @@ func UpdateSecuritySettings(c *gin.Context) {
 		return
 	}
 
-	// Validate settings
+	// Validate anti-abuse settings
 	if newSettings.ModelSwitchWindowMinutes < 1 {
 		newSettings.ModelSwitchWindowMinutes = 5
 	}
@@ -49,6 +49,24 @@ func UpdateSecuritySettings(c *gin.Context) {
 	}
 	if newSettings.RateLimitRequests < 1 {
 		newSettings.RateLimitRequests = 5
+	}
+
+	// Validate header filter settings
+	if err := security_setting.ValidateHeaderFilterConfig(
+		newSettings.HeaderFilterMode,
+		newSettings.HeaderBlacklist,
+		newSettings.HeaderWhitelist,
+	); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "响应头过滤配置无效: " + err.Error(),
+		})
+		return
+	}
+
+	// Set default filter mode if empty
+	if newSettings.HeaderFilterMode == "" {
+		newSettings.HeaderFilterMode = "blacklist"
 	}
 
 	// Convert to map for saving
