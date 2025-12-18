@@ -184,7 +184,8 @@ func ollamaStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http
 	}
 
 	// 检测空回复，触发重试
-	if service.IsEmptyStreamResponseWithModel(usage, responseTextBuilder.String(), info.UpstreamModelName) {
+	// 如果有工具调用（toolCallIndex > 0），不判定为空回复
+	if toolCallIndex == 0 && service.IsEmptyStreamResponseWithModel(usage, responseTextBuilder.String(), info.UpstreamModelName) {
 		logger.LogWarn(c, fmt.Sprintf("Ollama 检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, usage.CompletionTokens))
 		return usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 	}
@@ -301,7 +302,9 @@ func ollamaChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.R
 	}
 
 	// 检测空回复，触发重试
-	if service.IsEmptyNonStreamResponseWithModel(&full, info.UpstreamModelName) {
+	// 先检查 finish_reason，如果是工具调用则跳过空回复检测
+	if !service.IsNonEmptyFinishReason(finishReason) &&
+		service.IsEmptyNonStreamResponseWithModel(&full, info.UpstreamModelName) {
 		logger.LogWarn(c, fmt.Sprintf("Ollama 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
 		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 	}

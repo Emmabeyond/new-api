@@ -17,18 +17,24 @@ type EmptyResponseSetting struct {
 
 	// AlertThreshold 告警阈值（空回复率百分比），默认为 10
 	AlertThreshold float64 `json:"alert_threshold"`
+
+	// NonEmptyFinishReasons 非空 finish_reason 列表（逗号分隔）
+	// 当 finish_reason 在此列表中时，即使内容为空也不判定为空回复
+	// 默认值: tool_calls,tool_use,function_call
+	NonEmptyFinishReasons string `json:"non_empty_finish_reasons"`
 }
 
 // 默认配置
 var emptyResponseSetting = EmptyResponseSetting{
-	Enabled:        true,
-	MaxRetryCount:  2,
-	ExcludedModels: "",
-	AlertThreshold: 10.0,
+	Enabled:               true,
+	MaxRetryCount:         2,
+	ExcludedModels:        "",
+	AlertThreshold:        10.0,
+	NonEmptyFinishReasons: "tool_calls,tool_use,function_call",
 }
 
 // EmptyResponseConfigSetter 配置设置回调函数类型
-type EmptyResponseConfigSetter func(enabled bool, maxRetryCount int, excludedModels []string, alertThreshold float64)
+type EmptyResponseConfigSetter func(enabled bool, maxRetryCount int, excludedModels []string, alertThreshold float64, nonEmptyFinishReasons []string)
 
 // emptyResponseConfigSetter 配置设置回调
 var emptyResponseConfigSetter EmptyResponseConfigSetter
@@ -85,7 +91,17 @@ func (s *EmptyResponseSetting) SyncToService() {
 		}
 	}
 
-	emptyResponseConfigSetter(s.Enabled, s.MaxRetryCount, excludedModels, s.AlertThreshold)
+	nonEmptyFinishReasons := []string{}
+	if s.NonEmptyFinishReasons != "" {
+		// 解析逗号分隔的 finish_reason 列表
+		for _, reason := range splitAndTrim(s.NonEmptyFinishReasons, ",") {
+			if reason != "" {
+				nonEmptyFinishReasons = append(nonEmptyFinishReasons, reason)
+			}
+		}
+	}
+
+	emptyResponseConfigSetter(s.Enabled, s.MaxRetryCount, excludedModels, s.AlertThreshold, nonEmptyFinishReasons)
 }
 
 // splitAndTrim 分割字符串并去除空白

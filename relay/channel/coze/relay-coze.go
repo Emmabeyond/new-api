@@ -94,7 +94,14 @@ func cozeChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Res
 		Choices: response.Choices,
 		Usage:   response.Usage,
 	}
-	if service.IsEmptyNonStreamResponseWithModel(openaiResponse, info.UpstreamModelName) {
+	// 获取 finish_reason 用于判断是否为工具调用等非空响应
+	finishReason := ""
+	if len(response.Choices) > 0 {
+		finishReason = response.Choices[0].FinishReason
+	}
+	// 先检查 finish_reason，如果是工具调用则跳过空回复检测
+	if !service.IsNonEmptyFinishReason(finishReason) &&
+		service.IsEmptyNonStreamResponseWithModel(openaiResponse, info.UpstreamModelName) {
 		common.SysLog(fmt.Sprintf("Coze 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
 		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 	}

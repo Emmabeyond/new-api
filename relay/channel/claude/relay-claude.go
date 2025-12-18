@@ -794,7 +794,9 @@ func ClaudeHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 	var claudeResponse dto.ClaudeResponse
 	if unmarshalErr := common.Unmarshal(responseBody, &claudeResponse); unmarshalErr == nil {
 		// 检测空回复，触发重试
-		if service.IsEmptyClaudeResponseWithModel(&claudeResponse, info.UpstreamModelName) {
+		// 先检查 stop_reason，如果是工具调用则跳过空回复检测
+		if !service.IsNonEmptyFinishReason(claudeResponse.StopReason) &&
+			service.IsEmptyClaudeResponseWithModel(&claudeResponse, info.UpstreamModelName) {
 			logger.LogWarn(c, fmt.Sprintf("Claude 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
 			return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 		}

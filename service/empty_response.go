@@ -11,12 +11,17 @@ import (
 
 func init() {
 	// 注册配置设置回调，避免循环导入
-	operation_setting.RegisterEmptyResponseConfigSetter(func(enabled bool, maxRetryCount int, excludedModels []string, alertThreshold float64) {
+	operation_setting.RegisterEmptyResponseConfigSetter(func(enabled bool, maxRetryCount int, excludedModels []string, alertThreshold float64, nonEmptyFinishReasons []string) {
+		// 如果未配置非空 finish_reason 列表，使用默认值
+		if len(nonEmptyFinishReasons) == 0 {
+			nonEmptyFinishReasons = defaultNonEmptyFinishReasons
+		}
 		SetEmptyResponseConfig(&EmptyResponseConfig{
-			Enabled:        enabled,
-			MaxRetryCount:  maxRetryCount,
-			ExcludedModels: excludedModels,
-			AlertThreshold: alertThreshold,
+			Enabled:               enabled,
+			MaxRetryCount:         maxRetryCount,
+			ExcludedModels:        excludedModels,
+			AlertThreshold:        alertThreshold,
+			NonEmptyFinishReasons: nonEmptyFinishReasons,
 		})
 	})
 }
@@ -34,6 +39,11 @@ type EmptyResponseConfig struct {
 
 	// AlertThreshold 告警阈值（空回复率百分比），默认为 10
 	AlertThreshold float64 `json:"alert_threshold"`
+
+	// NonEmptyFinishReasons 非空 finish_reason 列表
+	// 当 finish_reason 在此列表中时，即使内容为空也不判定为空回复
+	// 用于支持 Agentic 场景（如 Claude Code、Codex）中的工具调用响应
+	NonEmptyFinishReasons []string `json:"non_empty_finish_reasons"`
 }
 
 // EmptyResponseEvent 空回复事件
@@ -58,12 +68,21 @@ type EmptyResponseStats struct {
 	SuccessAfterRetry int64   `json:"success_after_retry"`
 }
 
+// 默认非空 finish_reason 列表
+// 这些 finish_reason 表示工具调用，即使内容为空也不应判定为空回复
+var defaultNonEmptyFinishReasons = []string{
+	"tool_calls",    // OpenAI 格式的工具调用
+	"tool_use",      // Claude 格式的工具使用
+	"function_call", // OpenAI 旧版函数调用
+}
+
 // 默认配置
 var defaultEmptyResponseConfig = &EmptyResponseConfig{
-	Enabled:        true,
-	MaxRetryCount:  2,
-	ExcludedModels: []string{},
-	AlertThreshold: 10.0,
+	Enabled:               true,
+	MaxRetryCount:         2,
+	ExcludedModels:        []string{},
+	AlertThreshold:        10.0,
+	NonEmptyFinishReasons: defaultNonEmptyFinishReasons,
 }
 
 var (
@@ -105,6 +124,26 @@ func (c *EmptyResponseConfig) IsModelExcluded(modelName string) bool {
 	return false
 }
 
+// IsNonEmptyFinishReason 检查 finish_reason 是否表示非空响应
+// 当 finish_reason 在非空列表中时（如 tool_calls、tool_use、function_call），返回 true
+// 这用于支持 Agentic 场景，避免将工具调用响应误判为空回复
+func IsNonEmptyFinishReason(finishReason string) bool {
+	if finishReason == "" {
+		return false
+	}
+	config := GetEmptyResponseConfig()
+	if config == nil {
+		return false
+	}
+	finishReasonLower := strings.ToLower(finishReason)
+	for _, nonEmpty := range config.NonEmptyFinishReasons {
+		if strings.ToLower(nonEmpty) == finishReasonLower {
+			return true
+		}
+	}
+	return false
+}
+
 // IsEmptyStreamResponse 检测流式响应是否为空
 // 当 completionTokens 为 0 且 responseText 为空或仅包含空白字符时，返回 true
 func IsEmptyStreamResponse(usage *dto.Usage, responseText string) bool {
@@ -126,6 +165,23 @@ func IsEmptyStreamResponse(usage *dto.Usage, responseText string) bool {
 	// 检查响应文本是否为空或仅包含空白字符
 	trimmedText := strings.TrimSpace(responseText)
 	return trimmedText == ""
+}
+
+// IsEmptyStreamResponseWithFinishReason 带 finish_reason 的流式响应空检测
+// 先检查 finish_reason 是否表示非空响应（如工具调用），再进行内容检测
+func IsEmptyStreamResponseWithFinishReason(usage *dto.Usage, responseText string, finishReason string) bool {
+	config := GetEmptyResponseConfig()
+	if config == nil || !config.Enabled {
+		return false
+	}
+
+	// 先检查 finish_reason 是否表示非空响应
+	if IsNonEmptyFinishReason(finishReason) {
+		return false
+	}
+
+	// 回退到内容检测
+	return IsEmptyStreamResponse(usage, responseText)
 }
 
 // IsEmptyNonStreamResponse 检测非流式响应是否为空
@@ -169,6 +225,23 @@ func IsEmptyNonStreamResponse(response *dto.OpenAITextResponse) bool {
 
 	// 所有 choices 都是空内容且没有 tool calls
 	return true
+}
+
+// IsEmptyNonStreamResponseWithFinishReason 带 finish_reason 的非流式响应空检测
+// 先检查 finish_reason 是否表示非空响应（如工具调用），再进行内容检测
+func IsEmptyNonStreamResponseWithFinishReason(response *dto.OpenAITextResponse, finishReason string) bool {
+	config := GetEmptyResponseConfig()
+	if config == nil || !config.Enabled {
+		return false
+	}
+
+	// 先检查 finish_reason 是否表示非空响应
+	if IsNonEmptyFinishReason(finishReason) {
+		return false
+	}
+
+	// 回退到内容检测
+	return IsEmptyNonStreamResponse(response)
 }
 
 // IsEmptyStreamResponseWithModel 带模型检查的流式响应空检测
@@ -388,6 +461,23 @@ func IsEmptyClaudeResponseWithModel(response *dto.ClaudeResponse, modelName stri
 	return IsEmptyClaudeResponse(response)
 }
 
+// IsEmptyClaudeResponseWithFinishReason 带 stop_reason 的 Claude 响应空检测
+// 先检查 stop_reason 是否表示非空响应（如 tool_use），再进行内容检测
+func IsEmptyClaudeResponseWithFinishReason(response *dto.ClaudeResponse, stopReason string) bool {
+	config := GetEmptyResponseConfig()
+	if config == nil || !config.Enabled {
+		return false
+	}
+
+	// 先检查 stop_reason 是否表示非空响应
+	if IsNonEmptyFinishReason(stopReason) {
+		return false
+	}
+
+	// 回退到内容检测
+	return IsEmptyClaudeResponse(response)
+}
+
 // IsEmptyClaudeStreamResponse 检测 Claude 流式响应是否为空
 // 当 outputTokens 为 0 且 responseText 为空或仅包含空白字符时，返回 true
 func IsEmptyClaudeStreamResponse(outputTokens int, responseText string) bool {
@@ -418,6 +508,23 @@ func IsEmptyClaudeStreamResponseWithModel(outputTokens int, responseText string,
 		return false
 	}
 
+	return IsEmptyClaudeStreamResponse(outputTokens, responseText)
+}
+
+// IsEmptyClaudeStreamResponseWithFinishReason 带 stop_reason 的 Claude 流式响应空检测
+// 先检查 stop_reason 是否表示非空响应（如 tool_use），再进行内容检测
+func IsEmptyClaudeStreamResponseWithFinishReason(outputTokens int, responseText string, stopReason string) bool {
+	config := GetEmptyResponseConfig()
+	if config == nil || !config.Enabled {
+		return false
+	}
+
+	// 先检查 stop_reason 是否表示非空响应
+	if IsNonEmptyFinishReason(stopReason) {
+		return false
+	}
+
+	// 回退到内容检测
 	return IsEmptyClaudeStreamResponse(outputTokens, responseText)
 }
 
@@ -491,6 +598,24 @@ func IsEmptyGeminiResponseWithModel(response *dto.GeminiChatResponse, modelName 
 	return IsEmptyGeminiResponse(response)
 }
 
+// IsEmptyGeminiResponseWithFinishReason 带 finishReason 的 Gemini 响应空检测
+// 先检查 finishReason 是否表示非空响应，再进行内容检测
+// 注意：Gemini 的 finishReason 格式为大写（如 STOP, MAX_TOKENS）
+func IsEmptyGeminiResponseWithFinishReason(response *dto.GeminiChatResponse, finishReason string) bool {
+	config := GetEmptyResponseConfig()
+	if config == nil || !config.Enabled {
+		return false
+	}
+
+	// 先检查 finishReason 是否表示非空响应
+	if IsNonEmptyFinishReason(finishReason) {
+		return false
+	}
+
+	// 回退到内容检测
+	return IsEmptyGeminiResponse(response)
+}
+
 // IsEmptyGeminiStreamResponse 检测 Gemini 流式响应是否为空
 // 当 completionTokens 为 0 且 responseText 为空或仅包含空白字符时，返回 true
 func IsEmptyGeminiStreamResponse(completionTokens int, responseText string) bool {
@@ -521,5 +646,22 @@ func IsEmptyGeminiStreamResponseWithModel(completionTokens int, responseText str
 		return false
 	}
 
+	return IsEmptyGeminiStreamResponse(completionTokens, responseText)
+}
+
+// IsEmptyGeminiStreamResponseWithFinishReason 带 finishReason 的 Gemini 流式响应空检测
+// 先检查 finishReason 是否表示非空响应，再进行内容检测
+func IsEmptyGeminiStreamResponseWithFinishReason(completionTokens int, responseText string, finishReason string) bool {
+	config := GetEmptyResponseConfig()
+	if config == nil || !config.Enabled {
+		return false
+	}
+
+	// 先检查 finishReason 是否表示非空响应
+	if IsNonEmptyFinishReason(finishReason) {
+		return false
+	}
+
+	// 回退到内容检测
 	return IsEmptyGeminiStreamResponse(completionTokens, responseText)
 }

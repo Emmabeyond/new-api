@@ -1239,7 +1239,14 @@ func GeminiChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.R
 	}
 
 	// 检测空回复，触发重试
-	if service.IsEmptyGeminiResponseWithModel(&geminiResponse, info.UpstreamModelName) {
+	// 获取 finishReason 用于判断是否为工具调用等非空响应
+	finishReason := ""
+	if len(geminiResponse.Candidates) > 0 && geminiResponse.Candidates[0].FinishReason != nil {
+		finishReason = *geminiResponse.Candidates[0].FinishReason
+	}
+	// 先检查 finishReason，如果是工具调用则跳过空回复检测
+	if !service.IsNonEmptyFinishReason(finishReason) &&
+		service.IsEmptyGeminiResponseWithModel(&geminiResponse, info.UpstreamModelName) {
 		logger.LogWarn(c, fmt.Sprintf("Gemini 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
 		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 	}
