@@ -86,7 +86,14 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 		if newAPIError != nil {
 			// Log full error details for admin debugging
 			logger.LogError(c, fmt.Sprintf("relay error: %s", newAPIError.Error()))
-			newAPIError.SetMessage(common.MessageWithRequestId(newAPIError.Error(), requestId))
+
+			// 处理空回复错误：使用友好消息和 503 状态码
+			if newAPIError.GetErrorCode() == types.ErrorCodeEmptyContent {
+				newAPIError.StatusCode = http.StatusServiceUnavailable
+				newAPIError.SetMessage(common.GetEmptyResponseUserMessage())
+			} else {
+				newAPIError.SetMessage(common.MessageWithRequestId(newAPIError.Error(), requestId))
+			}
 
 			// Return user-safe errors with channel information masked
 			switch relayFormat {
@@ -189,6 +196,11 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 
 		processChannelError(c, *types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, common.GetContextKeyString(c, constant.ContextKeyChannelKey), channel.GetAutoBan()), newAPIError)
 
+		// 记录空回复事件
+		if newAPIError.GetErrorCode() == types.ErrorCodeEmptyContent {
+			service.RecordEmptyResponse(channel.Id, channel.Name, originalModel, requestId, i, false)
+		}
+
 		if !shouldRetry(c, newAPIError, common.RetryTimes-i) {
 			break
 		}
@@ -251,6 +263,10 @@ func shouldRetry(c *gin.Context, openaiErr *types.NewAPIError, retryTimes int) b
 		return false
 	}
 	if types.IsChannelError(openaiErr) {
+		return true
+	}
+	// 空内容错误允许重试
+	if openaiErr.GetErrorCode() == types.ErrorCodeEmptyContent {
 		return true
 	}
 	if types.IsSkipRetryError(openaiErr) {

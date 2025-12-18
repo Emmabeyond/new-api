@@ -1143,12 +1143,24 @@ func GeminiChatStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *
 	createAt := common.GetTimestamp()
 	finishReason := constant.FinishReasonStop
 
+	// 用于收集响应文本以进行空回复检测
+	var responseTextBuilder strings.Builder
+
 	usage, err := geminiStreamHandler(c, info, resp, func(data string, geminiResponse *dto.GeminiChatResponse) bool {
 		response, isStop := streamResponseGeminiChat2OpenAI(geminiResponse)
 
 		response.Id = id
 		response.Created = createAt
 		response.Model = info.UpstreamModelName
+
+		// 收集响应文本用于空回复检测
+		for _, candidate := range geminiResponse.Candidates {
+			for _, part := range candidate.Content.Parts {
+				if part.Text != "" {
+					responseTextBuilder.WriteString(part.Text)
+				}
+			}
+		}
 
 		logger.LogDebug(c, fmt.Sprintf("info.SendResponseCount = %d", info.SendResponseCount))
 		if info.SendResponseCount == 0 {
@@ -1201,6 +1213,13 @@ func GeminiChatStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *
 	if handleErr != nil {
 		common.SysLog("send final response failed: " + handleErr.Error())
 	}
+
+	// 检测空回复，触发重试
+	if service.IsEmptyGeminiStreamResponseWithModel(usage.CompletionTokens, responseTextBuilder.String(), info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("Gemini 检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, usage.CompletionTokens))
+		return usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	return usage, nil
 }
 
@@ -1218,6 +1237,13 @@ func GeminiChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.R
 	if err != nil {
 		return nil, types.NewOpenAIError(err, types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
 	}
+
+	// 检测空回复，触发重试
+	if service.IsEmptyGeminiResponseWithModel(&geminiResponse, info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("Gemini 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
+		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	if len(geminiResponse.Candidates) == 0 {
 		//return nil, types.NewOpenAIError(errors.New("no candidates returned"), types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
 		//if geminiResponse.PromptFeedback != nil && geminiResponse.PromptFeedback.BlockReason != nil {

@@ -76,6 +76,7 @@ func ollamaStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http
 	var responseId = common.GetUUID()
 	var created = time.Now().Unix()
 	var toolCallIndex int
+	var responseTextBuilder strings.Builder // 用于收集响应文本以进行空回复检测
 	start := helper.GenerateStartEmptyResponse(responseId, created, model, nil)
 	if data, err := common.Marshal(start); err == nil {
 		_ = helper.StringData(c, string(data))
@@ -104,6 +105,10 @@ func ollamaStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http
 				content = chunk.Message.Content
 			} else {
 				content = chunk.Response
+			}
+			// 收集响应文本用于空回复检测
+			if content != "" {
+				responseTextBuilder.WriteString(content)
 			}
 			delta := dto.ChatCompletionsStreamResponse{
 				Id:      responseId,
@@ -177,6 +182,13 @@ func ollamaStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http
 	if err := scanner.Err(); err != nil && err != io.EOF {
 		logger.LogError(c, "ollama stream scan error: "+err.Error())
 	}
+
+	// 检测空回复，触发重试
+	if service.IsEmptyStreamResponseWithModel(usage, responseTextBuilder.String(), info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("Ollama 检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, usage.CompletionTokens))
+		return usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	return usage, nil
 }
 
@@ -287,6 +299,13 @@ func ollamaChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.R
 		}},
 		Usage: *usage,
 	}
+
+	// 检测空回复，触发重试
+	if service.IsEmptyNonStreamResponseWithModel(&full, info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("Ollama 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
+		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	out, _ := common.Marshal(full)
 	service.IOCopyBytesGracefully(c, resp, out)
 	return usage, nil

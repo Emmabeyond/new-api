@@ -721,6 +721,13 @@ func ClaudeStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.
 	}
 
 	HandleStreamFinalResponse(c, info, claudeInfo, requestMode)
+
+	// 检测空回复，触发重试
+	if service.IsEmptyClaudeStreamResponseWithModel(claudeInfo.Usage.CompletionTokens, claudeInfo.ResponseText.String(), info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("Claude 检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, claudeInfo.Usage.CompletionTokens))
+		return claudeInfo.Usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	return claudeInfo.Usage, nil
 }
 
@@ -782,6 +789,17 @@ func ClaudeHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 	if common.DebugEnabled {
 		println("responseBody: ", string(responseBody))
 	}
+
+	// 解析 Claude 响应用于空回复检测
+	var claudeResponse dto.ClaudeResponse
+	if unmarshalErr := common.Unmarshal(responseBody, &claudeResponse); unmarshalErr == nil {
+		// 检测空回复，触发重试
+		if service.IsEmptyClaudeResponseWithModel(&claudeResponse, info.UpstreamModelName) {
+			logger.LogWarn(c, fmt.Sprintf("Claude 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
+			return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+		}
+	}
+
 	handleErr := HandleClaudeResponseData(c, info, claudeInfo, resp, responseBody, requestMode)
 	if handleErr != nil {
 		return nil, handleErr

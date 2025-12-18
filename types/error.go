@@ -71,6 +71,8 @@ const (
 	ErrorCodeBadResponse            ErrorCode = "bad_response"
 	ErrorCodeBadResponseBody        ErrorCode = "bad_response_body"
 	ErrorCodeEmptyResponse          ErrorCode = "empty_response"
+	ErrorCodeEmptyContent           ErrorCode = "empty_content"      // 空内容错误，可触发重试
+	ErrorCodeAllChannelsEmpty       ErrorCode = "all_channels_empty" // 所有渠道都返回空内容
 	ErrorCodeAwsInvokeError         ErrorCode = "aws_invoke_error"
 	ErrorCodeModelNotFound          ErrorCode = "model_not_found"
 	ErrorCodePromptBlocked          ErrorCode = "prompt_blocked"

@@ -41,6 +41,7 @@ import {
   BarChart2,
   TrendingUp,
   Receipt,
+  CalendarCheck,
 } from 'lucide-react';
 import { IconGift } from '@douyinfe/semi-icons';
 import { useMinimumLoadingTime } from '../../hooks/common/useMinimumLoadingTime';
@@ -83,6 +84,9 @@ const RechargeCard = ({
   statusLoading,
   topupInfo,
   onOpenHistory,
+  checkinStats,
+  checkinLoading,
+  onCheckin,
 }) => {
   const onlineFormApiRef = useRef(null);
   const redeemFormApiRef = useRef(null);
@@ -103,13 +107,25 @@ const RechargeCard = ({
             <div className='text-xs'>{t('多种充值方式，安全便捷')}</div>
           </div>
         </div>
-        <Button
-          icon={<Receipt size={16} />}
-          theme='solid'
-          onClick={onOpenHistory}
-        >
-          {t('账单')}
-        </Button>
+        <Space>
+          <Button
+            icon={<CalendarCheck size={16} />}
+            theme={checkinStats?.checked_in_today ? 'light' : 'solid'}
+            type={checkinStats?.checked_in_today ? 'tertiary' : 'primary'}
+            onClick={onCheckin}
+            loading={checkinLoading}
+            disabled={checkinStats?.checked_in_today}
+          >
+            {checkinStats?.checked_in_today ? t('已签到') : t('签到')}
+          </Button>
+          <Button
+            icon={<Receipt size={16} />}
+            theme='solid'
+            onClick={onOpenHistory}
+          >
+            {t('账单')}
+          </Button>
+        </Space>
       </div>
 
       <Space vertical style={{ width: '100%' }}>

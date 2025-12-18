@@ -85,6 +85,20 @@ func cozeChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Res
 			FinishReason: "stop",
 		},
 	}
+
+	// 检测空回复，触发重试
+	openaiResponse := &dto.OpenAITextResponse{
+		Id:      response.Id,
+		Model:   response.Model,
+		Created: response.Created,
+		Choices: response.Choices,
+		Usage:   response.Usage,
+	}
+	if service.IsEmptyNonStreamResponseWithModel(openaiResponse, info.UpstreamModelName) {
+		common.SysLog(fmt.Sprintf("Coze 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
+		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		return nil, types.NewError(err, types.ErrorCodeBadResponseBody)
@@ -102,6 +116,7 @@ func cozeChatStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *ht
 	helper.SetEventStreamHeaders(c)
 	id := helper.GetResponseID(c)
 	var responseText string
+	var responseTextBuilder strings.Builder // 用于收集响应文本以进行空回复检测
 
 	var currentEvent string
 	var currentData string
@@ -143,6 +158,13 @@ func cozeChatStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *ht
 
 	if usage.TotalTokens == 0 {
 		usage = service.ResponseText2Usage(c, responseText, info.UpstreamModelName, c.GetInt("coze_input_count"))
+	}
+
+	// 检测空回复，触发重试
+	responseTextBuilder.WriteString(responseText)
+	if service.IsEmptyStreamResponseWithModel(usage, responseTextBuilder.String(), info.UpstreamModelName) {
+		common.SysLog(fmt.Sprintf("Coze 检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, usage.CompletionTokens))
+		return usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 	}
 
 	return usage, nil

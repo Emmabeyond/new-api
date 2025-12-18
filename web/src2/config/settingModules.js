@@ -26,6 +26,7 @@ import {
   IconList,
   IconApps,
   IconMenu,
+  IconRefresh,
 } from '@douyinfe/semi-icons';
 
 /**
@@ -111,6 +112,18 @@ export const settingModules = [
       'QuotaForInviter',
       'QuotaForInvitee',
       'quota_setting.enable_free_model_pre_consume',
+    ],
+  },
+  {
+    key: 'emptyResponse',
+    title: '空回复处理设置',
+    icon: <IconRefresh />,
+    Component: React.lazy(() => import('../pages/Setting/Operation/SettingsEmptyResponse')),
+    settingKeys: [
+      'empty_response_setting.enabled',
+      'empty_response_setting.max_retry_count',
+      'empty_response_setting.excluded_models',
+      'empty_response_setting.alert_threshold',
     ],
   },
 ];

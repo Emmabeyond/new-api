@@ -249,6 +249,13 @@ func difyStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.R
 		usage = service.ResponseText2Usage(c, responseText, info.UpstreamModelName, info.GetEstimatePromptTokens())
 	}
 	usage.CompletionTokens += nodeToken
+
+	// 检测空回复，触发重试
+	if service.IsEmptyStreamResponseWithModel(usage, responseText, info.UpstreamModelName) {
+		common.SysLog(fmt.Sprintf("Dify 检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, usage.CompletionTokens))
+		return usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	return usage, nil
 }
 
@@ -279,6 +286,13 @@ func difyHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Respons
 		FinishReason: "stop",
 	}
 	fullTextResponse.Choices = append(fullTextResponse.Choices, choice)
+
+	// 检测空回复，触发重试
+	if service.IsEmptyNonStreamResponseWithModel(&fullTextResponse, info.UpstreamModelName) {
+		common.SysLog(fmt.Sprintf("Dify 检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
+		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	jsonResponse, err := json.Marshal(fullTextResponse)
 	if err != nil {
 		return nil, types.NewError(err, types.ErrorCodeBadResponseBody)

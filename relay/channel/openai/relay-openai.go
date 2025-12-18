@@ -191,6 +191,12 @@ func OaiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Re
 
 	HandleFinalResponse(c, info, lastStreamData, responseId, createAt, model, systemFingerprint, usage, containStreamUsage)
 
+	// 检测空回复，触发重试
+	if service.IsEmptyStreamResponseWithModel(usage, responseTextBuilder.String(), info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("检测到空回复，触发重试 (model: %s, tokens: %d)", info.UpstreamModelName, usage.CompletionTokens))
+		return usage, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
+	}
+
 	return usage, nil
 }
 
@@ -228,6 +234,12 @@ func OpenaiHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Respo
 
 	if oaiError := simpleResponse.GetOpenAIError(); oaiError != nil && oaiError.Type != "" {
 		return nil, types.WithOpenAIError(*oaiError, resp.StatusCode)
+	}
+
+	// 检测空回复，触发重试
+	if service.IsEmptyNonStreamResponseWithModel(&simpleResponse, info.UpstreamModelName) {
+		logger.LogWarn(c, fmt.Sprintf("检测到空回复（非流式），触发重试 (model: %s)", info.UpstreamModelName))
+		return nil, types.NewError(fmt.Errorf("上游返回空内容"), types.ErrorCodeEmptyContent)
 	}
 
 	forceFormat := false

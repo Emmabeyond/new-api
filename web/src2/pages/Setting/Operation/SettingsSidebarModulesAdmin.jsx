@@ -65,6 +65,8 @@ export default function SettingsSidebarModulesAdmin(props) {
       models: true,
       redemption: true,
       user: true,
+      'admin-checkin': true,
+      'topup-admin': true,
       setting: true,
     },
   });
@@ -124,6 +126,8 @@ export default function SettingsSidebarModulesAdmin(props) {
         models: true,
         redemption: true,
         user: true,
+        'admin-checkin': true,
+        'topup-admin': true,
         setting: true,
       },
     };
@@ -237,15 +241,16 @@ export default function SettingsSidebarModulesAdmin(props) {
       modules: [
         { key: 'topup', title: t('钱包管理'), description: t('余额充值管理') },
         {
-          key: 'personal',
-          title: t('个人设置'),
-          description: t('个人信息设置'),
-        },
-        {
           key: 'theme-center',
           title: t('主题中心'),
           description: t('界面主题切换'),
         },
+        {
+          key: 'personal',
+          title: t('个人设置'),
+          description: t('个人信息设置'),
+        },
+        
       ],
     },
     {
@@ -261,6 +266,16 @@ export default function SettingsSidebarModulesAdmin(props) {
           description: t('兑换码生成管理'),
         },
         { key: 'user', title: t('用户管理'), description: t('用户账户管理') },
+        {
+          key: 'admin-checkin',
+          title: t('签到管理'),
+          description: t('用户签到管理'),
+        },
+        {
+          key: 'topup-admin',
+          title: t('充值管理'),
+          description: t('充值订单管理'),
+        },
         {
           key: 'setting',
           title: t('系统设置'),

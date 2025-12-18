@@ -49,6 +49,7 @@ import Setup from './pages/Setup';
 import SetupCheck from './components/layout/SetupCheck';
 import Checkin from './pages/Checkin';
 import AdminCheckin from './pages/AdminCheckin';
+import TopUpAdmin from './pages/TopUpAdmin';
 
 const Home = lazy(() => import('./pages/Home'));
 const ThemeCenter = lazy(() => import('./pages/ThemeCenter'));
@@ -159,6 +160,14 @@ function App() {
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
                 <AdminCheckin />
               </Suspense>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path='/console/topup-admin'
+          element={
+            <AdminRoute>
+              <TopUpAdmin />
             </AdminRoute>
           }
         />

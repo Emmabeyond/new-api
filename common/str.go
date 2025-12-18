@@ -235,3 +235,8 @@ func MaskSensitiveInfo(str string) string {
 
 	return str
 }
+
+// GetEmptyResponseUserMessage 获取空回复的用户友好消息
+func GetEmptyResponseUserMessage() string {
+	return "服务暂时繁忙，请稍后重试"
+}

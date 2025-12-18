@@ -343,21 +343,32 @@ func GetUserTopUps(c *gin.Context) {
 	common.ApiSuccess(c, pageInfo)
 }
 
-// GetAllTopUps 管理员获取全平台充值记录
+// GetAllTopUps 管理员获取全平台充值记录（支持多条件筛选）
 func GetAllTopUps(c *gin.Context) {
 	pageInfo := common.GetPageQuery(c)
-	keyword := c.Query("keyword")
 
-	var (
-		topups []*model.TopUp
-		total  int64
-		err    error
-	)
-	if keyword != "" {
-		topups, total, err = model.SearchAllTopUps(keyword, pageInfo)
-	} else {
-		topups, total, err = model.GetAllTopUps(pageInfo)
+	// 解析筛选参数
+	filter := &model.TopUpFilter{}
+	filter.Keyword = c.Query("keyword")
+	filter.Status = c.Query("status")
+	filter.PaymentMethod = c.Query("payment_method")
+	if userIdStr := c.Query("user_id"); userIdStr != "" {
+		if userId, err := strconv.Atoi(userIdStr); err == nil {
+			filter.UserId = userId
+		}
 	}
+	if startTimeStr := c.Query("start_time"); startTimeStr != "" {
+		if startTime, err := strconv.ParseInt(startTimeStr, 10, 64); err == nil {
+			filter.StartTime = startTime
+		}
+	}
+	if endTimeStr := c.Query("end_time"); endTimeStr != "" {
+		if endTime, err := strconv.ParseInt(endTimeStr, 10, 64); err == nil {
+			filter.EndTime = endTime
+		}
+	}
+
+	topups, total, err := model.GetAllTopUpsWithFilter(filter, pageInfo)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -366,6 +377,118 @@ func GetAllTopUps(c *gin.Context) {
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(topups)
 	common.ApiSuccess(c, pageInfo)
+}
+
+// GetTopUpDetail 管理员获取充值订单详情
+func GetTopUpDetail(c *gin.Context) {
+	idStr := c.Param("topup_id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.ApiErrorMsg(c, "无效的订单ID")
+		return
+	}
+
+	detail, err := model.GetTopUpDetail(id)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+
+	common.ApiSuccess(c, detail)
+}
+
+// GetTopUpStats 管理员获取充值统计数据
+func GetTopUpStats(c *gin.Context) {
+	// 解析筛选参数
+	filter := &model.TopUpFilter{}
+	filter.Keyword = c.Query("keyword")
+	filter.Status = c.Query("status")
+	filter.PaymentMethod = c.Query("payment_method")
+	if userIdStr := c.Query("user_id"); userIdStr != "" {
+		if userId, err := strconv.Atoi(userIdStr); err == nil {
+			filter.UserId = userId
+		}
+	}
+	if startTimeStr := c.Query("start_time"); startTimeStr != "" {
+		if startTime, err := strconv.ParseInt(startTimeStr, 10, 64); err == nil {
+			filter.StartTime = startTime
+		}
+	}
+	if endTimeStr := c.Query("end_time"); endTimeStr != "" {
+		if endTime, err := strconv.ParseInt(endTimeStr, 10, 64); err == nil {
+			filter.EndTime = endTime
+		}
+	}
+
+	stats, err := model.GetTopUpStats(filter)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+
+	common.ApiSuccess(c, stats)
+}
+
+// ExportTopUps 管理员导出充值记录
+func ExportTopUps(c *gin.Context) {
+	// 解析筛选参数
+	filter := &model.TopUpFilter{}
+	filter.Keyword = c.Query("keyword")
+	filter.Status = c.Query("status")
+	filter.PaymentMethod = c.Query("payment_method")
+	if userIdStr := c.Query("user_id"); userIdStr != "" {
+		if userId, err := strconv.Atoi(userIdStr); err == nil {
+			filter.UserId = userId
+		}
+	}
+	if startTimeStr := c.Query("start_time"); startTimeStr != "" {
+		if startTime, err := strconv.ParseInt(startTimeStr, 10, 64); err == nil {
+			filter.StartTime = startTime
+		}
+	}
+	if endTimeStr := c.Query("end_time"); endTimeStr != "" {
+		if endTime, err := strconv.ParseInt(endTimeStr, 10, 64); err == nil {
+			filter.EndTime = endTime
+		}
+	}
+
+	topups, err := model.GetAllTopUpsForExport(filter)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+
+	// 设置响应头
+	c.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Header("Content-Disposition", "attachment; filename=topup_export.csv")
+
+	// 写入 BOM 以支持 Excel 正确识别 UTF-8
+	c.Writer.Write([]byte{0xEF, 0xBB, 0xBF})
+
+	// 写入 CSV 头
+	c.Writer.WriteString("订单ID,用户ID,充值金额,支付金额,订单号,支付方式,创建时间,完成时间,状态\n")
+
+	// 写入数据行
+	for _, topup := range topups {
+		createTime := time.Unix(topup.CreateTime, 0).Format("2006-01-02 15:04:05")
+		completeTime := ""
+		if topup.CompleteTime > 0 {
+			completeTime = time.Unix(topup.CompleteTime, 0).Format("2006-01-02 15:04:05")
+		}
+
+		line := fmt.Sprintf("%d,%d,%d,%.2f,%s,%s,%s,%s,%s\n",
+			topup.Id,
+			topup.UserId,
+			topup.Amount,
+			topup.Money,
+			topup.TradeNo,
+			topup.PaymentMethod,
+			createTime,
+			completeTime,
+			topup.Status,
+		)
+		c.Writer.WriteString(line)
+	}
 }
 
 type AdminCompleteTopupRequest struct {
