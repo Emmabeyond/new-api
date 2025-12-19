@@ -1,0 +1,13 @@
+{
+  "name": "bigai-pro-docs",
+  "version": "1.0.0",
+  "description": "BigAI Pro 用户文档",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.5.0"
+  }
+}
