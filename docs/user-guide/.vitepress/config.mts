@@ -36,6 +36,7 @@ export default defineConfig({
             { text: '快速入门指南', link: '/quick-start' },
             { text: 'API Key 管理', link: '/api-key-management' },
             { text: '计费与额度', link: '/billing-and-quota' },
+            { text: '每日签到', link: '/daily-checkin' },
           ]
         },
         {
@@ -55,7 +56,14 @@ export default defineConfig({
           items: [
             { text: 'Claude Code', link: '/tools/claude-code' },
             { text: 'Codex CLI', link: '/tools/codex-cli' },
+            { text: 'Gemini CLI', link: '/tools/gemini-cli' },
+            { text: 'CC-Switch', link: '/tools/cc-switch' },
+            { text: 'Claudix (VS Code)', link: '/tools/claudix' },
+            { text: 'Claude Code (JetBrains)', link: '/tools/claude-code-jetbrains' },
+            { text: 'Claude Code GUI', link: '/tools/claude-code-gui' },
             { text: 'Cursor IDE', link: '/tools/cursor-ide' },
+            { text: 'JetBrains IDE', link: '/tools/jetbrains-ide' },
+            { text: 'VS Code CLI 集成', link: '/tools/vscode-cli' },
             { text: 'Continue 插件', link: '/tools/continue-plugin' },
             { text: 'Kiro IDE', link: '/tools/kiro-ide' },
             { text: 'Cherry Studio', link: '/tools/cherry-studio' },

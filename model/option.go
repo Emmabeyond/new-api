@@ -454,6 +454,45 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.CaptchaMaxAttempts, _ = strconv.Atoi(value)
 	case "CaptchaBlockDuration":
 		setting.CaptchaBlockDuration, _ = strconv.Atoi(value)
+	// 签到配置
+	case "CheckinEnabled":
+		setting.CheckinEnabled = value == "true"
+	case "CheckinRewardDay1To6":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinRewardDay1To6 = intVal
+		}
+	case "CheckinRewardDay7":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinRewardDay7 = intVal
+		}
+	case "CheckinRewardDay8To13":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinRewardDay8To13 = intVal
+		}
+	case "CheckinRewardDay14To29":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinRewardDay14To29 = intVal
+		}
+	case "CheckinRewardDay30":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinRewardDay30 = intVal
+		}
+	case "CheckinRewardDay31Plus":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinRewardDay31Plus = intVal
+		}
+	case "CheckinBonusMin":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinBonusMin = intVal
+		}
+	case "CheckinBonusMax":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal > 0 {
+			setting.CheckinBonusMax = intVal
+		}
+	case "CheckinMakeupCost":
+		if intVal, err := strconv.Atoi(value); err == nil && intVal >= 0 {
+			setting.CheckinMakeupCost = intVal
+		}
 	}
 	return err
 }
