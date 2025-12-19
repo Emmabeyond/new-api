@@ -480,5 +480,10 @@ func handleConfigUpdate(key, value string) bool {
 	}
 	config.UpdateConfigFromMap(cfg, configMap)
 
+	// 同步配置到 service 层（如果配置对象实现了 SyncToService 方法）
+	if syncer, ok := cfg.(interface{ SyncToService() }); ok {
+		syncer.SyncToService()
+	}
+
 	return true // 已处理
 }

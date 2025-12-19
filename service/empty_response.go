@@ -135,6 +135,11 @@ func IsNonEmptyFinishReason(finishReason string) bool {
 	if config == nil {
 		return false
 	}
+	// 如果空回复检测被禁用，则不进行 finish_reason 判断
+	// 这样可以保持行为一致性：禁用后完全跳过空回复相关逻辑
+	if !config.Enabled {
+		return false
+	}
 	finishReasonLower := strings.ToLower(finishReason)
 	for _, nonEmpty := range config.NonEmptyFinishReasons {
 		if strings.ToLower(nonEmpty) == finishReasonLower {
