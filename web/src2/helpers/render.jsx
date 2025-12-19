@@ -111,6 +111,8 @@ export function getLucideIcon(key, selected = false) {
       return <CalendarCheck {...commonProps} color={iconColor} />;
     case 'admin-checkin':
       return <CalendarCheck {...commonProps} color={iconColor} />;
+    case 'topup-admin':
+      return <CreditCard {...commonProps} color={iconColor} />;
     case 'channel':
       return <Layers {...commonProps} color={iconColor} />;
     case 'redemption':

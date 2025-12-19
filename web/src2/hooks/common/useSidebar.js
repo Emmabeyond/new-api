@@ -66,6 +66,7 @@ export const useSidebar = () => {
       redemption: true,
       user: true,
       'admin-checkin': true,
+      'topup-admin': true,
       setting: true,
     },
   };

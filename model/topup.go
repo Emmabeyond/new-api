@@ -234,6 +234,216 @@ func SearchAllTopUps(keyword string, pageInfo *common.PageInfo) (topups []*TopUp
 	return topups, total, nil
 }
 
+// TopUpFilter 充值订单筛选条件
+type TopUpFilter struct {
+	Keyword       string `form:"keyword"`
+	Status        string `form:"status"`
+	PaymentMethod string `form:"payment_method"`
+	UserId        int    `form:"user_id"`
+	StartTime     int64  `form:"start_time"`
+	EndTime       int64  `form:"end_time"`
+}
+
+// GetAllTopUpsWithFilter 获取全平台充值记录（支持多条件筛选）
+func GetAllTopUpsWithFilter(filter *TopUpFilter, pageInfo *common.PageInfo) (topups []*TopUp, total int64, err error) {
+	tx := DB.Begin()
+	if tx.Error != nil {
+		return nil, 0, tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := tx.Model(&TopUp{})
+
+	// 应用筛选条件
+	if filter != nil {
+		if filter.Keyword != "" {
+			like := "%" + filter.Keyword + "%"
+			query = query.Where("trade_no LIKE ?", like)
+		}
+		if filter.Status != "" {
+			query = query.Where("status = ?", filter.Status)
+		}
+		if filter.PaymentMethod != "" {
+			query = query.Where("payment_method = ?", filter.PaymentMethod)
+		}
+		if filter.UserId > 0 {
+			query = query.Where("user_id = ?", filter.UserId)
+		}
+		if filter.StartTime > 0 {
+			query = query.Where("create_time >= ?", filter.StartTime)
+		}
+		if filter.EndTime > 0 {
+			query = query.Where("create_time <= ?", filter.EndTime)
+		}
+	}
+
+	if err = query.Count(&total).Error; err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+
+	if err = query.Order("id desc").Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Find(&topups).Error; err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+
+	if err = tx.Commit().Error; err != nil {
+		return nil, 0, err
+	}
+
+	return topups, total, nil
+}
+
+// TopUpStats 充值统计数据
+type TopUpStats struct {
+	TotalCount    int64   `json:"total_count"`
+	SuccessCount  int64   `json:"success_count"`
+	PendingCount  int64   `json:"pending_count"`
+	ExpiredCount  int64   `json:"expired_count"`
+	TotalAmount   float64 `json:"total_amount"`
+	SuccessAmount float64 `json:"success_amount"`
+}
+
+// TopUpDetail 充值订单详情（包含用户信息）
+type TopUpDetail struct {
+	TopUp
+	Username  string `json:"username"`
+	UserQuota int    `json:"user_quota"`
+}
+
+// GetTopUpDetail 获取充值订单详情（包含用户信息）
+func GetTopUpDetail(id int) (*TopUpDetail, error) {
+	topUp := GetTopUpById(id)
+	if topUp == nil {
+		return nil, errors.New("订单不存在")
+	}
+
+	detail := &TopUpDetail{
+		TopUp: *topUp,
+	}
+
+	// 获取用户信息
+	user, err := GetUserById(topUp.UserId, false)
+	if err == nil && user != nil {
+		detail.Username = user.Username
+		detail.UserQuota = user.Quota
+	}
+
+	return detail, nil
+}
+
+// GetTopUpStats 获取充值统计数据（支持筛选条件）
+func GetTopUpStats(filter *TopUpFilter) (*TopUpStats, error) {
+	stats := &TopUpStats{}
+
+	// 构建基础查询
+	buildQuery := func() *gorm.DB {
+		query := DB.Model(&TopUp{})
+		if filter != nil {
+			if filter.Keyword != "" {
+				like := "%" + filter.Keyword + "%"
+				query = query.Where("trade_no LIKE ?", like)
+			}
+			if filter.Status != "" {
+				query = query.Where("status = ?", filter.Status)
+			}
+			if filter.PaymentMethod != "" {
+				query = query.Where("payment_method = ?", filter.PaymentMethod)
+			}
+			if filter.UserId > 0 {
+				query = query.Where("user_id = ?", filter.UserId)
+			}
+			if filter.StartTime > 0 {
+				query = query.Where("create_time >= ?", filter.StartTime)
+			}
+			if filter.EndTime > 0 {
+				query = query.Where("create_time <= ?", filter.EndTime)
+			}
+		}
+		return query
+	}
+
+	// 总订单数
+	if err := buildQuery().Count(&stats.TotalCount).Error; err != nil {
+		return nil, err
+	}
+
+	// 成功订单数
+	if err := buildQuery().Where("status = ?", common.TopUpStatusSuccess).Count(&stats.SuccessCount).Error; err != nil {
+		return nil, err
+	}
+
+	// 待支付订单数
+	if err := buildQuery().Where("status = ?", common.TopUpStatusPending).Count(&stats.PendingCount).Error; err != nil {
+		return nil, err
+	}
+
+	// 过期订单数
+	if err := buildQuery().Where("status = ?", common.TopUpStatusExpired).Count(&stats.ExpiredCount).Error; err != nil {
+		return nil, err
+	}
+
+	// 总金额（所有订单）
+	var totalAmount *float64
+	if err := buildQuery().Select("COALESCE(SUM(money), 0)").Scan(&totalAmount).Error; err != nil {
+		return nil, err
+	}
+	if totalAmount != nil {
+		stats.TotalAmount = *totalAmount
+	}
+
+	// 成功金额
+	var successAmount *float64
+	if err := buildQuery().Where("status = ?", common.TopUpStatusSuccess).Select("COALESCE(SUM(money), 0)").Scan(&successAmount).Error; err != nil {
+		return nil, err
+	}
+	if successAmount != nil {
+		stats.SuccessAmount = *successAmount
+	}
+
+	return stats, nil
+}
+
+// GetAllTopUpsForExport 获取全部充值记录用于导出（不分页）
+func GetAllTopUpsForExport(filter *TopUpFilter) ([]*TopUp, error) {
+	var topups []*TopUp
+
+	query := DB.Model(&TopUp{})
+
+	// 应用筛选条件
+	if filter != nil {
+		if filter.Keyword != "" {
+			like := "%" + filter.Keyword + "%"
+			query = query.Where("trade_no LIKE ?", like)
+		}
+		if filter.Status != "" {
+			query = query.Where("status = ?", filter.Status)
+		}
+		if filter.PaymentMethod != "" {
+			query = query.Where("payment_method = ?", filter.PaymentMethod)
+		}
+		if filter.UserId > 0 {
+			query = query.Where("user_id = ?", filter.UserId)
+		}
+		if filter.StartTime > 0 {
+			query = query.Where("create_time >= ?", filter.StartTime)
+		}
+		if filter.EndTime > 0 {
+			query = query.Where("create_time <= ?", filter.EndTime)
+		}
+	}
+
+	if err := query.Order("id desc").Find(&topups).Error; err != nil {
+		return nil, err
+	}
+
+	return topups, nil
+}
+
 // ManualCompleteTopUp 管理员手动完成订单并给用户充值
 func ManualCompleteTopUp(tradeNo string) error {
 	if tradeNo == "" {

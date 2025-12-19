@@ -50,6 +50,7 @@ const routerMap = {
   personal: '/console/personal',
   'admin-checkin': '/console/admin-checkin',
   'theme-center': '/console/theme-center',
+  'topup-admin': '/console/topup-admin',
 };
 
 const SiderBar = ({ onNavigate = () => {} }) => {
@@ -136,14 +137,14 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         to: '/checkin',
       },
       {
-        text: t('个人设置'),
-        itemKey: 'personal',
-        to: '/personal',
-      },
-      {
         text: t('主题中心'),
         itemKey: 'theme-center',
         to: '/theme-center',
+      },
+      {
+        text: t('个人设置'),
+        itemKey: 'personal',
+        to: '/personal',
       },
     ];
 
@@ -186,6 +187,12 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('签到管理'),
         itemKey: 'admin-checkin',
         to: '/admin-checkin',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('充值管理'),
+        itemKey: 'topup-admin',
+        to: '/topup-admin',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {

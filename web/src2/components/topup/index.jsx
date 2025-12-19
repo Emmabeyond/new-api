@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useContext, useRef, useCallback } from 'react';
 import {
   API,
   showError,
@@ -38,6 +38,8 @@ import InvitationCard from './InvitationCard';
 import TransferModal from './modals/TransferModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
 import TopupHistoryModal from './modals/TopupHistoryModal';
+import CheckinResultModal from './modals/CheckinResultModal';
+import { SliderCaptcha } from '../captcha';
 
 const TopUp = () => {
   const { t } = useTranslation();
@@ -86,6 +88,14 @@ const TopUp = () => {
 
   // 账单Modal状态
   const [openHistory, setOpenHistory] = useState(false);
+
+  // 签到相关状态
+  const [checkinStats, setCheckinStats] = useState(null);
+  const [checkinLoading, setCheckinLoading] = useState(false);
+  const [sliderCaptchaEnabled, setSliderCaptchaEnabled] = useState(false);
+  const [captchaModalVisible, setCaptchaModalVisible] = useState(false);
+  const [checkinResultVisible, setCheckinResultVisible] = useState(false);
+  const [checkinResult, setCheckinResult] = useState(null);
 
   // 预设充值额度选项
   const [presetAmounts, setPresetAmounts] = useState([]);
@@ -567,6 +577,94 @@ const TopUp = () => {
     setOpenHistory(false);
   };
 
+  // 获取签到状态
+  const fetchCheckinStats = useCallback(async () => {
+    try {
+      const res = await API.get('/api/user/checkin/stats');
+      const { success, data, message } = res.data;
+      if (success) {
+        setCheckinStats(data);
+      }
+    } catch (err) {
+      // 忽略错误，按钮保持默认可点击状态
+    }
+  }, []);
+
+  // 获取验证码状态
+  const fetchCaptchaStatus = useCallback(async () => {
+    try {
+      const res = await API.get('/api/captcha/status');
+      if (res.data.success && res.data.data) {
+        const { enabled, require_on_checkin } = res.data.data;
+        setSliderCaptchaEnabled(enabled && require_on_checkin);
+      }
+    } catch (err) {
+      // 忽略错误，默认不启用验证码
+    }
+  }, []);
+
+  // 获取签到状态和验证码状态
+  useEffect(() => {
+    fetchCheckinStats();
+    fetchCaptchaStatus();
+  }, [fetchCheckinStats, fetchCaptchaStatus]);
+
+  // 滑块验证码成功回调
+  const handleSliderCaptchaSuccess = (token) => {
+    setCaptchaModalVisible(false);
+    doCheckin(token);
+  };
+
+  // 实际执行签到
+  const doCheckin = async (captchaToken) => {
+    setCheckinLoading(true);
+    try {
+      const checkinData = {};
+      if (captchaToken) {
+        checkinData.captcha_token = captchaToken;
+      }
+      const res = await API.post('/api/user/checkin', checkinData);
+      const { success, data, message } = res.data;
+      if (success) {
+        setCheckinResult(data);
+        setCheckinResultVisible(true);
+        // 刷新签到状态
+        await fetchCheckinStats();
+        // 更新用户额度
+        if (userState.user) {
+          const updatedUser = {
+            ...userState.user,
+            quota: userState.user.quota + data.total_reward,
+          };
+          userDispatch({ type: 'login', payload: updatedUser });
+        }
+      } else {
+        showError(message);
+      }
+    } catch (err) {
+      showError(t('签到失败'));
+    } finally {
+      setCheckinLoading(false);
+    }
+  };
+
+  // 执行签到
+  const handleCheckin = async () => {
+    if (checkinStats?.checked_in_today) {
+      Toast.warning(t('今日已签到'));
+      return;
+    }
+
+    // 如果启用了滑块验证码，先显示验证弹窗
+    if (sliderCaptchaEnabled) {
+      setCaptchaModalVisible(true);
+      return;
+    }
+
+    // 否则直接签到
+    doCheckin(null);
+  };
+
   const handleCreemCancel = () => {
     setCreemOpen(false);
     setSelectedCreemProduct(null);
@@ -635,6 +733,32 @@ const TopUp = () => {
         t={t}
       />
 
+      {/* 签到结果弹窗 */}
+      <CheckinResultModal
+        visible={checkinResultVisible}
+        onClose={() => setCheckinResultVisible(false)}
+        result={checkinResult}
+        t={t}
+        renderQuota={renderQuota}
+      />
+
+      {/* 滑块验证码弹窗 */}
+      <Modal
+        title={t('安全验证')}
+        visible={captchaModalVisible}
+        onCancel={() => setCaptchaModalVisible(false)}
+        footer={null}
+        centered
+        width={380}
+      >
+        <div className='py-4'>
+          <SliderCaptcha
+            onSuccess={handleSliderCaptchaSuccess}
+            disabled={checkinLoading}
+          />
+        </div>
+      </Modal>
+
       {/* Creem 充值确认模态框 */}
       <Modal
         title={t('确定要充值 $')}
@@ -702,6 +826,9 @@ const TopUp = () => {
               statusLoading={statusLoading}
               topupInfo={topupInfo}
               onOpenHistory={handleOpenHistory}
+              checkinStats={checkinStats}
+              checkinLoading={checkinLoading}
+              onCheckin={handleCheckin}
             />
           </div>
 
