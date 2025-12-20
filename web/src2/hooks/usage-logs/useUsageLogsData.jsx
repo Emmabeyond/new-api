@@ -365,6 +365,7 @@ export const useLogsData = () => {
                 other.cache_creation_ratio_5m || other.cache_creation_ratio || 1.0,
                 other.cache_creation_tokens_1h || 0,
                 other.cache_creation_ratio_1h || other.cache_creation_ratio || 1.0,
+                other.level_discount_ratio || 0,
               )
             : renderLogContent(
                 other?.model_ratio,
@@ -379,6 +380,7 @@ export const useLogsData = () => {
                 other.web_search_call_count || 0,
                 other.file_search || false,
                 other.file_search_call_count || 0,
+                other.level_discount_ratio || 0,
               ),
         });
         if (logs[i]?.content) {
@@ -463,6 +465,7 @@ export const useLogsData = () => {
             other?.audio_input_price || 0,
             other?.image_generation_call || false,
             other?.image_generation_call_price || 0,
+            other?.level_discount_ratio || 0,
           );
         }
         expandDataLocal.push({

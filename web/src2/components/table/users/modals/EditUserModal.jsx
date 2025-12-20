@@ -50,6 +50,7 @@ import {
   IconLink,
   IconUserGroup,
   IconPlus,
+  IconSync,
 } from '@douyinfe/semi-icons';
 
 const { Text, Title } = Typography;
@@ -62,6 +63,7 @@ const EditUserModal = (props) => {
   const [addQuotaLocal, setAddQuotaLocal] = useState('');
   const isMobile = useIsMobile();
   const [groupOptions, setGroupOptions] = useState([]);
+  const [levelOptions, setLevelOptions] = useState([]);
   const formApiRef = useRef(null);
 
   const isEdit = Boolean(userId);
@@ -78,6 +80,7 @@ const EditUserModal = (props) => {
     email: '',
     quota: 0,
     group: 'default',
+    level: 'tier_1',
     remark: '',
   });
 
@@ -88,6 +91,40 @@ const EditUserModal = (props) => {
     } catch (e) {
       showError(e.message);
     }
+  };
+
+  const fetchLevels = async () => {
+    try {
+      let res = await API.get(`/api/level/admin/`);
+      if (res.data.success && res.data.data) {
+        setLevelOptions(
+          res.data.data.map((l) => ({
+            label: l.name || l.id,
+            value: l.id,
+          })),
+        );
+      }
+    } catch (e) {
+      showError(e.message);
+    }
+  };
+
+  const syncCumulativeRecharge = async () => {
+    if (!userId) return;
+    setLoading(true);
+    try {
+      const res = await API.post(`/api/level/admin/user/${userId}/sync-recharge`);
+      if (res.data.success) {
+        showSuccess(t('同步成功'));
+        // 重新加载用户数据
+        await loadUser();
+      } else {
+        showError(res.data.message);
+      }
+    } catch (e) {
+      showError(e.message);
+    }
+    setLoading(false);
   };
 
   const handleCancel = () => props.handleClose();
@@ -108,7 +145,10 @@ const EditUserModal = (props) => {
 
   useEffect(() => {
     loadUser();
-    if (userId) fetchGroups();
+    if (userId) {
+      fetchGroups();
+      fetchLevels();
+    }
   }, [props.editingUser.id]);
 
   /* ----------------------- submit ----------------------- */
@@ -274,7 +314,7 @@ const EditUserModal = (props) => {
                     </div>
 
                     <Row gutter={12}>
-                      <Col span={24}>
+                      <Col span={12}>
                         <Form.Select
                           field='group'
                           label={t('分组')}
@@ -283,6 +323,16 @@ const EditUserModal = (props) => {
                           allowAdditions
                           search
                           rules={[{ required: true, message: t('请选择分组') }]}
+                        />
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Select
+                          field='level'
+                          label={t('等级')}
+                          placeholder={t('请选择等级')}
+                          optionList={levelOptions}
+                          rules={[{ required: true, message: t('请选择等级') }]}
                         />
                       </Col>
 
@@ -304,6 +354,28 @@ const EditUserModal = (props) => {
                             icon={<IconPlus />}
                             onClick={() => setIsModalOpen(true)}
                           />
+                        </Form.Slot>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Slot label={t('累计充值')}>
+                          <Input
+                            value={`$${(values.cumulative_recharge || 0).toFixed(2)}`}
+                            disabled
+                            style={{ width: '100%' }}
+                          />
+                        </Form.Slot>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Slot label={t('同步充值')}>
+                          <Button
+                            icon={<IconSync />}
+                            onClick={syncCumulativeRecharge}
+                            loading={loading}
+                          >
+                            {t('同步')}
+                          </Button>
                         </Form.Slot>
                       </Col>
                     </Row>

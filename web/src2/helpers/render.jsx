@@ -1190,6 +1190,7 @@ export function renderModelPrice(
   audioInputPrice = 0,
   imageGenerationCall = false,
   imageGenerationCallPrice = 0,
+  levelDiscountRatio = 0,
 ) {
   const { ratio: effectiveGroupRatio, label: ratioLabel } = getEffectiveRatio(
     groupRatio,
@@ -1200,17 +1201,25 @@ export function renderModelPrice(
   // 获取货币配置
   const { symbol, rate } = getCurrencyConfig();
 
+  // 计算等级折扣
+  const hasLevelDiscount = levelDiscountRatio > 0 && levelDiscountRatio !== 1.0;
+  const levelDiscount = hasLevelDiscount ? levelDiscountRatio : 1.0;
+
   if (modelPrice !== -1) {
     const displayPrice = (modelPrice * rate).toFixed(6);
-    const displayTotal = (modelPrice * groupRatio * rate).toFixed(6);
+    const displayTotal = (modelPrice * groupRatio * levelDiscount * rate).toFixed(6);
+    const levelDiscountText = hasLevelDiscount
+      ? i18next.t(' * 等级折扣 {{levelDiscount}}', { levelDiscount })
+      : '';
     return i18next.t(
-      '模型价格：{{symbol}}{{price}} * {{ratioType}}：{{ratio}} = {{symbol}}{{total}}',
+      '模型价格：{{symbol}}{{price}} * {{ratioType}}：{{ratio}}{{levelDiscountText}} = {{symbol}}{{total}}',
       {
         symbol: symbol,
         price: displayPrice,
         ratio: groupRatio,
         total: displayTotal,
         ratioType: ratioLabel,
+        levelDiscountText,
       },
     );
   } else {
@@ -1234,12 +1243,17 @@ export function renderModelPrice(
       effectiveInputTokens -= audioInputTokens;
     }
     let price =
-      (effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +
+      ((effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +
       (audioInputTokens / 1000000) * audioInputPrice * groupRatio +
       (completionTokens / 1000000) * completionRatioPrice * groupRatio +
       (webSearchCallCount / 1000) * webSearchPrice * groupRatio +
       (fileSearchCallCount / 1000) * fileSearchPrice * groupRatio +
-      imageGenerationCallPrice * groupRatio;
+      imageGenerationCallPrice * groupRatio) * levelDiscount;
+
+    // 等级折扣显示文本
+    const levelDiscountText = hasLevelDiscount
+      ? i18next.t(' * 等级折扣 {{levelDiscount}}', { levelDiscount })
+      : '';
 
     return (
       <>
@@ -1368,13 +1382,14 @@ export function renderModelPrice(
 
               // 构建输出部分描述
               const outputDesc = i18next.t(
-                '输出 {{completion}} tokens / 1M tokens * {{symbol}}{{compPrice}}) * {{ratioType}} {{ratio}}',
+                '输出 {{completion}} tokens / 1M tokens * {{symbol}}{{compPrice}}) * {{ratioType}} {{ratio}}{{levelDiscountText}}',
                 {
                   completion: completionTokens,
                   symbol: symbol,
                   compPrice: (completionRatioPrice * rate).toFixed(6),
                   ratio: groupRatio,
                   ratioType: ratioLabel,
+                  levelDiscountText,
                 },
               );
 
@@ -1449,6 +1464,7 @@ export function renderLogContent(
   webSearchCallCount = 0,
   fileSearch = false,
   fileSearchCallCount = 0,
+  levelDiscountRatio = 0,
 ) {
   const {
     ratio,
@@ -1459,13 +1475,18 @@ export function renderLogContent(
   // 获取货币配置
   const { symbol, rate } = getCurrencyConfig();
 
+  // 构建等级折扣文本
+  const levelDiscountText = levelDiscountRatio > 0 && levelDiscountRatio !== 1.0
+    ? i18next.t('，等级折扣 {{levelDiscount}}', { levelDiscount: levelDiscountRatio })
+    : '';
+
   if (modelPrice !== -1) {
     return i18next.t('模型价格 {{symbol}}{{price}}，{{ratioType}} {{ratio}}', {
       symbol: symbol,
       price: (modelPrice * rate).toFixed(6),
       ratioType: ratioLabel,
       ratio,
-    });
+    }) + levelDiscountText;
   } else {
     if (image) {
       return i18next.t(
@@ -1478,7 +1499,7 @@ export function renderLogContent(
           ratioType: ratioLabel,
           ratio,
         },
-      );
+      ) + levelDiscountText;
     } else if (webSearch) {
       return i18next.t(
         '模型倍率 {{modelRatio}}，缓存倍率 {{cacheRatio}}，输出倍率 {{completionRatio}}，{{ratioType}} {{ratio}}，Web 搜索调用 {{webSearchCallCount}} 次',
@@ -1490,7 +1511,7 @@ export function renderLogContent(
           ratio,
           webSearchCallCount,
         },
-      );
+      ) + levelDiscountText;
     } else {
       return i18next.t(
         '模型倍率 {{modelRatio}}，缓存倍率 {{cacheRatio}}，输出倍率 {{completionRatio}}，{{ratioType}} {{ratio}}',
@@ -1501,7 +1522,7 @@ export function renderLogContent(
           ratioType: ratioLabel,
           ratio,
         },
-      );
+      ) + levelDiscountText;
     }
   }
 }
@@ -2026,6 +2047,7 @@ export function renderClaudeLogContent(
   cacheCreationRatio5m = 1.0,
   cacheCreationTokens1h = 0,
   cacheCreationRatio1h = 1.0,
+  levelDiscountRatio = 0,
 ) {
   const { ratio: effectiveGroupRatio, label: ratioLabel } = getEffectiveRatio(
     groupRatio,
@@ -2036,13 +2058,18 @@ export function renderClaudeLogContent(
   // 获取货币配置
   const { symbol, rate } = getCurrencyConfig();
 
+  // 构建等级折扣文本
+  const levelDiscountText = levelDiscountRatio > 0 && levelDiscountRatio !== 1.0
+    ? i18next.t('，等级折扣 {{levelDiscount}}', { levelDiscount: levelDiscountRatio })
+    : '';
+
   if (modelPrice !== -1) {
     return i18next.t('模型价格 {{symbol}}{{price}}，{{ratioType}} {{ratio}}', {
       symbol: symbol,
       price: (modelPrice * rate).toFixed(6),
       ratioType: ratioLabel,
       ratio: groupRatio,
-    });
+    }) + levelDiscountText;
   } else {
     const hasSplitCacheCreation =
       cacheCreationTokens5m > 0 || cacheCreationTokens1h > 0;
@@ -2095,7 +2122,7 @@ export function renderClaudeLogContent(
       }),
     ];
 
-    return parts.join('，');
+    return parts.join('，') + levelDiscountText;
   }
 }
 

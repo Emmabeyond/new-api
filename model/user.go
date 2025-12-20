@@ -471,6 +471,10 @@ func (user *User) Edit(updatePassword bool) error {
 	if updatePassword {
 		updates["password"] = newUser.Password
 	}
+	// 支持管理员修改用户等级
+	if newUser.Level != "" {
+		updates["level"] = newUser.Level
+	}
 
 	DB.First(&user, user.Id)
 	if err = DB.Model(user).Updates(updates).Error; err != nil {

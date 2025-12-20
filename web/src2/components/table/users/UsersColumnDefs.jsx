@@ -341,6 +341,18 @@ export const getUsersColumns = ({
       },
     },
     {
+      title: t('累计充值'),
+      dataIndex: 'cumulative_recharge',
+      render: (text, record) => {
+        const amount = parseFloat(text) || 0;
+        return (
+          <Tag color='green' shape='circle' size='small'>
+            ${amount.toFixed(2)}
+          </Tag>
+        );
+      },
+    },
+    {
       title: t('角色'),
       dataIndex: 'role',
       render: (text, record, index) => {
