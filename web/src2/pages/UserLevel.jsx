@@ -9,11 +9,11 @@ License, or (at your option) any later version.
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Typography, Spin, Card, Tag, Collapsible } from '@douyinfe/semi-ui';
-import { IconChevronDown } from '@douyinfe/semi-icons';
+import { Typography, Spin, Card, Tag } from '@douyinfe/semi-ui';
 import { showError, API } from '../helpers';
 import LevelBadge from '../components/level/LevelBadge';
 import LevelSkeleton from '../components/level/LevelSkeleton';
+import BenefitsCards from '../components/level/BenefitsCards';
 import { useResponsive } from '../hooks/common/useResponsive';
 import { useLevelData } from '../hooks/common/useLevelData';
 import {
@@ -232,7 +232,7 @@ const UserLevel = () => {
       </Card>
 
       {/* 底部专属权益 */}
-      <BenefitsCollapsible benefits={benefits} t={t} />
+      <BenefitsCards benefits={benefits} />
     </div>
   );
 };
@@ -294,96 +294,6 @@ const LevelCellContent = ({ ratio, modelLimits, groupRateLimit, isAvailable, t }
         </div>
       )}
     </div>
-  );
-};
-
-/**
- * 专属权益折叠面板
- */
-const BenefitsCollapsible = ({ benefits, t }) => {
-  if (!benefits) return null;
-
-  const discount_ratio = benefits.discount_ratio ?? 1.0;
-  const group_discount_ratios = benefits.group_discount_ratios || {};
-  const rate_limit = benefits.rate_limit || {};
-  const model_rate_limits = benefits.model_rate_limits || {};
-
-  const hasGroupDiscounts = group_discount_ratios && Object.keys(group_discount_ratios).length > 0;
-  const hasModelLimits = model_rate_limits && Object.keys(model_rate_limits).length > 0;
-
-  return (
-    <Card className="benefits-card">
-      <div className="benefits-header">
-        <Title heading={4} style={{ margin: 0 }}>{t('level.exclusive_benefits')}</Title>
-        <Text type="tertiary" size="small">{t('level.benefits_hint')}</Text>
-      </div>
-
-      <div className="benefits-list">
-        {/* 并发限制 */}
-        <Collapsible
-          collapseHeight={48}
-          className="benefit-collapsible"
-        >
-          <div className="benefit-row">
-            <Text className="benefit-label">{t('level.concurrency_limit')}</Text>
-            <Text>{rate_limit?.total_count > 0 ? rate_limit.total_count : t('level.unlimited')}</Text>
-          </div>
-          {hasModelLimits && (
-            <div className="benefit-detail">
-              <Text type="tertiary" size="small">{t('level.model_concurrency')}</Text>
-              <div className="model-limits-grid">
-                {Object.entries(model_rate_limits).map(([model, limit]) => (
-                  <div key={model} className="model-limit-row">
-                    <Tag size="small">{model}</Tag>
-                    <Text size="small">{limit}</Text>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </Collapsible>
-
-        {/* 分组折扣 */}
-        <Collapsible
-          collapseHeight={48}
-          className="benefit-collapsible"
-        >
-          <div className="benefit-row">
-            <Text className="benefit-label">{t('level.group_discount')}</Text>
-            <Text>{discount_ratio < 1.0 ? formatDiscountForChannel(discount_ratio, t) : t('level.no_discount')}</Text>
-          </div>
-          {hasGroupDiscounts && (
-            <div className="benefit-detail">
-              <Text type="tertiary" size="small">{t('level.group_discount_detail')}</Text>
-              <div className="group-discounts-grid">
-                {Object.entries(group_discount_ratios).map(([group, ratio]) => (
-                  <div key={group} className="group-discount-row">
-                    <Tag size="small" color="cyan">{group}</Tag>
-                    <Text size="small" style={{ color: 'var(--theme-success, #52c41a)' }}>
-                      {formatDiscountForChannel(ratio, t)}
-                    </Text>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </Collapsible>
-
-        {/* 模型折扣 */}
-        <Collapsible
-          collapseHeight={48}
-          className="benefit-collapsible"
-        >
-          <div className="benefit-row">
-            <Text className="benefit-label">{t('level.model_discount')}</Text>
-            <Text>{t('level.no_discount')}</Text>
-          </div>
-          <div className="benefit-detail">
-            <Text type="tertiary" size="small">{t('level.model_discount_detail')}</Text>
-          </div>
-        </Collapsible>
-      </div>
-    </Card>
   );
 };
 

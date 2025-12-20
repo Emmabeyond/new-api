@@ -421,6 +421,7 @@ export const useLogsData = () => {
             other?.user_group_ratio,
             other?.cache_tokens || 0,
             other?.cache_ratio || 1.0,
+            other?.level_discount_ratio || 0,
           );
         } else if (other?.claude) {
           content = renderClaudeModelPrice(
@@ -439,6 +440,7 @@ export const useLogsData = () => {
             other.cache_creation_ratio_5m || other.cache_creation_ratio || 1.0,
             other.cache_creation_tokens_1h || 0,
             other.cache_creation_ratio_1h || other.cache_creation_ratio || 1.0,
+            other?.level_discount_ratio || 0,
           );
         } else {
           content = renderModelPrice(

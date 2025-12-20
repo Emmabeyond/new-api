@@ -1,0 +1,339 @@
+/* ========================================
+   专属权益卡片样式
+   ======================================== */
+
+.benefits-cards-container {
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.benefits-cards-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* ========================================
+   卡片网格布局
+   ======================================== */
+
+.benefits-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.benefits-cards-grid.mobile {
+  grid-template-columns: 1fr;
+}
+
+/* ========================================
+   单个权益卡片
+   ======================================== */
+
+.benefit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.benefit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.08;
+  z-index: 0;
+  transition: opacity 0.25s ease;
+}
+
+.benefit-card.clickable {
+  cursor: pointer;
+}
+
+.benefit-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.benefit-card.clickable:hover::before {
+  opacity: 0.12;
+}
+
+/* 折扣卡片 - 绿色渐变 */
+.discount-card {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.08) 0%, rgba(82, 196, 26, 0.02) 100%);
+  border: 1px solid rgba(82, 196, 26, 0.2);
+}
+
+.discount-card::before {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+}
+
+/* 并发限制卡片 - 蓝紫色渐变 */
+.ratelimit-card {
+  background: linear-gradient(135deg, rgba(51, 112, 255, 0.08) 0%, rgba(114, 46, 209, 0.02) 100%);
+  border: 1px solid rgba(51, 112, 255, 0.2);
+}
+
+.ratelimit-card::before {
+  background: linear-gradient(135deg, #3370ff 0%, #722ed1 100%);
+}
+
+/* 渠道卡片 - 青色渐变 */
+.channels-card {
+  background: linear-gradient(135deg, rgba(19, 194, 194, 0.08) 0%, rgba(19, 194, 194, 0.02) 100%);
+  border: 1px solid rgba(19, 194, 194, 0.2);
+}
+
+.channels-card::before {
+  background: linear-gradient(135deg, #13c2c2 0%, #36cfc9 100%);
+}
+
+/* ========================================
+   卡片图标
+   ======================================== */
+
+.benefit-card-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--theme-bg0, white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+.icon-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* ========================================
+   卡片内容
+   ======================================== */
+
+.benefit-card-content {
+  flex: 1;
+  min-width: 0;
+  z-index: 1;
+}
+
+.benefit-card-label {
+  display: block;
+  font-size: 13px;
+  color: var(--theme-text2, #8c8c8c);
+  margin-bottom: 4px;
+}
+
+.benefit-card-value {
+  margin-bottom: 4px;
+}
+
+/* 折扣值样式 */
+.discount-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #52c41a;
+  letter-spacing: -0.5px;
+}
+
+/* 并发限制值样式 */
+.ratelimit-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3370ff;
+  letter-spacing: -0.5px;
+}
+
+.ratelimit-value .unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text2, #8c8c8c);
+  margin-left: 2px;
+}
+
+/* 无限制样式 */
+.unlimited {
+  font-size: 20px;
+  font-weight: 600;
+  color: #3370ff;
+}
+
+/* 无折扣样式 */
+.no-benefit {
+  font-size: 16px;
+  color: var(--theme-text2, #8c8c8c);
+}
+
+/* 全部渠道样式 */
+.all-channels {
+  font-size: 16px;
+  font-weight: 600;
+  color: #13c2c2;
+}
+
+/* 渠道标签容器 */
+.channels-value {
+  min-height: 28px;
+}
+
+.channel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 提示文字 */
+.benefit-card-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  color: var(--theme-text2, #8c8c8c);
+}
+
+.benefit-card-hint .semi-icon {
+  color: var(--theme-text2, #8c8c8c);
+}
+
+/* ========================================
+   弹窗样式
+   ======================================== */
+
+.group-discount-list,
+.model-limits-list-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.group-discount-item,
+.model-limit-item-modal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--theme-fill0, #fafafa);
+  border-radius: 8px;
+  border: 1px solid var(--theme-border, #e8e8e8);
+}
+
+.group-discount-item:hover,
+.model-limit-item-modal:hover {
+  background: var(--theme-fill1, #f0f0f0);
+}
+
+/* ========================================
+   暗色模式适配
+   ======================================== */
+
+[data-theme='dark'] .benefit-card {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .discount-card {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.12) 0%, rgba(82, 196, 26, 0.04) 100%);
+}
+
+[data-theme='dark'] .ratelimit-card {
+  background: linear-gradient(135deg, rgba(51, 112, 255, 0.12) 0%, rgba(114, 46, 209, 0.04) 100%);
+}
+
+[data-theme='dark'] .channels-card {
+  background: linear-gradient(135deg, rgba(19, 194, 194, 0.12) 0%, rgba(19, 194, 194, 0.04) 100%);
+}
+
+[data-theme='dark'] .benefit-card-icon {
+  background: var(--theme-bg1, #1f1f1f);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .benefit-card.clickable:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 768px) {
+  .benefits-cards-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .benefit-card {
+    padding: 16px;
+  }
+
+  .benefit-card-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon-emoji {
+    font-size: 20px;
+  }
+
+  .discount-value,
+  .ratelimit-value {
+    font-size: 20px;
+  }
+}
+
+/* ========================================
+   动画效果
+   ======================================== */
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.benefit-card {
+  animation: cardFadeIn 0.3s ease-out;
+}
+
+.benefit-card:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.benefit-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+/* ========================================
+   减少动画模式
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .benefit-card {
+    animation: none;
+    transition: none;
+  }
+  
+  .benefit-card.clickable:hover {
+    transform: none;
+  }
+}

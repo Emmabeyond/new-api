@@ -561,6 +561,7 @@ export const getLogsColumns = ({
               1.0,
               other?.is_system_prompt_overwritten,
               'claude',
+              other.level_discount_ratio || 0,
             )
           : renderModelPriceSimple(
               other.model_ratio,
@@ -579,9 +580,10 @@ export const getLogsColumns = ({
               1.0,
               other?.is_system_prompt_overwritten,
               'openai',
+              other.level_discount_ratio || 0,
             );
         
-        // Add channel group and discount information
+        // Add channel group information
         let additionalInfo = [];
         
         // Show channel group
@@ -589,12 +591,8 @@ export const getLogsColumns = ({
           additionalInfo.push(t('渠道分组') + ': ' + record.group);
         }
         
-        // Show level discount ratio if present
+        // Show original fee vs discounted fee if level discount is applied
         if (other.level_discount_ratio && other.level_discount_ratio !== 1.0) {
-          const discountPercent = (other.level_discount_ratio * 100).toFixed(1);
-          additionalInfo.push(t('等级折扣') + ': ' + discountPercent + '%');
-          
-          // Calculate and show original fee vs discounted fee
           if (record.quota && other.level_discount_ratio > 0) {
             const discountedFee = record.quota;
             const originalFee = discountedFee / other.level_discount_ratio;

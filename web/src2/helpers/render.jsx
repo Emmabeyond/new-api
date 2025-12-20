@@ -1092,6 +1092,7 @@ function renderPriceSimpleCore({
   image = false,
   imageRatio = 1.0,
   isSystemPromptOverride = false,
+  levelDiscountRatio = 0,
 }) {
   const { ratio: effectiveGroupRatio, label: ratioLabel } = getEffectiveRatio(
     groupRatio,
@@ -1099,12 +1100,18 @@ function renderPriceSimpleCore({
   );
   const finalGroupRatio = effectiveGroupRatio;
 
+  // 计算等级折扣
+  const hasLevelDiscount = levelDiscountRatio > 0 && levelDiscountRatio !== 1.0;
+
   if (modelPrice !== -1) {
-    return i18next.t('价格：${{price}} * {{ratioType}}：{{ratio}}', {
+    const levelDiscountText = hasLevelDiscount
+      ? i18next.t(' * 等级折扣: {{levelDiscount}}', { levelDiscount: levelDiscountRatio })
+      : '';
+    return i18next.t('价格：${{price}} * {{ratioType}}: {{ratio}}', {
       price: modelPrice,
       ratioType: ratioLabel,
       ratio: finalGroupRatio,
-    });
+    }) + levelDiscountText;
   }
 
   const hasSplitCacheCreation =
@@ -1151,6 +1158,11 @@ function renderPriceSimpleCore({
 
   parts.push(`{{ratioType}}: {{groupRatio}}`);
 
+  // 添加等级折扣
+  if (hasLevelDiscount) {
+    parts.push(i18next.t('等级折扣: {{levelDiscount}}', { levelDiscount: levelDiscountRatio }));
+  }
+
   let result = i18next.t(parts.join(' * '), {
     ratio: modelRatio,
     ratioType: ratioLabel,
@@ -1160,6 +1172,7 @@ function renderPriceSimpleCore({
     cacheCreationRatio5m: cacheCreationRatio5m,
     cacheCreationRatio1h: cacheCreationRatio1h,
     imageRatio: imageRatio,
+    levelDiscount: levelDiscountRatio,
   });
 
   if (isSystemPromptOverride) {
@@ -1547,6 +1560,7 @@ export function renderModelPriceSimple(
   imageRatio = 1.0,
   isSystemPromptOverride = false,
   provider = 'openai',
+  levelDiscountRatio = 0,
 ) {
   return renderPriceSimpleCore({
     modelRatio,
@@ -1564,6 +1578,7 @@ export function renderModelPriceSimple(
     image,
     imageRatio,
     isSystemPromptOverride,
+    levelDiscountRatio,
   });
 }
 
@@ -1581,6 +1596,7 @@ export function renderAudioModelPrice(
   user_group_ratio,
   cacheTokens = 0,
   cacheRatio = 1.0,
+  levelDiscountRatio = 0,
 ) {
   const { ratio: effectiveGroupRatio, label: ratioLabel } = getEffectiveRatio(
     groupRatio,
@@ -1591,16 +1607,25 @@ export function renderAudioModelPrice(
   // 获取货币配置
   const { symbol, rate } = getCurrencyConfig();
 
+  // 计算等级折扣
+  const hasLevelDiscount = levelDiscountRatio > 0 && levelDiscountRatio !== 1.0;
+  const levelDiscount = hasLevelDiscount ? levelDiscountRatio : 1.0;
+
   // 1 ratio = $0.002 / 1K tokens
   if (modelPrice !== -1) {
+    const displayTotal = (modelPrice * groupRatio * levelDiscount * rate).toFixed(6);
+    const levelDiscountText = hasLevelDiscount
+      ? i18next.t(' * 等级折扣 {{levelDiscount}}', { levelDiscount })
+      : '';
     return i18next.t(
-      '模型价格：{{symbol}}{{price}} * {{ratioType}}：{{ratio}} = {{symbol}}{{total}}',
+      '模型价格：{{symbol}}{{price}} * {{ratioType}}：{{ratio}}{{levelDiscountText}} = {{symbol}}{{total}}',
       {
         symbol: symbol,
         price: (modelPrice * rate).toFixed(6),
         ratio: groupRatio,
-        total: (modelPrice * groupRatio * rate).toFixed(6),
+        total: displayTotal,
         ratioType: ratioLabel,
+        levelDiscountText,
       },
     );
   } else {
@@ -1620,15 +1645,15 @@ export function renderAudioModelPrice(
       inputTokens - cacheTokens + cacheTokens * cacheRatio;
 
     let textPrice =
-      (effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +
-      (completionTokens / 1000000) * completionRatioPrice * groupRatio;
+      ((effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +
+      (completionTokens / 1000000) * completionRatioPrice * groupRatio) * levelDiscount;
     let audioPrice =
-      (audioInputTokens / 1000000) * inputRatioPrice * audioRatio * groupRatio +
+      ((audioInputTokens / 1000000) * inputRatioPrice * audioRatio * groupRatio +
       (audioCompletionTokens / 1000000) *
         inputRatioPrice *
         audioRatio *
         audioCompletionRatio *
-        groupRatio;
+        groupRatio) * levelDiscount;
     let price = textPrice + audioPrice;
     return (
       <>
@@ -1741,15 +1766,26 @@ export function renderAudioModelPrice(
             )}
           </p>
           <p>
-            {i18next.t(
-              '总价：文字价格 {{textPrice}} + 音频价格 {{audioPrice}} = {{symbol}}{{total}}',
-              {
-                symbol: symbol,
-                total: (price * rate).toFixed(6),
-                textPrice: (textPrice * rate).toFixed(6),
-                audioPrice: (audioPrice * rate).toFixed(6),
-              },
-            )}
+            {hasLevelDiscount
+              ? i18next.t(
+                  '总价：(文字价格 {{textPrice}} + 音频价格 {{audioPrice}}) * 等级折扣 {{levelDiscount}} = {{symbol}}{{total}}',
+                  {
+                    symbol: symbol,
+                    total: (price * rate).toFixed(6),
+                    textPrice: (textPrice / levelDiscount * rate).toFixed(6),
+                    audioPrice: (audioPrice / levelDiscount * rate).toFixed(6),
+                    levelDiscount: levelDiscount,
+                  },
+                )
+              : i18next.t(
+                  '总价：文字价格 {{textPrice}} + 音频价格 {{audioPrice}} = {{symbol}}{{total}}',
+                  {
+                    symbol: symbol,
+                    total: (price * rate).toFixed(6),
+                    textPrice: (textPrice * rate).toFixed(6),
+                    audioPrice: (audioPrice * rate).toFixed(6),
+                  },
+                )}
           </p>
           <p>{i18next.t('仅供参考，以实际扣费为准')}</p>
         </article>
@@ -1782,6 +1818,7 @@ export function renderClaudeModelPrice(
   cacheCreationRatio5m = 1.0,
   cacheCreationTokens1h = 0,
   cacheCreationRatio1h = 1.0,
+  levelDiscountRatio = 0,
 ) {
   const { ratio: effectiveGroupRatio, label: ratioLabel } = getEffectiveRatio(
     groupRatio,
@@ -1792,15 +1829,24 @@ export function renderClaudeModelPrice(
   // 获取货币配置
   const { symbol, rate } = getCurrencyConfig();
 
+  // 计算等级折扣
+  const hasLevelDiscount = levelDiscountRatio > 0 && levelDiscountRatio !== 1.0;
+  const levelDiscount = hasLevelDiscount ? levelDiscountRatio : 1.0;
+
   if (modelPrice !== -1) {
+    const displayTotal = (modelPrice * groupRatio * levelDiscount * rate).toFixed(6);
+    const levelDiscountText = hasLevelDiscount
+      ? i18next.t(' * 等级折扣 {{levelDiscount}}', { levelDiscount })
+      : '';
     return i18next.t(
-      '模型价格：{{symbol}}{{price}} * {{ratioType}}：{{ratio}} = {{symbol}}{{total}}',
+      '模型价格：{{symbol}}{{price}} * {{ratioType}}：{{ratio}}{{levelDiscountText}} = {{symbol}}{{total}}',
       {
         symbol: symbol,
         price: (modelPrice * rate).toFixed(6),
         ratioType: ratioLabel,
         ratio: groupRatio,
-        total: (modelPrice * groupRatio * rate).toFixed(6),
+        levelDiscountText,
+        total: displayTotal,
       },
     );
   } else {
@@ -1840,8 +1886,8 @@ export function renderClaudeModelPrice(
       cacheCreationTokens1h * cacheCreationRatio1h;
 
     let price =
-      (effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +
-      (completionTokens / 1000000) * completionRatioPrice * groupRatio;
+      ((effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +
+      (completionTokens / 1000000) * completionRatioPrice * groupRatio) * levelDiscount;
 
     const inputUnitPrice = inputRatioPrice * rate;
     const completionUnitPrice = completionRatioPrice * rate;
@@ -2021,11 +2067,14 @@ export function renderClaudeModelPrice(
           <p></p>
           <p>
             {i18next.t(
-              '{{breakdown}} * {{ratioType}} {{ratio}} = {{symbol}}{{total}}',
+              '{{breakdown}} * {{ratioType}} {{ratio}}{{levelDiscountText}} = {{symbol}}{{total}}',
               {
                 breakdown: breakdownText,
                 ratioType: ratioLabel,
                 ratio: groupRatio,
+                levelDiscountText: hasLevelDiscount
+                  ? i18next.t(' * 等级折扣 {{levelDiscount}}', { levelDiscount })
+                  : '',
                 symbol: symbol,
                 total: (price * rate).toFixed(6),
               },
