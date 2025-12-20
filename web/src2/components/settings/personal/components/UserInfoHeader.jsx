@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Avatar,
   Card,
@@ -32,9 +32,26 @@ import {
   renderQuota,
   stringToColor,
 } from '../../../../helpers';
-import { Coins, BarChart2, Users } from 'lucide-react';
+import { Coins, BarChart2, Users, TrendingUp } from 'lucide-react';
+import { getUserLevel } from '../../../../services/levelService';
 
 const UserInfoHeader = ({ t, userState }) => {
+  const [levelName, setLevelName] = useState(null);
+
+  useEffect(() => {
+    const fetchLevelInfo = async () => {
+      try {
+        const res = await getUserLevel();
+        if (res.success && res.data?.level?.name) {
+          setLevelName(res.data.level.name);
+        }
+      } catch (error) {
+        console.error('Failed to fetch level info:', error);
+      }
+    };
+    fetchLevelInfo();
+  }, []);
+
   const getUsername = () => {
     if (userState.user) {
       return userState.user.username;
@@ -108,6 +125,25 @@ const UserInfoHeader = ({ t, userState }) => {
                     <Tag size='large' shape='circle' style={{ color: 'white' }}>
                       ID: {userState?.user?.id}
                     </Tag>
+                    {levelName && (
+                      <Tag
+                        size='large'
+                        shape='circle'
+                        style={{
+                          background: 'linear-gradient(135deg, #ffd700 0%, #ffb347 50%, #ffd700 100%)',
+                          color: '#5c4813',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          border: '1px solid rgba(255, 215, 0, 0.6)',
+                          boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)',
+                        }}
+                      >
+                        <TrendingUp size={14} />
+                        {levelName}
+                      </Tag>
+                    )}
                   </div>
                 </div>
               </div>
