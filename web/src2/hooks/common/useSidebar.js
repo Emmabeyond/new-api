@@ -57,6 +57,7 @@ export const useSidebar = () => {
       topup: true,
       checkin: true,
       personal: true,
+      'user-level': true,
       'theme-center': true,
     },
     admin: {
@@ -65,6 +66,7 @@ export const useSidebar = () => {
       models: true,
       redemption: true,
       user: true,
+      level: true,
       'admin-checkin': true,
       'topup-admin': true,
       setting: true,

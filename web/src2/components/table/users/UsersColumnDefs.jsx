@@ -329,6 +329,18 @@ export const getUsersColumns = ({
       },
     },
     {
+      title: t('等级'),
+      dataIndex: 'level',
+      render: (text, record) => {
+        const level = text || 'tier_1';
+        return (
+          <Tag color='cyan' shape='circle' size='small'>
+            {level}
+          </Tag>
+        );
+      },
+    },
+    {
       title: t('角色'),
       dataIndex: 'role',
       render: (text, record, index) => {

@@ -95,6 +95,7 @@ export default function SettingsSidebarModulesUser() {
         enabled: true,
         topup: isSidebarModuleAllowed('personal', 'topup'),
         personal: isSidebarModuleAllowed('personal', 'personal'),
+        'user-level': isSidebarModuleAllowed('personal', 'user-level'),
         'theme-center': isSidebarModuleAllowed('personal', 'theme-center'),
       };
     }
@@ -313,6 +314,11 @@ export default function SettingsSidebarModulesUser() {
           key: 'personal',
           title: t('个人设置'),
           description: t('个人信息设置'),
+        },
+        {
+          key: 'user-level',
+          title: t('等级/限制'),
+          description: t('查看等级和限制'),
         },
         {
           key: 'theme-center',

@@ -282,6 +282,8 @@ func migrateDB() error {
 		&TokenPenalty{},
 		&HelpCategory{},
 		&HelpDocument{},
+		&LevelConfig{},
+		&LevelChangeLog{},
 	)
 	if err != nil {
 		return err
@@ -291,6 +293,10 @@ func migrateDB() error {
 	// Create composite indexes for log queries optimization (when LOG_SQL_DSN is not set, use DB directly)
 	if os.Getenv("LOG_SQL_DSN") == "" {
 		createLogIndexesWithDB(DB)
+	}
+	// Initialize default level configs
+	if err := InitDefaultLevelConfigs(); err != nil {
+		common.SysLog("Warning: failed to initialize default level configs: " + err.Error())
 	}
 	return nil
 }
@@ -365,6 +371,8 @@ func migrateDBFast() error {
 		{&CheckinRecord{}, "CheckinRecord"},
 		{&CheckinAudit{}, "CheckinAudit"},
 		{&TokenPenalty{}, "TokenPenalty"},
+		{&LevelConfig{}, "LevelConfig"},
+		{&LevelChangeLog{}, "LevelChangeLog"},
 	}
 	// 动态计算migration数量，确保errChan缓冲区足够大
 	errChan := make(chan error, len(migrations))

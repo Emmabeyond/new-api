@@ -10,6 +10,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/common/limiter"
 	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting"
 
 	"github.com/gin-gonic/gin"
@@ -76,13 +77,27 @@ func recordRedisRequest(ctx context.Context, rdb *redis.Client, key string, maxC
 
 // Redis限流处理器
 func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) gin.HandlerFunc {
+	return redisRateLimitHandlerWithGroup(duration, totalMaxCount, successMaxCount, "")
+}
+
+// Redis限流处理器（支持渠道分组）
+func redisRateLimitHandlerWithGroup(duration int64, totalMaxCount, successMaxCount int, channelGroup string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := strconv.Itoa(c.GetInt("id"))
 		ctx := context.Background()
 		rdb := common.RDB
 
+		// 构建 key，包含渠道分组信息
+		var successKey, totalKey string
+		if channelGroup != "" {
+			successKey = fmt.Sprintf("rateLimit:%s:%s:%s", ModelRequestRateLimitSuccessCountMark, userId, channelGroup)
+			totalKey = fmt.Sprintf("rateLimit:%s:%s", userId, channelGroup)
+		} else {
+			successKey = fmt.Sprintf("rateLimit:%s:%s", ModelRequestRateLimitSuccessCountMark, userId)
+			totalKey = fmt.Sprintf("rateLimit:%s", userId)
+		}
+
 		// 1. 检查成功请求数限制
-		successKey := fmt.Sprintf("rateLimit:%s:%s", ModelRequestRateLimitSuccessCountMark, userId)
 		allowed, err := checkRedisRateLimit(ctx, rdb, successKey, successMaxCount, duration)
 		if err != nil {
 			fmt.Println("检查成功请求数限制失败:", err.Error())
@@ -90,13 +105,16 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 			return
 		}
 		if !allowed {
-			abortWithOpenAiMessage(c, http.StatusTooManyRequests, fmt.Sprintf("您已达到请求数限制：%d分钟内最多请求%d次", setting.ModelRequestRateLimitDurationMinutes, successMaxCount))
+			msg := fmt.Sprintf("您已达到请求数限制：%d分钟内最多请求%d次", setting.ModelRequestRateLimitDurationMinutes, successMaxCount)
+			if channelGroup != "" {
+				msg = fmt.Sprintf("您已达到请求数限制：%d分钟内最多请求%d次（渠道分组：%s）", setting.ModelRequestRateLimitDurationMinutes, successMaxCount, channelGroup)
+			}
+			abortWithOpenAiMessage(c, http.StatusTooManyRequests, msg)
 			return
 		}
 
-		//2.检查总请求数限制并记录总请求（当totalMaxCount为0时会自动跳过，使用令牌桶限流器
+		// 2. 检查总请求数限制并记录总请求（当totalMaxCount为0时会自动跳过，使用令牌桶限流器）
 		if totalMaxCount > 0 {
-			totalKey := fmt.Sprintf("rateLimit:%s", userId)
 			// 初始化
 			tb := limiter.New(ctx, rdb)
 			allowed, err = tb.Allow(
@@ -114,7 +132,11 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 			}
 
 			if !allowed {
-				abortWithOpenAiMessage(c, http.StatusTooManyRequests, fmt.Sprintf("您已达到总请求数限制：%d分钟内最多请求%d次，包括失败次数，请检查您的请求是否正确", setting.ModelRequestRateLimitDurationMinutes, totalMaxCount))
+				msg := fmt.Sprintf("您已达到总请求数限制：%d分钟内最多请求%d次，包括失败次数，请检查您的请求是否正确", setting.ModelRequestRateLimitDurationMinutes, totalMaxCount)
+				if channelGroup != "" {
+					msg = fmt.Sprintf("您已达到总请求数限制：%d分钟内最多请求%d次（渠道分组：%s），包括失败次数，请检查您的请求是否正确", setting.ModelRequestRateLimitDurationMinutes, totalMaxCount, channelGroup)
+				}
+				abortWithOpenAiMessage(c, http.StatusTooManyRequests, msg)
 			}
 		}
 
@@ -130,12 +152,25 @@ func redisRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) g
 
 // 内存限流处理器
 func memoryRateLimitHandler(duration int64, totalMaxCount, successMaxCount int) gin.HandlerFunc {
+	return memoryRateLimitHandlerWithGroup(duration, totalMaxCount, successMaxCount, "")
+}
+
+// 内存限流处理器（支持渠道分组）
+func memoryRateLimitHandlerWithGroup(duration int64, totalMaxCount, successMaxCount int, channelGroup string) gin.HandlerFunc {
 	inMemoryRateLimiter.Init(time.Duration(setting.ModelRequestRateLimitDurationMinutes) * time.Minute)
 
 	return func(c *gin.Context) {
 		userId := strconv.Itoa(c.GetInt("id"))
-		totalKey := ModelRequestRateLimitCountMark + userId
-		successKey := ModelRequestRateLimitSuccessCountMark + userId
+		
+		// 构建 key，包含渠道分组信息
+		var totalKey, successKey string
+		if channelGroup != "" {
+			totalKey = ModelRequestRateLimitCountMark + userId + ":" + channelGroup
+			successKey = ModelRequestRateLimitSuccessCountMark + userId + ":" + channelGroup
+		} else {
+			totalKey = ModelRequestRateLimitCountMark + userId
+			successKey = ModelRequestRateLimitSuccessCountMark + userId
+		}
 
 		// 1. 检查总请求数限制（当totalMaxCount为0时跳过）
 		if totalMaxCount > 0 && !inMemoryRateLimiter.Request(totalKey, totalMaxCount, duration) {
@@ -177,24 +212,100 @@ func ModelRequestRateLimit() func(c *gin.Context) {
 		totalMaxCount := setting.ModelRequestRateLimitCount
 		successMaxCount := setting.ModelRequestRateLimitSuccessCount
 
-		// 获取分组
-		group := common.GetContextKeyString(c, constant.ContextKeyTokenGroup)
-		if group == "" {
-			group = common.GetContextKeyString(c, constant.ContextKeyUserGroup)
+		// 获取渠道分组
+		channelGroup := common.GetContextKeyString(c, constant.ContextKeyTokenGroup)
+		if channelGroup == "" {
+			channelGroup = common.GetContextKeyString(c, constant.ContextKeyUserGroup)
 		}
 
-		//获取分组的限流配置
-		groupTotalCount, groupSuccessCount, found := setting.GetGroupRateLimit(group)
+		// 获取分组的限流配置
+		groupTotalCount, groupSuccessCount, found := setting.GetGroupRateLimit(channelGroup)
 		if found {
 			totalMaxCount = groupTotalCount
 			successMaxCount = groupSuccessCount
 		}
 
+		// 获取用户等级的限流配置（优先级高于分组配置）
+		// 优先使用渠道分组级别的限流配置
+		userId := c.GetInt("id")
+		if userId > 0 {
+			levelTotalCount, levelSuccessCount, levelFound := GetUserLevelRateLimitForGroup(userId, channelGroup)
+			if levelFound {
+				totalMaxCount = levelTotalCount
+				successMaxCount = levelSuccessCount
+			}
+		}
+
 		// 根据存储类型选择并执行限流处理器
 		if common.RedisEnabled {
-			redisRateLimitHandler(duration, totalMaxCount, successMaxCount)(c)
+			redisRateLimitHandlerWithGroup(duration, totalMaxCount, successMaxCount, channelGroup)(c)
 		} else {
-			memoryRateLimitHandler(duration, totalMaxCount, successMaxCount)(c)
+			memoryRateLimitHandlerWithGroup(duration, totalMaxCount, successMaxCount, channelGroup)(c)
 		}
 	}
+}
+
+// GetUserLevelRateLimit 获取用户等级的速率限制配置（全局限流）
+func GetUserLevelRateLimit(userId int) (totalCount int, successCount int, found bool) {
+	// 使用 model 包获取用户等级
+	user, err := model.GetUserById(userId, false)
+	if err != nil || user == nil {
+		return 0, 0, false
+	}
+
+	levelConfig, err := model.GetLevelConfigById(user.Level)
+	if err != nil || levelConfig == nil {
+		return 0, 0, false
+	}
+
+	benefits, err := levelConfig.GetBenefits()
+	if err != nil || benefits == nil || benefits.RateLimit == nil {
+		return 0, 0, false
+	}
+
+	// 如果配置了速率限制
+	if benefits.RateLimit.TotalCount > 0 || benefits.RateLimit.SuccessCount > 0 {
+		return benefits.RateLimit.TotalCount, benefits.RateLimit.SuccessCount, true
+	}
+
+	return 0, 0, false
+}
+
+// GetUserLevelRateLimitForGroup 获取用户等级在指定渠道分组的速率限制配置
+// 优先级：group_rate_limits > rate_limit > 无限制
+func GetUserLevelRateLimitForGroup(userId int, channelGroup string) (totalCount int, successCount int, found bool) {
+	// 使用 model 包获取用户等级
+	user, err := model.GetUserById(userId, false)
+	if err != nil || user == nil {
+		return 0, 0, false
+	}
+
+	levelConfig, err := model.GetLevelConfigById(user.Level)
+	if err != nil || levelConfig == nil {
+		return 0, 0, false
+	}
+
+	benefits, err := levelConfig.GetBenefits()
+	if err != nil || benefits == nil {
+		return 0, 0, false
+	}
+
+	// 1. 优先检查渠道分组限流
+	if benefits.GroupRateLimits != nil && channelGroup != "" {
+		if limit, exists := benefits.GroupRateLimits[channelGroup]; exists && limit != nil {
+			if limit.TotalCount > 0 || limit.SuccessCount > 0 {
+				return limit.TotalCount, limit.SuccessCount, true
+			}
+		}
+	}
+
+	// 2. 回退到全局限流
+	if benefits.RateLimit != nil {
+		if benefits.RateLimit.TotalCount > 0 || benefits.RateLimit.SuccessCount > 0 {
+			return benefits.RateLimit.TotalCount, benefits.RateLimit.SuccessCount, true
+		}
+	}
+
+	// 3. 无限制
+	return 0, 0, false
 }

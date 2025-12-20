@@ -57,6 +57,7 @@ export default function SettingsSidebarModulesAdmin(props) {
       enabled: true,
       topup: true,
       personal: true,
+      'user-level': true,
       'theme-center': true,
     },
     admin: {
@@ -117,6 +118,7 @@ export default function SettingsSidebarModulesAdmin(props) {
         enabled: true,
         topup: true,
         personal: true,
+        'user-level': true,
       },
       admin: {
         enabled: true,
@@ -184,7 +186,7 @@ export default function SettingsSidebarModulesAdmin(props) {
             midjourney: true,
             task: true,
           },
-          personal: { enabled: true, topup: true, personal: true, 'theme-center': true },
+          personal: { enabled: true, topup: true, personal: true, 'user-level': true, 'theme-center': true },
           admin: {
             enabled: true,
             channel: true,
@@ -240,6 +242,11 @@ export default function SettingsSidebarModulesAdmin(props) {
           key: 'personal',
           title: t('个人设置'),
           description: t('个人信息设置'),
+        },
+        {
+          key: 'user-level',
+          title: t('等级/限制'),
+          description: t('查看等级和限制'),
         },
         {
           key: 'theme-center',

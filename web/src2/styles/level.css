@@ -1,0 +1,519 @@
+/* ========================================
+   Limits 页面样式 - 参考 OpenAI 风格
+   ======================================== */
+
+/* 等级主题色变量 */
+:root {
+  --tier-basic-primary: #595959;
+  --tier-basic-bg: #fafafa;
+  --tier-standard-primary: #1890ff;
+  --tier-standard-bg: #e6f7ff;
+  --tier-premium-primary: #531dab;
+  --tier-premium-bg: #f9f0ff;
+  --tier-elite-primary: #d48806;
+  --tier-elite-bg: #fffbe6;
+  --text-primary: #262626;
+  --text-secondary: #595959;
+  --border-color: #e8e8e8;
+}
+
+/* ========================================
+   页面布局
+   ======================================== */
+
+.limits-page {
+  padding: 24px;
+  padding-top: 48px; /* 避免被顶部工具栏遮挡 */
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.limits-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.limits-header h2 {
+  margin: 0 !important;
+}
+
+.limits-header .level-badge {
+  flex-shrink: 0;
+}
+
+.limits-main-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.limits-layout {
+  display: flex;
+  min-height: 400px;
+}
+
+.limits-layout.mobile {
+  flex-direction: column;
+}
+
+/* ========================================
+   左侧等级列表
+   ======================================== */
+
+.levels-sidebar {
+  width: 200px;
+  min-width: 200px;
+  border-right: 1px solid var(--border-color);
+  padding: 16px;
+  background: #fafafa;
+}
+
+.limits-layout.mobile .levels-sidebar {
+  width: 100%;
+  border-right: none;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+}
+
+.level-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-left: 3px solid transparent;
+  margin-left: -16px;
+  padding-left: 13px;
+  transition: all 0.2s ease;
+}
+
+.level-item.current {
+  background: linear-gradient(90deg, rgba(51, 112, 255, 0.05) 0%, transparent 100%);
+  border-left-color: var(--tier-standard-primary);
+}
+
+.limits-layout.mobile .level-item {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  margin-left: 0;
+  border-left: none;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid var(--border-color);
+}
+
+.limits-layout.mobile .level-item.current {
+  border-color: var(--tier-standard-primary);
+  background: var(--tier-standard-bg);
+}
+
+.level-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.limits-layout.mobile .level-item-dot {
+  display: none;
+}
+
+.level-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.limits-layout.mobile .level-item-content {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-level-hint {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.limits-layout.mobile .current-level-hint {
+  display: none;
+}
+
+.current-level-tag {
+  margin-top: 8px;
+}
+
+/* ========================================
+   右侧矩阵表格
+   ======================================== */
+
+.limits-matrix {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.matrix-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.matrix-table-wrapper {
+  overflow-x: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.matrix-table th,
+.matrix-table td {
+  padding: 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.matrix-table th {
+  background: #fafafa;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.matrix-table th.level-col {
+  text-align: left;
+  min-width: 120px;
+}
+
+.matrix-table td.level-name {
+  text-align: left;
+  font-weight: 500;
+}
+
+.matrix-table tbody tr.current-level-row {
+  background: var(--tier-standard-bg) !important;
+}
+
+.matrix-table tbody tr.current-level-row td:first-child {
+  position: relative;
+  padding-left: 24px;
+}
+
+.matrix-table tbody tr.current-level-row td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--tier-standard-primary);
+}
+
+.matrix-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* ========================================
+   单元格内容
+   ======================================== */
+
+.cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.cell-discount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cell-limits {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cell-rate-limit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.cell-rate-limit .rate-limit-values {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.model-limits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.model-limit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.model-limit-item .semi-tag {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.other-limit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+}
+
+/* ========================================
+   底部专属权益
+   ======================================== */
+
+.benefits-card {
+  border-radius: 12px;
+}
+
+.benefits-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.benefits-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.benefit-collapsible {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.benefit-collapsible:last-child {
+  border-bottom: none;
+}
+
+.benefit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  cursor: pointer;
+}
+
+.benefit-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.benefit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.benefit-label::before {
+  content: '▼';
+  font-size: 10px;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.benefit-detail {
+  padding: 0 0 16px 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.model-limits-grid,
+.group-discounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.model-limit-row,
+.group-discount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 768px) {
+  .limits-page {
+    padding: 16px;
+  }
+
+  .levels-sidebar {
+    width: 100%;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .model-limit-item .semi-tag {
+    max-width: 120px;
+    font-size: 11px;
+  }
+
+  .benefits-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .model-limits-grid,
+  .group-discounts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   动画效果
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================
+   加载状态
+   ======================================== */
+
+.level-skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ========================================
+   LevelBadge 组件样式
+   ======================================== */
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.level-badge.size-small {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.level-badge.size-large {
+  padding: 8px 16px;
+  font-size: 16px;
+}
+
+.level-badge-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.level-badge.size-small .level-badge-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.level-badge.size-large .level-badge-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* ========================================
+   高对比度模式
+   ======================================== */
+
+@media (prefers-contrast: high) {
+  :root {
+    --text-primary: #000000;
+    --text-secondary: #262626;
+    --border-color: #000000;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    border: 1px solid #000;
+  }
+}
+
+/* ========================================
+   减少动画模式
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

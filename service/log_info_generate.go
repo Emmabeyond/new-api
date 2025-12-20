@@ -42,6 +42,12 @@ func GenerateTextOtherInfo(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, m
 	other["model_price"] = modelPrice
 	other["user_group_ratio"] = userGroupRatio
 	other["frt"] = float64(relayInfo.FirstResponseTime.UnixMilli() - relayInfo.StartTime.UnixMilli())
+	
+	// 记录等级折扣信息
+	if relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio > 0 && relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio != 1.0 {
+		other["level_discount_ratio"] = relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio
+	}
+	
 	if fallbackUsed {
 		other["fallback_used"] = true
 	}
@@ -127,6 +133,10 @@ func GenerateMjOtherInfo(relayInfo *relaycommon.RelayInfo, priceData types.PerCa
 	other["group_ratio"] = priceData.GroupRatioInfo.GroupRatio
 	if priceData.GroupRatioInfo.HasSpecialRatio {
 		other["user_group_ratio"] = priceData.GroupRatioInfo.GroupSpecialRatio
+	}
+	// 记录等级折扣信息
+	if priceData.GroupRatioInfo.LevelDiscountRatio > 0 && priceData.GroupRatioInfo.LevelDiscountRatio != 1.0 {
+		other["level_discount_ratio"] = priceData.GroupRatioInfo.LevelDiscountRatio
 	}
 	appendRequestPath(nil, relayInfo, other)
 	return other

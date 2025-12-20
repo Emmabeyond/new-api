@@ -47,6 +47,10 @@ type User struct {
 	Setting          string         `json:"setting" gorm:"type:text;column:setting"`
 	Remark           string         `json:"remark,omitempty" gorm:"type:varchar(255)" validate:"max=255"`
 	StripeCustomer   string         `json:"stripe_customer" gorm:"type:varchar(64);column:stripe_customer;index"`
+	// 用户等级相关字段
+	Level              string  `json:"level" gorm:"type:varchar(32);default:'tier_1';index"`  // 当前等级
+	CumulativeRecharge float64 `json:"cumulative_recharge" gorm:"default:0"`                  // 累计充值（美元）
+	LevelUpdatedAt     int64   `json:"level_updated_at" gorm:"default:0"`                     // 等级更新时间
 }
 
 func (user *User) ToBaseUser() *UserBase {

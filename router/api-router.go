@@ -334,5 +334,30 @@ func SetApiRouter(router *gin.Engine) {
 				helpAdminRoute.DELETE("/documents/:id", controller.AdminDeleteHelpDocument)
 			}
 		}
+
+		// User level routes
+		levelRoute := apiRouter.Group("/level")
+		{
+			// 用户等级 API
+			levelRoute.GET("/self", middleware.UserAuth(), controller.GetUserLevel)
+			levelRoute.GET("/self/progress", middleware.UserAuth(), controller.GetUserLevelProgress)
+			levelRoute.GET("/self/benefits", middleware.UserAuth(), controller.GetUserLevelBenefits)
+			levelRoute.GET("/compare", middleware.UserAuth(), controller.GetLevelComparison)
+			levelRoute.GET("/channel-groups", middleware.UserAuth(), controller.GetChannelGroups)
+
+			// 管理员等级配置 API
+			levelAdminRoute := levelRoute.Group("/admin")
+			levelAdminRoute.Use(middleware.AdminAuth())
+			{
+				levelAdminRoute.GET("/", controller.GetAllLevels)
+				levelAdminRoute.POST("/", controller.CreateLevel)
+				levelAdminRoute.PUT("/:id", controller.UpdateLevel)
+				levelAdminRoute.DELETE("/:id", controller.DeleteLevel)
+				levelAdminRoute.GET("/stats", controller.GetLevelStats)
+				levelAdminRoute.PUT("/user/:id", controller.SetUserLevel)
+				levelAdminRoute.GET("/user/:id/history", controller.GetUserLevelHistory)
+				levelAdminRoute.POST("/user/:id/sync-recharge", controller.SyncUserRecharge)
+			}
+		}
 	}
 }

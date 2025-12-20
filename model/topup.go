@@ -23,6 +23,26 @@ type TopUp struct {
 	Status        string  `json:"status"`
 }
 
+// TopUpSuccessCallback 充值成功回调函数类型
+type TopUpSuccessCallback func(userId int, amount float64) error
+
+// topUpSuccessCallbacks 充值成功回调函数列表
+var topUpSuccessCallbacks []TopUpSuccessCallback
+
+// RegisterTopUpSuccessCallback 注册充值成功回调函数
+func RegisterTopUpSuccessCallback(callback TopUpSuccessCallback) {
+	topUpSuccessCallbacks = append(topUpSuccessCallbacks, callback)
+}
+
+// triggerTopUpSuccessCallbacks 触发充值成功回调
+func triggerTopUpSuccessCallbacks(userId int, amount float64) {
+	for _, callback := range topUpSuccessCallbacks {
+		if err := callback(userId, amount); err != nil {
+			common.SysLog("topup success callback error: " + err.Error())
+		}
+	}
+}
+
 func (topUp *TopUp) Insert() error {
 	var err error
 	err = DB.Create(topUp).Error
@@ -86,7 +106,12 @@ func Recharge(referenceId string, customerId string) (err error) {
 		}
 
 		quota = topUp.Money * common.QuotaPerUnit
-		err = tx.Model(&User{}).Where("id = ?", topUp.UserId).Updates(map[string]interface{}{"stripe_customer": customerId, "quota": gorm.Expr("quota + ?", quota)}).Error
+		// 更新用户额度和累计充值（美元）
+		err = tx.Model(&User{}).Where("id = ?", topUp.UserId).Updates(map[string]interface{}{
+			"stripe_customer":      customerId,
+			"quota":                gorm.Expr("quota + ?", quota),
+			"cumulative_recharge":  gorm.Expr("cumulative_recharge + ?", topUp.Money),
+		}).Error
 		if err != nil {
 			return err
 		}
@@ -99,6 +124,9 @@ func Recharge(referenceId string, customerId string) (err error) {
 	}
 
 	RecordLog(topUp.UserId, LogTypeTopup, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%d", logger.FormatQuota(int(quota)), topUp.Amount))
+
+	// 触发充值成功回调（用于等级升级检查等）
+	triggerTopUpSuccessCallbacks(topUp.UserId, topUp.Money)
 
 	return nil
 }
@@ -513,6 +541,10 @@ func ManualCompleteTopUp(tradeNo string) error {
 
 	// 事务外记录日志，避免阻塞
 	RecordLog(userId, LogTypeTopup, fmt.Sprintf("管理员补单成功，充值金额: %v，支付金额：%f", logger.FormatQuota(quotaToAdd), payMoney))
+
+	// 触发充值成功回调（用于等级升级检查等）
+	triggerTopUpSuccessCallbacks(userId, payMoney)
+
 	return nil
 }
 func RechargeCreem(referenceId string, customerEmail string, customerName string) (err error) {
@@ -550,7 +582,8 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 
 		// 构建更新字段，优先使用邮箱，如果邮箱为空则使用用户名
 		updateFields := map[string]interface{}{
-			"quota": gorm.Expr("quota + ?", quota),
+			"quota":               gorm.Expr("quota + ?", quota),
+			"cumulative_recharge": gorm.Expr("cumulative_recharge + ?", topUp.Money),
 		}
 
 		// 如果有客户邮箱，尝试更新用户邮箱（仅当用户邮箱为空时）
@@ -581,6 +614,9 @@ func RechargeCreem(referenceId string, customerEmail string, customerName string
 	}
 
 	RecordLog(topUp.UserId, LogTypeTopup, fmt.Sprintf("使用Creem充值成功，充值额度: %v，支付金额：%.2f", quota, topUp.Money))
+
+	// 触发充值成功回调（用于等级升级检查等）
+	triggerTopUpSuccessCallbacks(topUp.UserId, topUp.Money)
 
 	return nil
 }

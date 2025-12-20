@@ -38,6 +38,7 @@ const routerMap = {
   topup: '/console/topup',
   checkin: '/console/checkin',
   user: '/console/user',
+  'user-level': '/console/user-level',
   log: '/console/log',
   midjourney: '/console/midjourney',
   setting: '/console/setting',
@@ -135,6 +136,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('每日签到'),
         itemKey: 'checkin',
         to: '/checkin',
+      },
+      {
+        text: t('等级/限制'),
+        itemKey: 'user-level',
+        to: '/user-level',
       },
       {
         text: t('主题中心'),

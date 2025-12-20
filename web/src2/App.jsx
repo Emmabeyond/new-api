@@ -45,6 +45,7 @@ import ModelPage from './pages/Model';
 import Playground from './pages/Playground';
 import OAuth2Callback from './components/auth/OAuth2Callback';
 import PersonalSetting from './components/settings/PersonalSetting';
+import UserLevel from './pages/UserLevel';
 import Setup from './pages/Setup';
 import SetupCheck from './components/layout/SetupCheck';
 import Checkin from './pages/Checkin';
@@ -255,6 +256,16 @@ function App() {
             <PrivateRoute>
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
                 <PersonalSetting />
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/console/user-level'
+          element={
+            <PrivateRoute>
+              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+                <UserLevel />
               </Suspense>
             </PrivateRoute>
           }

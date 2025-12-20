@@ -264,5 +264,9 @@ func InitResources() error {
 	if err != nil {
 		return err
 	}
+
+	// 初始化等级升级回调
+	service.InitLevelUpgradeCallback()
+
 	return nil
 }

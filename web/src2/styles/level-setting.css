@@ -1,0 +1,420 @@
+/* ========================================
+   Level Setting 管理页面样式
+   参考 level.css 的设计风格
+   ======================================== */
+
+/* ========================================
+   页面布局
+   ======================================== */
+
+.level-setting-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.level-setting-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.level-setting-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.level-setting-header-left h2 {
+  margin: 0 !important;
+}
+
+.level-setting-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.level-setting-main-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.level-setting-layout {
+  display: flex;
+  min-height: 500px;
+}
+
+.level-setting-layout.mobile {
+  flex-direction: column;
+}
+
+/* ========================================
+   左侧等级列表
+   ======================================== */
+
+.level-setting-sidebar {
+  width: 260px;
+  min-width: 260px;
+  border-right: 1px solid var(--border-color, #e8e8e8);
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.level-setting-layout.mobile .level-setting-sidebar {
+  width: 100%;
+  min-width: 100%;
+  border-right: none;
+  border-bottom: 1px solid var(--border-color, #e8e8e8);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.level-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.level-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.level-sidebar-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.level-sidebar-item.selected {
+  background: linear-gradient(90deg, rgba(51, 112, 255, 0.08) 0%, transparent 100%);
+  border-left-color: var(--semi-color-primary, #3370ff);
+}
+
+.level-sidebar-item.creating {
+  background: linear-gradient(90deg, rgba(82, 196, 26, 0.08) 0%, transparent 100%);
+  border-left-color: #52c41a;
+}
+
+.level-sidebar-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.level-sidebar-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.level-sidebar-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.level-sidebar-name-text {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.level-sidebar-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--semi-color-text-2, #595959);
+}
+
+.level-sidebar-user-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.level-sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color, #e8e8e8);
+  background: #fff;
+}
+
+/* ========================================
+   右侧详情面板
+   ======================================== */
+
+.level-detail-panel {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.level-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--semi-color-text-2, #595959);
+}
+
+.level-detail-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.level-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color, #e8e8e8);
+}
+
+.level-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-detail-title h3 {
+  margin: 0 !important;
+}
+
+.level-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.level-detail-form {
+  max-width: 600px;
+}
+
+.level-detail-form .semi-form-field {
+  margin-bottom: 16px;
+}
+
+/* ========================================
+   表单分组
+   ======================================== */
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--semi-color-text-0, #262626);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color, #e8e8e8);
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row > * {
+  flex: 1;
+}
+
+/* ========================================
+   折扣矩阵区域
+   ======================================== */
+
+.discount-matrix-section {
+  margin-top: 24px;
+}
+
+.discount-matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 768px) {
+  .level-setting-page {
+    padding: 16px;
+  }
+
+  .level-setting-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .level-setting-sidebar {
+    width: 100%;
+  }
+
+  .level-detail-panel {
+    padding: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+/* ========================================
+   暗色模式支持
+   ======================================== */
+
+[data-theme='dark'] .level-setting-sidebar,
+.semi-always-dark .level-setting-sidebar {
+  background: var(--semi-color-bg-1, #1c1c1c);
+}
+
+[data-theme='dark'] .level-sidebar-item:hover,
+.semi-always-dark .level-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .level-sidebar-item.selected,
+.semi-always-dark .level-sidebar-item.selected {
+  background: linear-gradient(90deg, rgba(51, 112, 255, 0.15) 0%, transparent 100%);
+}
+
+[data-theme='dark'] .level-detail-panel,
+.semi-always-dark .level-detail-panel {
+  background: var(--semi-color-bg-0, #141414);
+}
+
+[data-theme='dark'] .level-sidebar-footer,
+.semi-always-dark .level-sidebar-footer {
+  background: var(--semi-color-bg-1, #1c1c1c);
+}
+
+/* ========================================
+   动画效果
+   ======================================== */
+
+.level-sidebar-item {
+  animation: fadeInLeft 0.2s ease-out;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.level-detail-panel {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   加载状态
+   ======================================== */
+
+.level-setting-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* ========================================
+   空状态
+   ======================================== */
+
+.level-sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--semi-color-text-2, #595959);
+  text-align: center;
+}
+
+/* ========================================
+   渠道分组限流配置样式
+   ======================================== */
+
+.level-group-rate-limits {
+  padding: 16px;
+}
+
+.level-group-rate-limits-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.level-group-rate-limits-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.level-group-rate-limits-info {
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: var(--semi-color-fill-0, #f5f5f5);
+  border-radius: 6px;
+}
+
+.level-group-rate-limits-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.level-group-rate-limits-empty {
+  padding: 48px;
+  text-align: center;
+}
+
+.rate-limit-input-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 暗色模式 */
+[data-theme='dark'] .level-group-rate-limits-info,
+.semi-always-dark .level-group-rate-limits-info {
+  background: var(--semi-color-fill-0, #2a2a2a);
+}

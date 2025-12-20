@@ -541,7 +541,9 @@ export const getLogsColumns = ({
             </Typography.Paragraph>
           );
         }
-        let content = other?.claude
+        
+        // Build price details
+        let priceContent = other?.claude
           ? renderModelPriceSimple(
               other.model_ratio,
               other.model_price,
@@ -578,6 +580,37 @@ export const getLogsColumns = ({
               other?.is_system_prompt_overwritten,
               'openai',
             );
+        
+        // Add channel group and discount information
+        let additionalInfo = [];
+        
+        // Show channel group
+        if (record.group) {
+          additionalInfo.push(t('渠道分组') + ': ' + record.group);
+        }
+        
+        // Show level discount ratio if present
+        if (other.level_discount_ratio && other.level_discount_ratio !== 1.0) {
+          const discountPercent = (other.level_discount_ratio * 100).toFixed(1);
+          additionalInfo.push(t('等级折扣') + ': ' + discountPercent + '%');
+          
+          // Calculate and show original fee vs discounted fee
+          if (record.quota && other.level_discount_ratio > 0) {
+            const discountedFee = record.quota;
+            const originalFee = discountedFee / other.level_discount_ratio;
+            additionalInfo.push(
+              t('原始费用') + ': ' + renderQuota(originalFee, 6) + ' → ' +
+              t('折扣后') + ': ' + renderQuota(discountedFee, 6)
+            );
+          }
+        }
+        
+        // Combine all content
+        let content = priceContent;
+        if (additionalInfo.length > 0) {
+          content = content + '\n' + additionalInfo.join('\n');
+        }
+        
         return (
           <Typography.Paragraph
             ellipsis={{

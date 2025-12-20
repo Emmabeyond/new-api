@@ -34,6 +34,7 @@ import {
   CreditCard,
   ShieldCheck,
   HelpCircle,
+  Users,
 } from 'lucide-react';
 
 import SystemSetting from '../../components/settings/SystemSetting';
@@ -50,6 +51,7 @@ import PaymentSetting from '../../components/settings/PaymentSetting';
 import CaptchaSetting from '../../components/settings/CaptchaSetting';
 import SecuritySetting from '../../components/settings/SecuritySetting';
 import HelpSetting from '../../components/settings/HelpSetting';
+import LevelSetting from '../../components/settings/LevelSetting';
 
 const Setting = () => {
   const { t } = useTranslation();
@@ -128,6 +130,16 @@ const Setting = () => {
       ),
       content: <RateLimitSetting />,
       itemKey: 'ratelimit',
+    });
+    panes.push({
+      tab: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <Users size={18} />
+          {t('用户等级设置')}
+        </span>
+      ),
+      content: <LevelSetting />,
+      itemKey: 'level',
     });
     panes.push({
       tab: (

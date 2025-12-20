@@ -6,6 +6,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/QuantumNous/new-api/types"
@@ -40,6 +41,15 @@ func HandleGroupRatio(ctx *gin.Context, relayInfo *relaycommon.RelayInfo) types.
 	} else {
 		// normal group ratio
 		groupRatioInfo.GroupRatio = ratio_setting.GetGroupRatio(relayInfo.UsingGroup)
+	}
+
+	// 应用用户等级优惠倍率
+	// 计费公式：最终消费 = Token数量 × 模型倍率 × 渠道分组倍率 × 等级优惠倍率
+	levelDiscountRatio, err := service.GetUserLevelDiscountRatio(relayInfo.UserId, relayInfo.UsingGroup)
+	if err == nil && levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
+		groupRatioInfo.GroupRatio = groupRatioInfo.GroupRatio * levelDiscountRatio
+		groupRatioInfo.LevelDiscountRatio = levelDiscountRatio
+		logger.LogDebug(ctx, fmt.Sprintf("applied level discount ratio: %f, final group ratio: %f", levelDiscountRatio, groupRatioInfo.GroupRatio))
 	}
 
 	return groupRatioInfo

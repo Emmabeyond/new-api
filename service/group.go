@@ -63,3 +63,34 @@ func GetUserGroupRatio(userGroup, group string) float64 {
 	}
 	return ratio_setting.GetGroupRatio(group)
 }
+
+
+// GetUserUsableGroupsWithLevel 获取用户可用分组（考虑用户等级）
+// 优先使用等级配置的可用分组，如果等级未配置则使用原有逻辑
+func GetUserUsableGroupsWithLevel(userId int, userGroup string) map[string]string {
+	// 尝试获取用户等级的可用分组
+	levelGroups, err := GetUserLevelAvailableGroups(userId)
+	if err == nil && len(levelGroups) > 0 {
+		// 使用等级配置的分组
+		groupsCopy := make(map[string]string)
+		for _, g := range levelGroups {
+			groupsCopy[g] = "等级可用分组"
+		}
+		return groupsCopy
+	}
+
+	// 降级到原有逻辑
+	return GetUserUsableGroups(userGroup)
+}
+
+// GroupInUserUsableGroupsWithLevel 检查分组是否在用户可用分组内（考虑用户等级）
+func GroupInUserUsableGroupsWithLevel(userId int, userGroup, groupName string) bool {
+	// 先检查等级权限
+	allowed, err := CheckUserLevelGroupPermission(userId, groupName)
+	if err == nil && allowed {
+		return true
+	}
+
+	// 降级到原有逻辑
+	return GroupInUserUsableGroups(userGroup, groupName)
+}

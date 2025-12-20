@@ -1,0 +1,71 @@
+/* 等级徽章样式 */
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.level-badge .badge-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--badge-primary) 0%, var(--badge-secondary) 100%);
+  box-shadow: 0 2px 8px var(--badge-shadow);
+}
+
+.level-badge svg {
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Tier 1 - Basic (灰色) */
+.level-badge.tier-basic {
+  --badge-primary: #8c8c8c;
+  --badge-secondary: #bfbfbf;
+  --badge-shadow: rgba(140, 140, 140, 0.3);
+}
+
+/* Tier 2 - Standard (蓝色) */
+.level-badge.tier-standard {
+  --badge-primary: #3370ff;
+  --badge-secondary: #5b8ff9;
+  --badge-shadow: rgba(51, 112, 255, 0.3);
+}
+
+/* Tier 3 - Premium (紫色) */
+.level-badge.tier-premium {
+  --badge-primary: #722ed1;
+  --badge-secondary: #9254de;
+  --badge-shadow: rgba(114, 46, 209, 0.3);
+}
+
+/* Tier 4 - Elite (金色) */
+.level-badge.tier-elite {
+  --badge-primary: #faad14;
+  --badge-secondary: #ffc53d;
+  --badge-shadow: rgba(250, 173, 20, 0.3);
+}
+
+/* 尺寸变体 */
+.level-badge-small {
+  box-shadow: 0 1px 4px var(--badge-shadow);
+}
+
+.level-badge-medium {
+  box-shadow: 0 2px 8px var(--badge-shadow);
+}
+
+.level-badge-large {
+  box-shadow: 0 4px 16px var(--badge-shadow);
+}
+
+/* 悬停效果 */
+.level-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px var(--badge-shadow);
+}
