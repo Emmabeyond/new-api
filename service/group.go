@@ -71,10 +71,15 @@ func GetUserUsableGroupsWithLevel(userId int, userGroup string) map[string]strin
 	// 尝试获取用户等级的可用分组
 	levelGroups, err := GetUserLevelAvailableGroups(userId)
 	if err == nil && len(levelGroups) > 0 {
-		// 使用等级配置的分组
+		// 使用等级配置的分组，保留原有的描述信息
 		groupsCopy := make(map[string]string)
+		allGroups := setting.GetUserUsableGroupsCopy()
 		for _, g := range levelGroups {
-			groupsCopy[g] = "等级可用分组"
+			if desc, ok := allGroups[g]; ok {
+				groupsCopy[g] = desc
+			} else {
+				groupsCopy[g] = g // 如果没有描述，使用分组名称
+			}
 		}
 		return groupsCopy
 	}

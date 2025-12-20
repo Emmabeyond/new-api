@@ -49,7 +49,16 @@ const LevelDiscountMatrix = ({ levelId, benefits, onSave }) => {
     try {
       const res = await API.get('/api/level/channel-groups');
       if (res.data.success) {
-        setChannelGroups(res.data.data || []);
+        const groups = res.data.data || [];
+        // 排序逻辑：default 排第一，其他按字母顺序
+        const sortedGroups = groups.sort((a, b) => {
+          // default 分组始终排在第一位
+          if (a.key === 'default') return -1;
+          if (b.key === 'default') return 1;
+          // 其他分组按 key 字母顺序排列
+          return a.key.localeCompare(b.key);
+        });
+        setChannelGroups(sortedGroups);
       } else {
         Toast.error('获取渠道分组失败');
       }
@@ -238,7 +247,7 @@ const LevelDiscountMatrix = ({ levelId, benefits, onSave }) => {
         }
 
         return (
-          <Text style={{ color: '#52c41a', fontWeight: 500 }}>
+          <Text style={{ color: 'var(--theme-success, #52c41a)', fontWeight: 500 }}>
             {(value * 100).toFixed(0)}% 折扣
           </Text>
         );

@@ -45,11 +45,13 @@ func HandleGroupRatio(ctx *gin.Context, relayInfo *relaycommon.RelayInfo) types.
 
 	// 应用用户等级优惠倍率
 	// 计费公式：最终消费 = Token数量 × 模型倍率 × 渠道分组倍率 × 等级优惠倍率
+	// 注意：不修改 GroupRatio，保持原始分组倍率，等级折扣单独记录
 	levelDiscountRatio, err := service.GetUserLevelDiscountRatio(relayInfo.UserId, relayInfo.UsingGroup)
-	if err == nil && levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
-		groupRatioInfo.GroupRatio = groupRatioInfo.GroupRatio * levelDiscountRatio
+	if err == nil && levelDiscountRatio > 0 {
 		groupRatioInfo.LevelDiscountRatio = levelDiscountRatio
-		logger.LogDebug(ctx, fmt.Sprintf("applied level discount ratio: %f, final group ratio: %f", levelDiscountRatio, groupRatioInfo.GroupRatio))
+		if levelDiscountRatio != 1.0 {
+			logger.LogDebug(ctx, fmt.Sprintf("applied level discount ratio: %f, original group ratio: %f", levelDiscountRatio, groupRatioInfo.GroupRatio))
+		}
 	}
 
 	return groupRatioInfo
@@ -98,13 +100,23 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 		imageRatio, _ = ratio_setting.GetImageRatio(info.OriginModelName)
 		audioRatio = ratio_setting.GetAudioRatio(info.OriginModelName)
 		audioCompletionRatio = ratio_setting.GetAudioCompletionRatio(info.OriginModelName)
-		ratio := modelRatio * groupRatioInfo.GroupRatio
+		// 计算最终倍率：模型倍率 × 分组倍率 × 等级折扣
+		levelDiscount := groupRatioInfo.LevelDiscountRatio
+		if levelDiscount <= 0 {
+			levelDiscount = 1.0
+		}
+		ratio := modelRatio * groupRatioInfo.GroupRatio * levelDiscount
 		preConsumedQuota = int(float64(preConsumedTokens) * ratio)
 	} else {
 		if meta.ImagePriceRatio != 0 {
 			modelPrice = modelPrice * meta.ImagePriceRatio
 		}
-		preConsumedQuota = int(modelPrice * common.QuotaPerUnit * groupRatioInfo.GroupRatio)
+		// 计算最终倍率：分组倍率 × 等级折扣
+		levelDiscount := groupRatioInfo.LevelDiscountRatio
+		if levelDiscount <= 0 {
+			levelDiscount = 1.0
+		}
+		preConsumedQuota = int(modelPrice * common.QuotaPerUnit * groupRatioInfo.GroupRatio * levelDiscount)
 	}
 
 	// check if free model pre-consume is disabled
@@ -165,7 +177,12 @@ func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) types.
 			modelPrice = defaultPrice
 		}
 	}
-	quota := int(modelPrice * common.QuotaPerUnit * groupRatioInfo.GroupRatio)
+	// 计算最终倍率：分组倍率 × 等级折扣
+	levelDiscount := groupRatioInfo.LevelDiscountRatio
+	if levelDiscount <= 0 {
+		levelDiscount = 1.0
+	}
+	quota := int(modelPrice * common.QuotaPerUnit * groupRatioInfo.GroupRatio * levelDiscount)
 	priceData := types.PerCallPriceData{
 		ModelPrice:     modelPrice,
 		Quota:          quota,

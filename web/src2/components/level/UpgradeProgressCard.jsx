@@ -27,7 +27,7 @@ const UpgradeProgressCard = ({ progress }) => {
         role="region"
         aria-label="最高等级状态"
       >
-        <Trophy size={48} style={{ color: '#faad14', marginBottom: '16px' }} aria-hidden="true" />
+        <Trophy size={48} style={{ color: 'var(--theme-warning, #faad14)', marginBottom: '16px' }} aria-hidden="true" />
         <Title heading={3} style={{ margin: '8px 0' }}>
           {t('level.max_level')}
         </Title>
@@ -55,7 +55,7 @@ const UpgradeProgressCard = ({ progress }) => {
     >
       {/* 标题 */}
       <div className="progress-header">
-        <TrendingUp size={24} style={{ color: '#52c41a' }} aria-hidden="true" />
+        <TrendingUp size={24} style={{ color: 'var(--theme-success, #52c41a)' }} aria-hidden="true" />
         <Title heading={4} style={{ margin: 0 }} id="upgrade-progress-title">
           {t('level.upgrade_progress')}
         </Title>

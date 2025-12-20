@@ -59,8 +59,8 @@
 .level-setting-sidebar {
   width: 260px;
   min-width: 260px;
-  border-right: 1px solid var(--border-color, #e8e8e8);
-  background: #fafafa;
+  border-right: 1px solid var(--theme-border, #e8e8e8);
+  background: var(--theme-bg1, #fafafa);
   display: flex;
   flex-direction: column;
 }
@@ -69,7 +69,7 @@
   width: 100%;
   min-width: 100%;
   border-right: none;
-  border-bottom: 1px solid var(--border-color, #e8e8e8);
+  border-bottom: 1px solid var(--theme-border, #e8e8e8);
   max-height: 200px;
   overflow-y: auto;
 }
@@ -91,7 +91,7 @@
 }
 
 .level-sidebar-item:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--theme-fill0, rgba(0, 0, 0, 0.04));
 }
 
 .level-sidebar-item.selected {
@@ -101,7 +101,7 @@
 
 .level-sidebar-item.creating {
   background: linear-gradient(90deg, rgba(82, 196, 26, 0.08) 0%, transparent 100%);
-  border-left-color: #52c41a;
+  border-left-color: var(--theme-success, #52c41a);
 }
 
 .level-sidebar-dot {
@@ -148,8 +148,8 @@
 
 .level-sidebar-footer {
   padding: 12px 16px;
-  border-top: 1px solid var(--border-color, #e8e8e8);
-  background: #fff;
+  border-top: 1px solid var(--theme-border, #e8e8e8);
+  background: var(--theme-bg0, #fff);
 }
 
 /* ========================================
@@ -160,7 +160,7 @@
   flex: 1;
   padding: 24px;
   overflow-y: auto;
-  background: #fff;
+  background: var(--theme-bg0, #fff);
 }
 
 .level-detail-empty {
@@ -185,7 +185,7 @@
   justify-content: space-between;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color, #e8e8e8);
+  border-bottom: 1px solid var(--theme-border, #e8e8e8);
 }
 
 .level-detail-title {
@@ -226,7 +226,7 @@
   color: var(--semi-color-text-0, #262626);
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color, #e8e8e8);
+  border-bottom: 1px solid var(--theme-border, #e8e8e8);
 }
 
 .form-row {
@@ -282,33 +282,11 @@
 }
 
 /* ========================================
-   暗色模式支持
+   暗色模式支持 - 使用主题系统自动适配
    ======================================== */
 
-[data-theme='dark'] .level-setting-sidebar,
-.semi-always-dark .level-setting-sidebar {
-  background: var(--semi-color-bg-1, #1c1c1c);
-}
-
-[data-theme='dark'] .level-sidebar-item:hover,
-.semi-always-dark .level-sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme='dark'] .level-sidebar-item.selected,
-.semi-always-dark .level-sidebar-item.selected {
-  background: linear-gradient(90deg, rgba(51, 112, 255, 0.15) 0%, transparent 100%);
-}
-
-[data-theme='dark'] .level-detail-panel,
-.semi-always-dark .level-detail-panel {
-  background: var(--semi-color-bg-0, #141414);
-}
-
-[data-theme='dark'] .level-sidebar-footer,
-.semi-always-dark .level-sidebar-footer {
-  background: var(--semi-color-bg-1, #1c1c1c);
-}
+/* 主题系统会自动通过 CSS 变量适配暗色模式 */
+/* 如果需要特殊的暗色模式样式，可以在这里添加 */
 
 /* ========================================
    动画效果
@@ -413,8 +391,4 @@
   gap: 4px;
 }
 
-/* 暗色模式 */
-[data-theme='dark'] .level-group-rate-limits-info,
-.semi-always-dark .level-group-rate-limits-info {
-  background: var(--semi-color-fill-0, #2a2a2a);
-}
+/* 暗色模式会通过主题变量自动适配 */

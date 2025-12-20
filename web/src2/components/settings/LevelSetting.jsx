@@ -91,7 +91,16 @@ const LevelSetting = () => {
     try {
       const res = await API.get('/api/level/channel-groups');
       if (res.data.success) {
-        setChannelGroups(res.data.data || []);
+        const groups = res.data.data || [];
+        // 排序逻辑：default 排第一，其他按字母顺序
+        const sortedGroups = groups.sort((a, b) => {
+          // default 分组始终排在第一位
+          if (a.key === 'default') return -1;
+          if (b.key === 'default') return 1;
+          // 其他分组按 key 字母顺序排列
+          return a.key.localeCompare(b.key);
+        });
+        setChannelGroups(sortedGroups);
       }
     } catch (error) {
       console.error('Failed to fetch channel groups:', error);
@@ -227,7 +236,7 @@ const LevelSetting = () => {
         priority: levels.length + 1,
         discount_ratio: 1.0,
         rate_limit_total: 0,
-        rate_limit_success: 1000,
+        rate_limit_success: 0,
         available_groups: ['default'],
       };
     }
@@ -335,11 +344,11 @@ const LevelSidebar = ({ levels, stats, selectedLevelId, isCreating, onSelect }) 
           <div className="level-sidebar-item creating">
             <div
               className="level-sidebar-dot"
-              style={{ background: '#52c41a' }}
+              style={{ background: 'var(--theme-success, #52c41a)' }}
             />
             <div className="level-sidebar-content">
               <div className="level-sidebar-name">
-                <span className="level-sidebar-name-text" style={{ color: '#52c41a' }}>
+                <span className="level-sidebar-name-text" style={{ color: 'var(--theme-success, #52c41a)' }}>
                   {t('新等级')}
                 </span>
                 <Tag size="small" color="green">{t('创建中')}</Tag>

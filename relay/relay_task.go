@@ -72,6 +72,13 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (taskErr *dto.
 	} else {
 		ratio = modelPrice * groupRatio
 	}
+	
+	// 应用等级折扣
+	levelDiscountRatio, _ := service.GetUserLevelDiscountRatio(info.UserId, info.UsingGroup)
+	if levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
+		ratio = ratio * levelDiscountRatio
+	}
+	
 	// FIXME: 临时修补，支持任务仅按次计费
 	if !common.StringsContains(constant.TaskPricePatches, modelName) {
 		if len(info.PriceData.OtherRatios) > 0 {
@@ -82,7 +89,7 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (taskErr *dto.
 			}
 		}
 	}
-	println(fmt.Sprintf("model: %s, model_price: %.4f, group: %s, group_ratio: %.4f, final_ratio: %.4f", modelName, modelPrice, info.UsingGroup, groupRatio, ratio))
+	println(fmt.Sprintf("model: %s, model_price: %.4f, group: %s, group_ratio: %.4f, level_discount: %.4f, final_ratio: %.4f", modelName, modelPrice, info.UsingGroup, groupRatio, levelDiscountRatio, ratio))
 	userQuota, err := model.GetUserQuota(info.UserId, false)
 	if err != nil {
 		taskErr = service.TaskErrorWrapper(err, "get_user_quota_failed", http.StatusInternalServerError)

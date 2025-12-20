@@ -36,7 +36,15 @@ const ChannelDiscountMatrix = ({ allLevels, currentLevel, userCumulativeUSD }) =
         const validGroups = (res.data.data || []).filter(
           (group) => group.key && group.key.trim() !== ''
         );
-        setChannelGroups(validGroups);
+        // 排序逻辑：default 排第一，其他按字母顺序
+        const sortedGroups = validGroups.sort((a, b) => {
+          // default 分组始终排在第一位
+          if (a.key === 'default') return -1;
+          if (b.key === 'default') return 1;
+          // 其他分组按 key 字母顺序排列
+          return a.key.localeCompare(b.key);
+        });
+        setChannelGroups(sortedGroups);
       } else {
         Toast.error(t('level.error.fetch_channel_groups_failed'));
       }
@@ -153,7 +161,7 @@ const ChannelDiscountMatrix = ({ allLevels, currentLevel, userCumulativeUSD }) =
                         {discountText === '-' || discountText === t('level.format.no_discount') ? (
                           <Text type="secondary">{discountText}</Text>
                         ) : (
-                          <Text style={{ color: '#52c41a', fontWeight: 500 }}>{discountText}</Text>
+                          <Text style={{ color: 'var(--theme-success, #52c41a)', fontWeight: 500 }}>{discountText}</Text>
                         )}
                       </td>
                     );

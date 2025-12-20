@@ -30,13 +30,14 @@ type TokenDetails struct {
 }
 
 type QuotaInfo struct {
-	InputDetails  TokenDetails
-	OutputDetails TokenDetails
-	ModelName     string
-	UsePrice      bool
-	ModelPrice    float64
-	ModelRatio    float64
-	GroupRatio    float64
+	InputDetails       TokenDetails
+	OutputDetails      TokenDetails
+	ModelName          string
+	UsePrice           bool
+	ModelPrice         float64
+	ModelRatio         float64
+	GroupRatio         float64
+	LevelDiscountRatio float64 // 等级折扣倍率
 }
 
 func hasCustomModelRatio(modelName string, currentRatio float64) bool {
@@ -48,12 +49,20 @@ func hasCustomModelRatio(modelName string, currentRatio float64) bool {
 }
 
 func calculateAudioQuota(info QuotaInfo) int {
+	// 等级折扣，默认为1.0
+	levelDiscount := 1.0
+	if info.LevelDiscountRatio > 0 {
+		levelDiscount = info.LevelDiscountRatio
+	}
+	dLevelDiscount := decimal.NewFromFloat(levelDiscount)
+	
 	if info.UsePrice {
 		modelPrice := decimal.NewFromFloat(info.ModelPrice)
 		quotaPerUnit := decimal.NewFromFloat(common.QuotaPerUnit)
 		groupRatio := decimal.NewFromFloat(info.GroupRatio)
 
-		quota := modelPrice.Mul(quotaPerUnit).Mul(groupRatio)
+		// 使用价格计算时也要乘以等级折扣
+		quota := modelPrice.Mul(quotaPerUnit).Mul(groupRatio).Mul(dLevelDiscount)
 		return int(quota.IntPart())
 	}
 
@@ -63,7 +72,8 @@ func calculateAudioQuota(info QuotaInfo) int {
 
 	groupRatio := decimal.NewFromFloat(info.GroupRatio)
 	modelRatio := decimal.NewFromFloat(info.ModelRatio)
-	ratio := groupRatio.Mul(modelRatio)
+	// 计算最终倍率：分组倍率 × 模型倍率 × 等级折扣
+	ratio := groupRatio.Mul(modelRatio).Mul(dLevelDiscount)
 
 	inputTextTokens := decimal.NewFromInt(int64(info.InputDetails.TextTokens))
 	outputTextTokens := decimal.NewFromInt(int64(info.OutputDetails.TextTokens))
@@ -120,6 +130,9 @@ func PreWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usag
 	if ok {
 		actualGroupRatio = userGroupRatio
 	}
+	
+	// 获取等级折扣
+	levelDiscountRatio, _ := GetUserLevelDiscountRatio(relayInfo.UserId, relayInfo.UsingGroup)
 
 	quotaInfo := QuotaInfo{
 		InputDetails: TokenDetails{
@@ -130,10 +143,11 @@ func PreWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usag
 			TextTokens:  textOutTokens,
 			AudioTokens: audioOutTokens,
 		},
-		ModelName:  modelName,
-		UsePrice:   relayInfo.UsePrice,
-		ModelRatio: modelRatio,
-		GroupRatio: actualGroupRatio,
+		ModelName:          modelName,
+		UsePrice:           relayInfo.UsePrice,
+		ModelRatio:         modelRatio,
+		GroupRatio:         actualGroupRatio,
+		LevelDiscountRatio: levelDiscountRatio,
 	}
 
 	quota := calculateAudioQuota(quotaInfo)
@@ -171,6 +185,7 @@ func PostWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, mod
 
 	modelRatio := relayInfo.PriceData.ModelRatio
 	groupRatio := relayInfo.PriceData.GroupRatioInfo.GroupRatio
+	levelDiscountRatio := relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio
 	modelPrice := relayInfo.PriceData.ModelPrice
 	usePrice := relayInfo.PriceData.UsePrice
 
@@ -183,10 +198,11 @@ func PostWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, mod
 			TextTokens:  textOutTokens,
 			AudioTokens: audioOutTokens,
 		},
-		ModelName:  modelName,
-		UsePrice:   usePrice,
-		ModelRatio: modelRatio,
-		GroupRatio: groupRatio,
+		ModelName:          modelName,
+		UsePrice:           usePrice,
+		ModelRatio:         modelRatio,
+		GroupRatio:         groupRatio,
+		LevelDiscountRatio: levelDiscountRatio,
 	}
 
 	quota := calculateAudioQuota(quotaInfo)
@@ -196,8 +212,14 @@ func PostWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, mod
 	if !usePrice {
 		logContent = fmt.Sprintf("模型倍率 %.2f，补全倍率 %.2f，音频倍率 %.2f，音频补全倍率 %.2f，分组倍率 %.2f",
 			modelRatio, completionRatio.InexactFloat64(), audioRatio.InexactFloat64(), audioCompletionRatio.InexactFloat64(), groupRatio)
+		if levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
+			logContent += fmt.Sprintf("，等级折扣 %.2f", levelDiscountRatio)
+		}
 	} else {
 		logContent = fmt.Sprintf("模型价格 %.2f，分组倍率 %.2f", modelPrice, groupRatio)
+		if levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
+			logContent += fmt.Sprintf("，等级折扣 %.2f", levelDiscountRatio)
+		}
 	}
 
 	// record all the consume log even if quota is 0
@@ -246,6 +268,7 @@ func PostClaudeConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, 
 	completionRatio := relayInfo.PriceData.CompletionRatio
 	modelRatio := relayInfo.PriceData.ModelRatio
 	groupRatio := relayInfo.PriceData.GroupRatioInfo.GroupRatio
+	levelDiscountRatio := relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio
 	modelPrice := relayInfo.PriceData.ModelPrice
 	cacheRatio := relayInfo.PriceData.CacheRatio
 	cacheTokens := usage.PromptTokensDetails.CachedTokens
@@ -256,6 +279,12 @@ func PostClaudeConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, 
 	cacheCreationTokens := usage.PromptTokensDetails.CachedCreationTokens
 	cacheCreationTokens5m := usage.ClaudeCacheCreation5mTokens
 	cacheCreationTokens1h := usage.ClaudeCacheCreation1hTokens
+	
+	// 等级折扣，默认为1.0
+	levelDiscount := 1.0
+	if levelDiscountRatio > 0 {
+		levelDiscount = levelDiscountRatio
+	}
 
 	if relayInfo.ChannelType == constant.ChannelTypeOpenRouter {
 		promptTokens -= cacheTokens
@@ -280,9 +309,11 @@ func PostClaudeConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, 
 			calculateQuota += float64(remainingCacheCreationTokens) * cacheCreationRatio
 		}
 		calculateQuota += float64(completionTokens) * completionRatio
-		calculateQuota = calculateQuota * groupRatio * modelRatio
+		// 计算最终倍率：分组倍率 × 模型倍率 × 等级折扣
+		calculateQuota = calculateQuota * groupRatio * modelRatio * levelDiscount
 	} else {
-		calculateQuota = modelPrice * common.QuotaPerUnit * groupRatio
+		// 使用价格计算时也要乘以等级折扣
+		calculateQuota = modelPrice * common.QuotaPerUnit * groupRatio * levelDiscount
 	}
 
 	if modelRatio != 0 && calculateQuota <= 0 {
@@ -390,6 +421,7 @@ func PostAudioConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, u
 
 	modelRatio := relayInfo.PriceData.ModelRatio
 	groupRatio := relayInfo.PriceData.GroupRatioInfo.GroupRatio
+	levelDiscountRatio := relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio
 	modelPrice := relayInfo.PriceData.ModelPrice
 	usePrice := relayInfo.PriceData.UsePrice
 
@@ -402,10 +434,11 @@ func PostAudioConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, u
 			TextTokens:  textOutTokens,
 			AudioTokens: audioOutTokens,
 		},
-		ModelName:  relayInfo.OriginModelName,
-		UsePrice:   usePrice,
-		ModelRatio: modelRatio,
-		GroupRatio: groupRatio,
+		ModelName:          relayInfo.OriginModelName,
+		UsePrice:           usePrice,
+		ModelRatio:         modelRatio,
+		GroupRatio:         groupRatio,
+		LevelDiscountRatio: levelDiscountRatio,
 	}
 
 	quota := calculateAudioQuota(quotaInfo)
@@ -415,8 +448,14 @@ func PostAudioConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, u
 	if !usePrice {
 		logContent = fmt.Sprintf("模型倍率 %.2f，补全倍率 %.2f，音频倍率 %.2f，音频补全倍率 %.2f，分组倍率 %.2f",
 			modelRatio, completionRatio.InexactFloat64(), audioRatio.InexactFloat64(), audioCompletionRatio.InexactFloat64(), groupRatio)
+		if levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
+			logContent += fmt.Sprintf("，等级折扣 %.2f", levelDiscountRatio)
+		}
 	} else {
 		logContent = fmt.Sprintf("模型价格 %.2f，分组倍率 %.2f", modelPrice, groupRatio)
+		if levelDiscountRatio > 0 && levelDiscountRatio != 1.0 {
+			logContent += fmt.Sprintf("，等级折扣 %.2f", levelDiscountRatio)
+		}
 	}
 
 	// record all the consume log even if quota is 0

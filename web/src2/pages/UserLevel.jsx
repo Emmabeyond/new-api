@@ -47,7 +47,15 @@ const UserLevel = () => {
         const validGroups = (res.data.data || []).filter(
           (group) => group.key && group.key.trim() !== ''
         );
-        setChannelGroups(validGroups);
+        // 排序逻辑：default 排第一，其他按字母顺序
+        const sortedGroups = validGroups.sort((a, b) => {
+          // default 分组始终排在第一位
+          if (a.key === 'default') return -1;
+          if (b.key === 'default') return 1;
+          // 其他分组按 key 字母顺序排列
+          return a.key.localeCompare(b.key);
+        });
+        setChannelGroups(sortedGroups);
       }
     } catch (err) {
       console.error('Failed to fetch channel groups:', err);
@@ -74,6 +82,49 @@ const UserLevel = () => {
 
   const { level, benefits } = levelInfo;
   const sortedLevels = [...(allLevels || [])].sort((a, b) => a.priority - b.priority);
+
+  // 计算每个分组在所有等级中的可用性（只要有一个等级可用就算可用）
+  const getGroupAvailabilityScore = (groupKey) => {
+    let hasAvailable = false;
+    let hasUnavailable = false;
+    
+    for (const lvl of sortedLevels) {
+      const lvlBenefits = parseBenefits(lvl.benefits);
+      const availableGroups = lvlBenefits.available_channel_groups || [];
+      const isAvailable = availableGroups.length === 0 || availableGroups.includes(groupKey);
+      
+      if (isAvailable) {
+        hasAvailable = true;
+      } else {
+        hasUnavailable = true;
+      }
+    }
+    
+    // 如果所有等级都不可用，返回 0（排到最后）
+    if (!hasAvailable) return 0;
+    // 如果所有等级都可用，返回 2（排在前面）
+    if (!hasUnavailable) return 2;
+    // 如果部分可用，返回 1（排在中间）
+    return 1;
+  };
+
+  // 对分组进行最终排序：default 第一，全部可用的在前，部分可用的在中间，全部不可用的在后
+  const finalSortedGroups = [...channelGroups].sort((a, b) => {
+    // default 分组始终排在第一位
+    if (a.key === 'default') return -1;
+    if (b.key === 'default') return 1;
+    
+    // 根据所有等级的可用性排序
+    const aScore = getGroupAvailabilityScore(a.key);
+    const bScore = getGroupAvailabilityScore(b.key);
+    
+    if (aScore !== bScore) {
+      return bScore - aScore; // 分数高的排在前面
+    }
+    
+    // 分数相同时，按字母顺序
+    return a.key.localeCompare(b.key);
+  });
 
   return (
     <div className="limits-page">
@@ -128,7 +179,7 @@ const UserLevel = () => {
                   <thead>
                     <tr>
                       <th className="level-col">{t('level.comparison.level')}</th>
-                      {channelGroups.map((group) => (
+                      {finalSortedGroups.map((group) => (
                         <th key={group.key}>
                           {group.label || group.key}
                         </th>
@@ -148,7 +199,11 @@ const UserLevel = () => {
                           style={isCurrentLevel ? { background: theme.bg } : {}}
                         >
                           <td className="level-name">{lvl.name}</td>
-                          {channelGroups.map((group) => {
+                          {finalSortedGroups.map((group) => {
+                            // 检查该等级是否允许使用此渠道分组
+                            const availableGroups = lvlBenefits.available_channel_groups || [];
+                            const isGroupAvailable = availableGroups.length === 0 || availableGroups.includes(group.key);
+                            
                             const ratio = getDiscountRatio(lvlBenefits, group.key);
                             const modelLimits = lvlBenefits.model_rate_limits || {};
                             const groupRateLimit = getRateLimitForGroup(lvlBenefits, group.key);
@@ -159,6 +214,7 @@ const UserLevel = () => {
                                   ratio={ratio}
                                   modelLimits={modelLimits}
                                   groupRateLimit={groupRateLimit}
+                                  isAvailable={isGroupAvailable}
                                   t={t}
                                 />
                               </td>
@@ -184,31 +240,39 @@ const UserLevel = () => {
 /**
  * 单元格内容组件
  */
-const LevelCellContent = ({ ratio, modelLimits, groupRateLimit, t }) => {
+const LevelCellContent = ({ ratio, modelLimits, groupRateLimit, isAvailable, t }) => {
+  // 如果该等级不允许使用此渠道，显示 -
+  if (!isAvailable) {
+    return (
+      <div className="cell-content">
+        <Text type="tertiary" style={{ fontSize: '18px', fontWeight: 500 }}>-</Text>
+      </div>
+    );
+  }
+
   const hasModelLimits = modelLimits && Object.keys(modelLimits).length > 0;
   const discountText = formatDiscountForChannel(ratio, t);
   const hasDiscount = ratio < 1.0;
   const hasRateLimit = groupRateLimit && (groupRateLimit.total_count > 0 || groupRateLimit.success_count > 0);
 
-  if (!hasDiscount && !hasModelLimits && !hasRateLimit) {
-    return <Text type="tertiary">-</Text>;
-  }
-
   return (
     <div className="cell-content">
       {hasDiscount && (
-        <Text style={{ color: '#52c41a', fontWeight: 500 }}>{discountText}</Text>
+        <Text style={{ color: 'var(--theme-success, #52c41a)', fontWeight: 500 }}>{discountText}</Text>
       )}
-      {hasRateLimit && (
-        <div className="cell-rate-limit">
-          <Text size="small" type="tertiary">{t('level.concurrency_limit')}:</Text>
-          <div className="rate-limit-values">
-            {groupRateLimit.success_count > 0 && (
-              <Text size="small">{formatRateLimitValue(groupRateLimit.success_count, t)}/min</Text>
-            )}
-          </div>
-        </div>
-      )}
+      {/* 始终显示并发限制信息 */}
+      <div className="cell-rate-limit">
+        <Text size="small" type="tertiary">
+          {t('level.concurrency_limit')}: {' '}
+          {hasRateLimit ? (
+            groupRateLimit.success_count > 0 ? (
+              `${formatRateLimitValue(groupRateLimit.success_count, t)}/min`
+            ) : null
+          ) : (
+            t('level.unlimited')
+          )}
+        </Text>
+      </div>
       {hasModelLimits && (
         <div className="cell-limits">
           <Text size="small" type="tertiary">{t('level.concurrency')}:</Text>
@@ -295,7 +359,7 @@ const BenefitsCollapsible = ({ benefits, t }) => {
                 {Object.entries(group_discount_ratios).map(([group, ratio]) => (
                   <div key={group} className="group-discount-row">
                     <Tag size="small" color="cyan">{group}</Tag>
-                    <Text size="small" style={{ color: '#52c41a' }}>
+                    <Text size="small" style={{ color: 'var(--theme-success, #52c41a)' }}>
                       {formatDiscountForChannel(ratio, t)}
                     </Text>
                   </div>

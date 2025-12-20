@@ -1,0 +1,72 @@
+/* ========================================
+   渠道分组限流配置组件样式
+   ======================================== */
+
+.level-group-rate-limits {
+  padding: 16px;
+}
+
+.level-group-rate-limits-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.level-group-rate-limits-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.level-group-rate-limits-info {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--theme-fill0, #f8fafc);
+  border-radius: 8px;
+  border: 1px solid var(--theme-border, #e2e8f0);
+}
+
+.level-group-rate-limits-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rate-limit-input-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.level-group-rate-limits-empty {
+  padding: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 768px) {
+  .level-group-rate-limits {
+    padding: 12px;
+  }
+
+  .level-group-rate-limits-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rate-limit-input-cell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

@@ -15,6 +15,7 @@ import (
 	"github.com/QuantumNous/new-api/relay"
 	"github.com/QuantumNous/new-api/relay/channel"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 )
 
@@ -170,9 +171,16 @@ func updateVideoSingleTask(ctx context.Context, adaptor channel.TaskAdaptor, cha
 							} else {
 								finalGroupRatio = groupRatio
 							}
+							
+							// 获取等级折扣
+							levelDiscountRatio, _ := service.GetUserLevelDiscountRatio(task.UserId, group)
+							levelDiscount := 1.0
+							if levelDiscountRatio > 0 {
+								levelDiscount = levelDiscountRatio
+							}
 
-							// 计算实际应扣费额度: totalTokens * modelRatio * groupRatio
-							actualQuota := int(float64(taskResult.TotalTokens) * modelRatio * finalGroupRatio)
+							// 计算实际应扣费额度: totalTokens * modelRatio * groupRatio * levelDiscount
+							actualQuota := int(float64(taskResult.TotalTokens) * modelRatio * finalGroupRatio * levelDiscount)
 
 							// 计算差额
 							preConsumedQuota := task.Quota
@@ -195,8 +203,13 @@ func updateVideoSingleTask(ctx context.Context, adaptor channel.TaskAdaptor, cha
 									task.Quota = actualQuota // 更新任务记录的实际扣费额度
 
 									// 记录消费日志
-									logContent := fmt.Sprintf("视频任务成功补扣费，模型倍率 %.2f，分组倍率 %.2f，tokens %d，预扣费 %s，实际扣费 %s，补扣费 %s",
-										modelRatio, finalGroupRatio, taskResult.TotalTokens,
+									logContent := fmt.Sprintf("视频任务成功补扣费，模型倍率 %.2f，分组倍率 %.2f",
+										modelRatio, finalGroupRatio)
+									if levelDiscount != 1.0 {
+										logContent += fmt.Sprintf("，等级折扣 %.2f", levelDiscount)
+									}
+									logContent += fmt.Sprintf("，tokens %d，预扣费 %s，实际扣费 %s，补扣费 %s",
+										taskResult.TotalTokens,
 										logger.LogQuota(preConsumedQuota), logger.LogQuota(actualQuota), logger.LogQuota(quotaDelta))
 									model.RecordLog(task.UserId, model.LogTypeSystem, logContent)
 								}
@@ -216,8 +229,13 @@ func updateVideoSingleTask(ctx context.Context, adaptor channel.TaskAdaptor, cha
 									task.Quota = actualQuota // 更新任务记录的实际扣费额度
 
 									// 记录退款日志
-									logContent := fmt.Sprintf("视频任务成功退还多扣费用，模型倍率 %.2f，分组倍率 %.2f，tokens %d，预扣费 %s，实际扣费 %s，退还 %s",
-										modelRatio, finalGroupRatio, taskResult.TotalTokens,
+									logContent := fmt.Sprintf("视频任务成功退还多扣费用，模型倍率 %.2f，分组倍率 %.2f",
+										modelRatio, finalGroupRatio)
+									if levelDiscount != 1.0 {
+										logContent += fmt.Sprintf("，等级折扣 %.2f", levelDiscount)
+									}
+									logContent += fmt.Sprintf("，tokens %d，预扣费 %s，实际扣费 %s，退还 %s",
+										taskResult.TotalTokens,
 										logger.LogQuota(preConsumedQuota), logger.LogQuota(actualQuota), logger.LogQuota(refundQuota))
 									model.RecordLog(task.UserId, model.LogTypeSystem, logContent)
 								}

@@ -12,6 +12,7 @@ import {
 import { IconSave } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
 import { parseBenefits, isValidRateLimitValue } from '../../utils/levelUtils';
+import '../../styles/level-group-rate-limits.css';
 
 const { Text } = Typography;
 
@@ -50,13 +51,33 @@ const LevelGroupRateLimits = ({
 
     setEditedLimits((prev) => {
       const newLimits = { ...prev };
-      if (!newLimits[groupKey]) {
-        newLimits[groupKey] = { total_count: 0, success_count: 0 };
+      
+      // 如果值为 null/undefined，表示清空
+      if (value === null || value === undefined) {
+        if (newLimits[groupKey]) {
+          // 设置为 undefined 表示未配置，将在保存时被清理
+          newLimits[groupKey] = {
+            ...newLimits[groupKey],
+            [field]: undefined,
+          };
+          
+          // 如果两个字段都是 undefined，删除整个配置
+          if (newLimits[groupKey].total_count === undefined && 
+              newLimits[groupKey].success_count === undefined) {
+            delete newLimits[groupKey];
+          }
+        }
+      } else {
+        // 设置具体的值
+        if (!newLimits[groupKey]) {
+          newLimits[groupKey] = { total_count: undefined, success_count: undefined };
+        }
+        newLimits[groupKey] = {
+          ...newLimits[groupKey],
+          [field]: value,
+        };
       }
-      newLimits[groupKey] = {
-        ...newLimits[groupKey],
-        [field]: value || 0,
-      };
+      
       return newLimits;
     });
     setHasChanges(true);
@@ -66,11 +87,21 @@ const LevelGroupRateLimits = ({
   const handleSave = async () => {
     setLoading(true);
     try {
-      // 清理空配置（两个值都为0的）
+      // 清理空配置（两个值都为0或未设置的）
       const cleanedLimits = {};
       Object.entries(editedLimits).forEach(([key, limit]) => {
-        if (limit.total_count > 0 || limit.success_count > 0) {
-          cleanedLimits[key] = limit;
+        if (limit) {
+          // 清理 undefined 字段，转换为 0
+          const totalCount = limit.total_count !== undefined ? limit.total_count : 0;
+          const successCount = limit.success_count !== undefined ? limit.success_count : 0;
+          
+          // 只保存至少有一个值大于0的配置
+          if (totalCount > 0 || successCount > 0) {
+            cleanedLimits[key] = {
+              total_count: totalCount,
+              success_count: successCount,
+            };
+          }
         }
       });
 
@@ -109,20 +140,21 @@ const LevelGroupRateLimits = ({
       render: (_, record) => {
         const limit = editedLimits[record.groupKey] || {};
         const value = limit.total_count;
-        const isDefault = value === undefined || value === 0;
+        const isDefault = value === undefined || value === null;
         
         return (
           <div className="rate-limit-input-cell">
             <InputNumber
-              value={value || null}
+              value={value !== undefined && value !== null ? value : null}
               min={0}
-              placeholder={isDefault ? (globalRateLimit.total_count || t('无限制')) : ''}
+              placeholder={t('留空继承全局')}
               onChange={(val) => handleLimitChange(record.groupKey, 'total_count', val)}
               style={{ width: 120 }}
+              showClear
             />
             {isDefault && globalRateLimit.total_count > 0 && (
               <Text type="tertiary" size="small" style={{ marginLeft: 4 }}>
-                ({t('继承全局')})
+                ({t('继承全局')}: {globalRateLimit.total_count})
               </Text>
             )}
           </div>
@@ -136,20 +168,21 @@ const LevelGroupRateLimits = ({
       render: (_, record) => {
         const limit = editedLimits[record.groupKey] || {};
         const value = limit.success_count;
-        const isDefault = value === undefined || value === 0;
+        const isDefault = value === undefined || value === null;
         
         return (
           <div className="rate-limit-input-cell">
             <InputNumber
-              value={value || null}
+              value={value !== undefined && value !== null ? value : null}
               min={0}
-              placeholder={isDefault ? (globalRateLimit.success_count || t('无限制')) : ''}
+              placeholder={t('留空继承全局')}
               onChange={(val) => handleLimitChange(record.groupKey, 'success_count', val)}
               style={{ width: 120 }}
+              showClear
             />
             {isDefault && globalRateLimit.success_count > 0 && (
               <Text type="tertiary" size="small" style={{ marginLeft: 4 }}>
-                ({t('继承全局')})
+                ({t('继承全局')}: {globalRateLimit.success_count})
               </Text>
             )}
           </div>

@@ -214,6 +214,7 @@ func postConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usage 
 	imageRatio := relayInfo.PriceData.ImageRatio
 	modelRatio := relayInfo.PriceData.ModelRatio
 	groupRatio := relayInfo.PriceData.GroupRatioInfo.GroupRatio
+	levelDiscountRatio := relayInfo.PriceData.GroupRatioInfo.LevelDiscountRatio
 	modelPrice := relayInfo.PriceData.ModelPrice
 	cachedCreationRatio := relayInfo.PriceData.CacheCreationRatio
 
@@ -232,8 +233,15 @@ func postConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usage 
 	dModelPrice := decimal.NewFromFloat(modelPrice)
 	dCachedCreationRatio := decimal.NewFromFloat(cachedCreationRatio)
 	dQuotaPerUnit := decimal.NewFromFloat(common.QuotaPerUnit)
+	
+	// 等级折扣，默认为1.0
+	dLevelDiscount := decimal.NewFromFloat(1.0)
+	if levelDiscountRatio > 0 {
+		dLevelDiscount = decimal.NewFromFloat(levelDiscountRatio)
+	}
 
-	ratio := dModelRatio.Mul(dGroupRatio)
+	// 计算最终倍率：模型倍率 × 分组倍率 × 等级折扣
+	ratio := dModelRatio.Mul(dGroupRatio).Mul(dLevelDiscount)
 
 	// openai web search 工具计费
 	var dWebSearchQuota decimal.Decimal
@@ -340,7 +348,8 @@ func postConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usage 
 			quotaCalculateDecimal = decimal.NewFromInt(1)
 		}
 	} else {
-		quotaCalculateDecimal = dModelPrice.Mul(dQuotaPerUnit).Mul(dGroupRatio)
+		// 使用价格计算时也要乘以等级折扣
+		quotaCalculateDecimal = dModelPrice.Mul(dQuotaPerUnit).Mul(dGroupRatio).Mul(dLevelDiscount)
 	}
 	// 添加 responses tools call 调用的配额
 	quotaCalculateDecimal = quotaCalculateDecimal.Add(dWebSearchQuota)

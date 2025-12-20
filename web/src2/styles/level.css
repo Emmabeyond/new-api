@@ -2,19 +2,19 @@
    Limits 页面样式 - 参考 OpenAI 风格
    ======================================== */
 
-/* 等级主题色变量 */
+/* 等级主题色变量 - 使用主题系统的颜色 */
 :root {
-  --tier-basic-primary: #595959;
-  --tier-basic-bg: #fafafa;
-  --tier-standard-primary: #1890ff;
-  --tier-standard-bg: #e6f7ff;
-  --tier-premium-primary: #531dab;
-  --tier-premium-bg: #f9f0ff;
-  --tier-elite-primary: #d48806;
-  --tier-elite-bg: #fffbe6;
-  --text-primary: #262626;
-  --text-secondary: #595959;
-  --border-color: #e8e8e8;
+  --tier-basic-primary: var(--theme-secondary, #595959);
+  --tier-basic-bg: var(--theme-fill0, #fafafa);
+  --tier-standard-primary: var(--theme-primary, #1890ff);
+  --tier-standard-bg: var(--theme-primary-light, #e6f7ff);
+  --tier-premium-primary: var(--theme-primary, #531dab);
+  --tier-premium-bg: var(--theme-primary-light, #f9f0ff);
+  --tier-elite-primary: var(--theme-warning, #d48806);
+  --tier-elite-bg: var(--theme-fill1, #fffbe6);
+  --text-primary: var(--theme-text0, #262626);
+  --text-secondary: var(--theme-text1, #595959);
+  --border-color: var(--theme-border, #e8e8e8);
 }
 
 /* ========================================
@@ -67,7 +67,7 @@
   min-width: 200px;
   border-right: 1px solid var(--border-color);
   padding: 16px;
-  background: #fafafa;
+  background: var(--theme-bg1, #fafafa);
 }
 
 .limits-layout.mobile .levels-sidebar {
@@ -102,7 +102,7 @@
   margin-left: 0;
   border-left: none;
   border-radius: 8px;
-  background: white;
+  background: var(--theme-bg0, white);
   border: 1px solid var(--border-color);
 }
 
@@ -185,7 +185,7 @@
 }
 
 .matrix-table th {
-  background: #fafafa;
+  background: var(--theme-bg1, #fafafa);
   font-weight: 600;
   font-size: 14px;
   color: var(--text-primary);
@@ -224,7 +224,7 @@
 }
 
 .matrix-table tbody tr:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--theme-fill0, rgba(0, 0, 0, 0.02));
 }
 
 /* ========================================
@@ -334,8 +334,15 @@
 }
 
 .benefit-row:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--theme-fill0, rgba(0, 0, 0, 0.02));
 }
+
+/* ========================================
+   暗色模式支持 - 使用主题系统自动适配
+   ======================================== */
+
+/* 主题系统会自动通过 CSS 变量适配暗色模式 */
+/* 如果需要特殊的暗色模式样式，可以在这里添加 */
 
 .benefit-label {
   display: flex;
@@ -352,7 +359,7 @@
 
 .benefit-detail {
   padding: 0 0 16px 20px;
-  background: #fafafa;
+  background: var(--theme-fill0, #fafafa);
   border-radius: 8px;
   margin-bottom: 8px;
 }
@@ -371,7 +378,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: white;
+  background: var(--theme-bg0, white);
   border-radius: 6px;
   border: 1px solid var(--border-color);
 }
