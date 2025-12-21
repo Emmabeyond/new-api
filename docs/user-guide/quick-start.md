@@ -24,10 +24,19 @@ BigAI Pro 提供与 OpenAI 完全兼容的 API 接口，支持 GPT、Claude、Ge
 
 ## 第二步：配置 API 端点
 
+BigAI Pro 提供多个 API 端点，可根据需求选择：
+
+| 端点 | 地址 | 特点 |
+|------|-----|------|
+| **主站点** | `https://api.bigaipro.com/v1` | 功能完整，Cloudflare 加速 |
+| **国内直连** | `https://api.abu117.cn/v1` | 无 CF，低延迟，仅支持 API 调用 |
+
 | 配置项 | 值 |
 |--------|-----|
-| **API Base URL** | `https://api.bigaipro.com/` |
+| **API Base URL** | `https://api.bigaipro.com/v1` 或 `https://api.abu117.cn/v1` |
 | **API Key** | `sk-xxxxxxxxxxxxxxxx` |
+
+> 💡 **提示**: 国内服务器推荐使用 `https://api.abu117.cn/v1`，延迟更低
 
 ## 第三步：发起第一个请求
 
@@ -133,6 +142,8 @@ set OPENAI_API_BASE=https://api.bigaipro.com/v1
 
 ## 下一步
 
+- 📖 [API 端点说明](./api-endpoints.md) - 了解各端点特点
+- ⭐ [用户等级](./user-levels.md) - 了解等级折扣权益
 - 📖 [API Key 管理](./api-key-management.md) - 了解如何管理多个密钥
 - 💰 [计费与额度](./billing-and-quota.md) - 了解计费规则
 - 🤖 [模型使用指南](./models/overview.md) - 深入了解各模型特性
