@@ -156,11 +156,11 @@ const PageLayout = () => {
             style={{
               position: 'fixed',
               left: 0,
-              top: '64px',
+              top: isMobile ? '56px' : '64px',
               zIndex: 99,
               border: 'none',
               paddingRight: '0',
-              height: 'calc(100vh - 64px)',
+              height: isMobile ? 'calc(100vh - 56px)' : 'calc(100vh - 64px)',
               width: 'var(--sidebar-current-width)',
             }}
           >

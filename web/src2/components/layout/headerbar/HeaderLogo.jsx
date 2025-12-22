@@ -38,7 +38,7 @@ const HeaderLogo = ({
   }
 
   return (
-    <Link to='/' className='group flex items-center gap-3'>
+    <Link to='/' className='group flex items-center gap-2 md:gap-3'>
       {/* Logo 容器 - 带光晕效果 */}
       <div className='relative'>
         {/* 光晕背景 */}
@@ -47,13 +47,13 @@ const HeaderLogo = ({
           style={{ animation: 'pulse 2s ease-in-out infinite' }}
         />
         {/* Logo 外框 */}
-        <div className='relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 p-[2px] shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300'>
-          <div className='w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center overflow-hidden'>
+        <div className='relative w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 p-[2px] shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300'>
+          <div className='w-full h-full rounded-[6px] md:rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center overflow-hidden'>
             <SkeletonWrapper loading={isLoading || !logoLoaded} type='image' />
             <img
               src={logo}
               alt='logo'
-              className={`w-7 h-7 md:w-8 md:h-8 object-contain transition-all duration-300 group-hover:scale-110 ${!isLoading && logoLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-6 h-6 md:w-8 md:h-8 object-contain transition-all duration-300 group-hover:scale-110 ${!isLoading && logoLoaded ? 'opacity-100' : 'opacity-0'}`}
             />
           </div>
         </div>
@@ -70,7 +70,7 @@ const HeaderLogo = ({
           >
             {/* 渐变文字效果 */}
             <span 
-              className='text-xl font-bold transition-all duration-300 group-hover:tracking-wide'
+              className='text-lg md:text-xl font-bold transition-all duration-300 group-hover:tracking-wide'
               style={{
                 background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 25%, #ec4899 50%, #8b5cf6 75%, #a855f7 100%)',
                 backgroundSize: '200% auto',

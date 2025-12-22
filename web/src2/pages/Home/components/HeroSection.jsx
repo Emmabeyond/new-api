@@ -49,7 +49,7 @@ const HeroSection = ({
   };
 
   return (
-    <div className="w-full min-h-[450px] md:min-h-[550px] relative overflow-hidden">
+    <div className="w-full min-h-[400px] md:min-h-[550px] relative overflow-hidden">
       {/* 粒子背景 */}
       <ParticlesBackground count={isMobile ? 15 : 30} />
       
@@ -57,41 +57,41 @@ const HeroSection = ({
       <div className="blur-ball blur-ball-indigo" />
       <div className="blur-ball blur-ball-teal" />
       
-      <div className="flex items-center justify-center h-full px-4 py-16 md:py-24 relative z-10">
+      <div className="flex items-center justify-center h-full px-4 py-12 md:py-24 relative z-10">
         <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
           {/* 顶部标签 */}
-          <div className="mb-4 md:mb-6">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-sm text-semi-color-text-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="mb-3 md:mb-6">
+            <span className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1 md:py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-xs md:text-sm text-semi-color-text-1">
+              <span className="w-1.5 md:w-2 h-1.5 md:h-2 rounded-full bg-green-500 animate-pulse" />
               {t('服务运行中')}
             </span>
           </div>
 
           {/* 标题区域 */}
-          <div className="flex flex-col items-center justify-center mb-6 md:mb-8">
+          <div className="flex flex-col items-center justify-center mb-4 md:mb-8">
             <h1
-              className={`hero-title-glow text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-semi-color-text-0 leading-tight ${isChinese ? 'tracking-wide md:tracking-wider' : ''}`}
+              className={`hero-title-glow text-2xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-semi-color-text-0 leading-tight ${isChinese ? 'tracking-wide md:tracking-wider' : ''}`}
             >
               {t('统一的')}
               <br />
               <span className="gradient-text-animated">{t('大模型接口网关')}</span>
             </h1>
             
-            <p className="text-base md:text-lg lg:text-xl text-semi-color-text-1 mt-4 md:mt-6 max-w-2xl leading-relaxed">
+            <p className="text-sm md:text-lg lg:text-xl text-semi-color-text-1 mt-3 md:mt-6 max-w-2xl leading-relaxed px-2">
               {t('更好的价格，更好的稳定性，只需要将模型基址替换为：')}
             </p>
 
             {/* BASE URL 输入框 */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full mt-6 md:mt-8 max-w-lg">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 w-full mt-4 md:mt-8 max-w-lg px-2">
               <Input
                 readonly
                 value={serverAddress}
-                className="flex-1 !rounded-full shimmer-border"
+                className="flex-1 !rounded-full shimmer-border text-sm md:text-base"
                 size={isMobile ? 'default' : 'large'}
                 suffix={
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <ScrollList
-                      bodyHeight={32}
+                      bodyHeight={isMobile ? 28 : 32}
                       style={{ border: 'unset', boxShadow: 'unset' }}
                     >
                       <ScrollItem
@@ -106,6 +106,7 @@ const HeroSection = ({
                       type="primary"
                       onClick={handleCopyBaseURL}
                       icon={<IconCopy />}
+                      size={isMobile ? 'small' : 'default'}
                       className="!rounded-full btn-glow"
                     />
                   </div>
@@ -115,13 +116,13 @@ const HeroSection = ({
           </div>
 
           {/* CTA 按钮 */}
-          <div className="flex flex-row gap-4 justify-center items-center">
+          <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
             <Link to="/console">
               <Button
                 theme="solid"
                 type="primary"
                 size={isMobile ? 'default' : 'large'}
-                className="!rounded-3xl px-8 py-2 btn-glow"
+                className="!rounded-3xl px-6 md:px-8 py-2 btn-glow text-sm md:text-base"
                 icon={<IconPlay />}
               >
                 {t('获取密钥')}
@@ -130,7 +131,7 @@ const HeroSection = ({
             {isDemoSiteMode && version ? (
               <Button
                 size={isMobile ? 'default' : 'large'}
-                className="flex items-center !rounded-3xl px-6 py-2"
+                className="flex items-center !rounded-3xl px-4 md:px-6 py-2 text-sm md:text-base"
                 icon={<IconGithubLogo />}
                 onClick={() =>
                   window.open('https://github.com/QuantumNous/new-api', '_blank')
@@ -142,7 +143,7 @@ const HeroSection = ({
               docsLink && (
                 <Button
                   size={isMobile ? 'default' : 'large'}
-                  className="flex items-center !rounded-3xl px-6 py-2"
+                  className="flex items-center !rounded-3xl px-4 md:px-6 py-2 text-sm md:text-base"
                   icon={<IconFile />}
                   onClick={() => window.open(docsLink, '_blank')}
                 >
@@ -153,7 +154,7 @@ const HeroSection = ({
           </div>
 
           {/* 底部特性标签 */}
-          <div className="flex flex-wrap justify-center gap-3 mt-8 md:mt-12">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 mt-6 md:mt-12 px-2">
             {[
               { icon: '⚡', text: t('低延迟') },
               { icon: '🔒', text: t('安全可靠') },
@@ -161,9 +162,9 @@ const HeroSection = ({
             ].map((item, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-semi-color-bg-2 text-semi-color-text-2 text-sm"
+                className="inline-flex items-center gap-1 md:gap-1.5 px-2.5 md:px-3 py-1 rounded-full bg-semi-color-bg-2 text-semi-color-text-2 text-xs md:text-sm"
               >
-                <span>{item.icon}</span>
+                <span className="text-sm md:text-base">{item.icon}</span>
                 <span>{item.text}</span>
               </span>
             ))}
