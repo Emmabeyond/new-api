@@ -29,6 +29,7 @@ const UsersFilters = ({
   activePage,
   pageSize,
   groupOptions,
+  levelOptions,
   loading,
   searching,
   t,
@@ -78,6 +79,23 @@ const UsersFilters = ({
             optionList={groupOptions}
             onChange={(value) => {
               // Group change triggers automatic search
+              setTimeout(() => {
+                searchUsers(1, pageSize);
+              }, 100);
+            }}
+            className='w-full'
+            showClear
+            pure
+            size='small'
+          />
+        </div>
+        <div className='w-full md:w-48'>
+          <Form.Select
+            field='searchLevel'
+            placeholder={t('选择等级')}
+            optionList={levelOptions}
+            onChange={(value) => {
+              // Level change triggers automatic search
               setTimeout(() => {
                 searchUsers(1, pageSize);
               }, 100);

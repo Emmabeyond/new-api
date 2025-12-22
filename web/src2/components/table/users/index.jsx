@@ -98,6 +98,7 @@ const UsersPage = () => {
               activePage={activePage}
               pageSize={pageSize}
               groupOptions={groupOptions}
+              levelOptions={usersData.levelOptions}
               loading={loading}
               searching={searching}
               t={t}

@@ -302,6 +302,8 @@ func migrateDB() error {
 	if err := InitDefaultLevelConfigs(); err != nil {
 		common.SysLog("Warning: failed to initialize default level configs: " + err.Error())
 	}
+	// 迁移：为空等级用户设置默认等级 tier_1
+	migrateEmptyUserLevels()
 	return nil
 }
 
@@ -611,4 +613,32 @@ func PingDB() error {
 	lastPingTime = time.Now()
 	common.SysLog("Database pinged successfully")
 	return nil
+}
+
+
+// migrateEmptyUserLevels 为空等级用户设置默认等级 tier_1
+// 同时修复历史数据中等级名称与ID不一致的问题
+func migrateEmptyUserLevels() {
+	// 1. 修复空等级
+	result := DB.Model(&User{}).Where("level = '' OR level IS NULL").Update("level", "tier_1")
+	if result.Error != nil {
+		common.SysLog("Warning: failed to migrate empty user levels: " + result.Error.Error())
+	} else if result.RowsAffected > 0 {
+		common.SysLog(fmt.Sprintf("Migrated %d users with empty level to tier_1", result.RowsAffected))
+	}
+
+	// 2. 修复等级名称与ID不一致的问题（历史数据可能存的是名称而非ID）
+	levelNameToId := map[string]string{
+		"Tier 1": "tier_1",
+		"Tier 2": "tier_2",
+		"Tier 3": "tier_3",
+	}
+	for name, id := range levelNameToId {
+		result := DB.Model(&User{}).Where("level = ?", name).Update("level", id)
+		if result.Error != nil {
+			common.SysLog(fmt.Sprintf("Warning: failed to migrate level '%s' to '%s': %s", name, id, result.Error.Error()))
+		} else if result.RowsAffected > 0 {
+			common.SysLog(fmt.Sprintf("Migrated %d users from level '%s' to '%s'", result.RowsAffected, name, id))
+		}
+	}
 }

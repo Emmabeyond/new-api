@@ -223,7 +223,7 @@ func GetAllUsers(pageInfo *common.PageInfo) (users []*User, total int64, err err
 	return users, total, nil
 }
 
-func SearchUsers(keyword string, group string, startIdx int, num int) ([]*User, int64, error) {
+func SearchUsers(keyword string, group string, level string, startIdx int, num int) ([]*User, int64, error) {
 	var users []*User
 	var total int64
 	var err error
@@ -241,6 +241,11 @@ func SearchUsers(keyword string, group string, startIdx int, num int) ([]*User, 
 
 	// 构建基础查询
 	query := tx.Unscoped().Model(&User{})
+
+	// 添加等级过滤条件
+	if level != "" {
+		query = query.Where("level = ?", level)
+	}
 
 	// 构建搜索条件
 	likeCondition := "username LIKE ? OR email LIKE ? OR display_name LIKE ?"
@@ -262,7 +267,7 @@ func SearchUsers(keyword string, group string, startIdx int, num int) ([]*User, 
 		if group != "" {
 			query = query.Where("("+likeCondition+") AND "+commonGroupCol+" = ?",
 				"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", group)
-		} else {
+		} else if keyword != "" {
 			query = query.Where(likeCondition,
 				"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
 		}
