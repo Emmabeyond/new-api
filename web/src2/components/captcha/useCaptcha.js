@@ -34,10 +34,20 @@ const useCaptcha = () => {
       let bgLoaded = false;
       let puzzleLoaded = false;
       let hasError = false;
+      let timeoutId = null;
 
       const checkComplete = () => {
         if (bgLoaded && puzzleLoaded && !hasError) {
+          if (timeoutId) clearTimeout(timeoutId);
           resolve();
+        }
+      };
+
+      const handleError = (errorMsg) => {
+        if (!hasError) {
+          hasError = true;
+          if (timeoutId) clearTimeout(timeoutId);
+          reject(new Error(errorMsg));
         }
       };
 
@@ -47,12 +57,10 @@ const useCaptcha = () => {
         bgLoaded = true;
         checkComplete();
       };
-      bgImg.onerror = () => {
-        if (!hasError) {
-          hasError = true;
-          reject(new Error('背景图加载失败'));
-        }
-      };
+      bgImg.onerror = () => handleError('背景图加载失败');
+      
+      // 添加 crossOrigin 属性以支持跨域图片
+      bgImg.crossOrigin = 'anonymous';
       bgImg.src = bgImage;
 
       // 预加载拼图块
@@ -61,21 +69,16 @@ const useCaptcha = () => {
         puzzleLoaded = true;
         checkComplete();
       };
-      puzzleImg.onerror = () => {
-        if (!hasError) {
-          hasError = true;
-          reject(new Error('拼图块加载失败'));
-        }
-      };
+      puzzleImg.onerror = () => handleError('拼图块加载失败');
+      
+      // 添加 crossOrigin 属性以支持跨域图片
+      puzzleImg.crossOrigin = 'anonymous';
       puzzleImg.src = puzzleImage;
 
-      // 设置超时（10秒）
-      setTimeout(() => {
-        if (!bgLoaded || !puzzleLoaded) {
-          hasError = true;
-          reject(new Error('图片加载超时'));
-        }
-      }, 10000);
+      // 设置超时（移动端增加到 20 秒）
+      timeoutId = setTimeout(() => {
+        handleError('图片加载超时，请检查网络连接');
+      }, 20000);
     });
   }, []);
 
@@ -97,11 +100,21 @@ const useCaptcha = () => {
             retryCountRef.current = 0; // 重置重试计数
             return data;
           } catch (imgError) {
+            console.warn(`[useCaptcha] Image preload failed (attempt ${attempt + 1}):`, imgError.message);
+            
             // 图片加载失败，重试获取新的验证码
             if (retryOnError && attempt < MAX_RETRY_COUNT) {
-              await delay(RETRY_DELAY);
+              await delay(RETRY_DELAY * (attempt + 1));
               return attemptFetch(attempt + 1);
             }
+            
+            // 如果重试次数用完，尝试直接设置 challenge（让组件自己处理图片加载）
+            if (attempt >= MAX_RETRY_COUNT) {
+              console.warn('[useCaptcha] Max retries reached, setting challenge without preload');
+              setChallenge(data);
+              return data;
+            }
+            
             throw new Error('图片加载失败，请刷新重试');
           }
         } else {

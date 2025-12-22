@@ -96,6 +96,9 @@ const SliderTrack = ({
   const handleTouchStart = useCallback((e) => {
     if (disabled) return;
     
+    // 阻止默认行为，防止触摸选择和长按菜单
+    e.preventDefault();
+    
     const touch = e.touches[0];
     setIsDragging(true);
     startXRef.current = touch.clientX;
@@ -106,6 +109,9 @@ const SliderTrack = ({
   const handleTouchMove = useCallback((e) => {
     if (!isDragging || disabled) return;
     
+    // 阻止默认行为，防止页面滚动
+    e.preventDefault();
+    
     const touch = e.touches[0];
     const newPos = calculateDisplayPosition(touch.clientX);
     setPosition(newPos);
@@ -115,6 +121,9 @@ const SliderTrack = ({
   // 触摸结束
   const handleTouchEnd = useCallback((e) => {
     if (!isDragging) return;
+    
+    // 阻止默认行为
+    e.preventDefault();
     
     setIsDragging(false);
     onDragEnd(position);
