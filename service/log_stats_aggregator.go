@@ -262,12 +262,62 @@ type TimeRange struct {
 // 注册聚合数据查询回调到 model 层
 func InitLogStatsAggregator() {
 	// 获取聚合服务实例
-	_ = GetLogStatsAggregator()
+	aggregator := GetLogStatsAggregator()
 
 	// 注册聚合数据查询回调
 	model.RegisterLogStatsAggregationCallback(func(startHour, endHour time.Time, username, modelName string, channelID int, groupName string) (*model.LogStat, error) {
 		return model.SumAggregatedStats(startHour, endHour, username, modelName, channelID, groupName)
 	})
 
+	// 启动时异步聚合最近 24 小时的历史数据
+	gopool.Go(func() {
+		// 等待数据库连接稳定
+		time.Sleep(5 * time.Second)
+		common.SysLog("Starting initial log stats aggregation for last 24 hours...")
+		if err := aggregator.AggregateRecentHours(24); err != nil {
+			common.SysLog("Initial aggregation completed with some errors: " + err.Error())
+		} else {
+			common.SysLog("Initial log stats aggregation completed successfully")
+		}
+	})
+
+	// 启动定时聚合任务（每小时执行一次）
+	go aggregator.startHourlyAggregation()
+
 	common.SysLog("Log stats aggregator initialized")
+}
+
+// startHourlyAggregation 启动每小时定时聚合任务
+func (a *LogStatsAggregator) startHourlyAggregation() {
+	// 计算到下一个整点的时间
+	now := time.Now()
+	nextHour := now.Truncate(time.Hour).Add(time.Hour)
+	waitDuration := nextHour.Sub(now)
+
+	// 等待到下一个整点
+	time.Sleep(waitDuration)
+
+	// 创建每小时触发的 ticker
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if !a.IsEnabled() {
+				continue
+			}
+			// 聚合上一个完整小时的数据
+			prevHour := GetPreviousHourStart()
+			gopool.Go(func() {
+				if err := a.AggregateHourlyStats(prevHour); err != nil {
+					common.SysLog("Hourly aggregation failed for " + prevHour.Format(time.RFC3339) + ": " + err.Error())
+				} else {
+					common.SysLog("Hourly aggregation completed for " + prevHour.Format(time.RFC3339))
+				}
+			})
+		case <-a.stopChan:
+			return
+		}
+	}
 }

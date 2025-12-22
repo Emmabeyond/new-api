@@ -13,17 +13,19 @@ import (
 
 // LogQueryCacheConfig 日志查询缓存配置
 type LogQueryCacheConfig struct {
-	DefaultTTL time.Duration // 默认 TTL，30 秒
-	MaxTTL     time.Duration // 最大 TTL，5 分钟
-	L1Capacity int           // L1 缓存容量
+	DefaultTTL  time.Duration // 默认 TTL，30 秒（当天数据）
+	HistoryTTL  time.Duration // 历史数据 TTL，5 分钟
+	MaxTTL      time.Duration // 最大 TTL，10 分钟
+	L1Capacity  int           // L1 缓存容量
 }
 
 // DefaultLogQueryCacheConfig 默认配置
 func DefaultLogQueryCacheConfig() LogQueryCacheConfig {
 	return LogQueryCacheConfig{
-		DefaultTTL: 30 * time.Second,
-		MaxTTL:     5 * time.Minute,
-		L1Capacity: 5000,
+		DefaultTTL:  30 * time.Second,
+		HistoryTTL:  5 * time.Minute,
+		MaxTTL:      10 * time.Minute,
+		L1Capacity:  5000,
 	}
 }
 
@@ -56,7 +58,7 @@ func GetLogQueryCache() *LogQueryCache {
 func NewLogQueryCache(config LogQueryCacheConfig) *LogQueryCache {
 	mlcConfig := common.MultiLevelCacheConfig{
 		L1Capacity:    config.L1Capacity,
-		L1TTL:         config.DefaultTTL,
+		L1TTL:         config.HistoryTTL, // 使用历史数据 TTL 作为默认
 		L2TTL:         config.MaxTTL,
 		TTLJitter:     0.1,
 		EmptyTTL:      10 * time.Second,
@@ -122,6 +124,7 @@ func (c *LogQueryCache) SetStats(opts model.LogQueryOptions, stat *model.LogStat
 }
 
 // GetStatsWithLoader 获取统计缓存，如果未命中则使用 loader 加载
+// 实现分级缓存策略：历史数据缓存更久，当天数据缓存较短
 func (c *LogQueryCache) GetStatsWithLoader(opts model.LogQueryOptions, loader func() (*model.LogStat, error)) (*model.LogStat, bool, error) {
 	key := c.CacheKey(opts)
 
@@ -136,7 +139,33 @@ func (c *LogQueryCache) GetStatsWithLoader(opts model.LogQueryOptions, loader fu
 		return result, true, nil
 	})
 
+	// 如果是缓存未命中且加载成功，根据时间范围设置不同的 TTL
+	if !cacheHit && err == nil && stat != nil {
+		ttl := c.calculateTTL(opts)
+		c.statsCache.SetWithTTL(key, stat, ttl)
+	}
+
 	return stat, cacheHit, err
+}
+
+// calculateTTL 根据查询时间范围计算缓存 TTL
+// 历史数据（非当天）缓存更久，当天数据缓存较短
+func (c *LogQueryCache) calculateTTL(opts model.LogQueryOptions) time.Duration {
+	now := time.Now()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// 如果结束时间在今天之前，说明是纯历史数据，使用更长的 TTL
+	if opts.EndTimestamp > 0 && opts.EndTimestamp < todayStart.Unix() {
+		return c.config.HistoryTTL
+	}
+
+	// 如果开始时间在今天之前，说明是混合数据（历史+当天），使用中等 TTL
+	if opts.StartTimestamp > 0 && opts.StartTimestamp < todayStart.Unix() {
+		return c.config.DefaultTTL * 2 // 60 秒
+	}
+
+	// 当天数据，使用默认短 TTL
+	return c.config.DefaultTTL
 }
 
 // InvalidateStats 使统计缓存失效

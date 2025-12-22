@@ -599,7 +599,8 @@ func getLogStatsWithAggregation(ctx context.Context, opts LogQueryOptions, callb
 	// 如果有完整小时，使用聚合数据
 	if completeStart.Before(completeEnd) {
 		aggStat, err := callback(completeStart, completeEnd, opts.Username, opts.ModelName, opts.ChannelId, opts.Group)
-		if err == nil && aggStat != nil {
+		// 只有当聚合数据存在且有实际值时才使用，否则回退到原始查询
+		if err == nil && aggStat != nil && aggStat.Quota > 0 {
 			totalQuota += aggStat.Quota
 			hasAggData = true
 		}

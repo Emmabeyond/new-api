@@ -185,6 +185,14 @@ func (c *MultiLevelCache[T]) Set(key string, value T) {
 	}
 }
 
+// SetWithTTL 设置缓存，使用自定义 TTL
+func (c *MultiLevelCache[T]) SetWithTTL(key string, value T, ttl time.Duration) {
+	c.l1.Set(key, value, c.addJitter(ttl))
+	if c.l2Enabled {
+		c.setToL2WithTTL(key, value, ttl)
+	}
+}
+
 // Invalidate 使缓存失效
 func (c *MultiLevelCache[T]) Invalidate(key string) {
 	c.l1.Delete(key)
@@ -280,6 +288,22 @@ func (c *MultiLevelCache[T]) setToL2(key string, value T) {
 
 	ttl := c.addJitter(c.config.L2TTL)
 	if err := RedisSet(c.l2Key(key), string(data), ttl); err != nil {
+		SysLog(fmt.Sprintf("failed to set L2 cache: %v", err))
+	}
+}
+
+func (c *MultiLevelCache[T]) setToL2WithTTL(key string, value T, ttl time.Duration) {
+	if !RedisEnabled {
+		return
+	}
+
+	data, err := json.Marshal(value)
+	if err != nil {
+		SysLog(fmt.Sprintf("failed to marshal cache value: %v", err))
+		return
+	}
+
+	if err := RedisSet(c.l2Key(key), string(data), c.addJitter(ttl)); err != nil {
 		SysLog(fmt.Sprintf("failed to set L2 cache: %v", err))
 	}
 }
