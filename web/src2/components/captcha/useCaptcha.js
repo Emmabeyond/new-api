@@ -28,7 +28,58 @@ const useCaptcha = () => {
   // 延迟函数
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // 获取验证挑战（带重试逻辑）
+  // 预加载图片
+  const preloadImages = useCallback((bgImage, puzzleImage) => {
+    return new Promise((resolve, reject) => {
+      let bgLoaded = false;
+      let puzzleLoaded = false;
+      let hasError = false;
+
+      const checkComplete = () => {
+        if (bgLoaded && puzzleLoaded && !hasError) {
+          resolve();
+        }
+      };
+
+      // 预加载背景图
+      const bgImg = new Image();
+      bgImg.onload = () => {
+        bgLoaded = true;
+        checkComplete();
+      };
+      bgImg.onerror = () => {
+        if (!hasError) {
+          hasError = true;
+          reject(new Error('背景图加载失败'));
+        }
+      };
+      bgImg.src = bgImage;
+
+      // 预加载拼图块
+      const puzzleImg = new Image();
+      puzzleImg.onload = () => {
+        puzzleLoaded = true;
+        checkComplete();
+      };
+      puzzleImg.onerror = () => {
+        if (!hasError) {
+          hasError = true;
+          reject(new Error('拼图块加载失败'));
+        }
+      };
+      puzzleImg.src = puzzleImage;
+
+      // 设置超时（10秒）
+      setTimeout(() => {
+        if (!bgLoaded || !puzzleLoaded) {
+          hasError = true;
+          reject(new Error('图片加载超时'));
+        }
+      }, 10000);
+    });
+  }, []);
+
+  // 获取验证挑战（带重试逻辑和图片预加载）
   const fetchChallenge = useCallback(async (retryOnError = true) => {
     setLoading(true);
     setError(null);
@@ -39,9 +90,20 @@ const useCaptcha = () => {
         const { success, data, error: apiError, message } = res.data;
         
         if (success) {
-          setChallenge(data);
-          retryCountRef.current = 0; // 重置重试计数
-          return data;
+          // 预加载图片
+          try {
+            await preloadImages(data.bg_image, data.puzzle_image);
+            setChallenge(data);
+            retryCountRef.current = 0; // 重置重试计数
+            return data;
+          } catch (imgError) {
+            // 图片加载失败，重试获取新的验证码
+            if (retryOnError && attempt < MAX_RETRY_COUNT) {
+              await delay(RETRY_DELAY);
+              return attemptFetch(attempt + 1);
+            }
+            throw new Error('图片加载失败，请刷新重试');
+          }
         } else {
           const errorMsg = apiError?.message || message || '获取验证码失败';
           throw new Error(errorMsg);
@@ -65,7 +127,7 @@ const useCaptcha = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [preloadImages]);
 
   // 验证滑块位置
   const verifyChallenge = useCallback(async (x) => {

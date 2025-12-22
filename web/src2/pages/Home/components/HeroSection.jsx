@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button,
-  Typography,
   Input,
   ScrollList,
   ScrollItem,
@@ -18,8 +17,6 @@ import { copy, showSuccess } from '../../../helpers';
 import { API_ENDPOINTS } from '../../../constants/common.constant';
 import { useIsMobile } from '../../../hooks/common/useIsMobile';
 import ParticlesBackground from './ParticlesBackground';
-
-const { Text } = Typography;
 
 const HeroSection = ({
   serverAddress,

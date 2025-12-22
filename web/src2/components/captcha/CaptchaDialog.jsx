@@ -51,6 +51,7 @@ const CaptchaDialog = ({
   const [bgImageLoaded, setBgImageLoaded] = useState(false);
   const [puzzleImageLoaded, setPuzzleImageLoaded] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   
   // 图片容器 ref
   const imageContainerRef = useRef(null);
@@ -66,7 +67,7 @@ const CaptchaDialog = ({
   } = useResponsiveCaptcha(imageContainerRef);
   
   // 计算是否两张图片都已加载
-  const imageLoaded = bgImageLoaded && puzzleImageLoaded;
+  const imageLoaded = bgImageLoaded && puzzleImageLoaded && !imageLoadError;
 
   // 重置状态
   useEffect(() => {
@@ -75,8 +76,28 @@ const CaptchaDialog = ({
       setStatus('idle');
       setBgImageLoaded(false);
       setPuzzleImageLoaded(false);
+      setImageLoadError(false);
     }
   }, [open, challenge?.session_id]);
+
+  // 处理背景图加载完成
+  const handleBgImageLoad = useCallback(() => {
+    setBgImageLoaded(true);
+    setImageLoadError(false);
+  }, []);
+
+  // 处理拼图块加载完成
+  const handlePuzzleImageLoad = useCallback(() => {
+    setPuzzleImageLoaded(true);
+    setImageLoadError(false);
+  }, []);
+
+  // 处理图片加载错误
+  const handleImageError = useCallback((type) => {
+    console.error(`[CaptchaDialog] ${type} image load error`);
+    setImageLoadError(true);
+    Toast.error(t('图片加载失败，请刷新重试'));
+  }, [t]);
 
   // 处理拖动 - x 是显示坐标
   const handleDrag = useCallback((displayX) => {
@@ -140,22 +161,13 @@ const CaptchaDialog = ({
     }
   }, [challenge, verifying, onVerify, toOriginalCoord, scaleRatio, t]);
 
-  // 处理背景图加载完成
-  const handleBgImageLoad = useCallback(() => {
-    setBgImageLoaded(true);
-  }, []);
-
-  // 处理拼图块加载完成
-  const handlePuzzleImageLoad = useCallback(() => {
-    setPuzzleImageLoaded(true);
-  }, []);
-
   // 处理刷新
   const handleRefresh = useCallback(() => {
     setPuzzleX(0);
     setStatus('idle');
     setBgImageLoaded(false);
     setPuzzleImageLoaded(false);
+    setImageLoadError(false);
     onRefresh();
   }, [onRefresh]);
 
@@ -197,6 +209,11 @@ const CaptchaDialog = ({
           {(loading || !imageLoaded) && (
             <div className="captcha-loading-skeleton">
               <Spin />
+              {imageLoadError && (
+                <div style={{ marginTop: '8px', color: 'var(--semi-color-danger)' }}>
+                  {t('图片加载失败')}
+                </div>
+              )}
             </div>
           )}
           
@@ -217,38 +234,31 @@ const CaptchaDialog = ({
                 alt="captcha background"
                 className="captcha-bg-image"
                 onLoad={handleBgImageLoad}
+                onError={() => handleImageError('background')}
                 style={{ 
-                  display: bgImageLoaded ? 'block' : 'none',
+                  opacity: bgImageLoaded ? 1 : 0,
                   width: '100%',
-                  height: '100%'
+                  height: '100%',
+                  transition: 'opacity 0.3s ease'
                 }}
               />
               
               {/* 拼图块 - 使用缩放后的坐标和尺寸 */}
-              {imageLoaded && (
-                <img
-                  src={challenge.puzzle_image}
-                  alt="puzzle piece"
-                  className={`captcha-puzzle-piece ${status} ${status === 'idle' ? 'idle' : ''}`}
-                  onLoad={handlePuzzleImageLoad}
-                  style={{
-                    left: puzzleX,
-                    top: toDisplayCoord(challenge.puzzle_y),
-                    width: puzzleDisplaySize,
-                    height: puzzleDisplaySize
-                  }}
-                />
-              )}
-              
-              {/* 隐藏的拼图块用于预加载 */}
-              {!puzzleImageLoaded && (
-                <img
-                  src={challenge.puzzle_image}
-                  alt=""
-                  onLoad={handlePuzzleImageLoad}
-                  style={{ display: 'none' }}
-                />
-              )}
+              <img
+                src={challenge.puzzle_image}
+                alt="puzzle piece"
+                className={`captcha-puzzle-piece ${status} ${status === 'idle' ? 'idle' : ''}`}
+                onLoad={handlePuzzleImageLoad}
+                onError={() => handleImageError('puzzle')}
+                style={{
+                  left: puzzleX,
+                  top: toDisplayCoord(challenge.puzzle_y),
+                  width: puzzleDisplaySize,
+                  height: puzzleDisplaySize,
+                  opacity: puzzleImageLoaded ? 1 : 0,
+                  transition: 'opacity 0.3s ease'
+                }}
+              />
             </>
           )}
         </div>
