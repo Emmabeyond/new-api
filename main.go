@@ -259,6 +259,9 @@ func InitResources() error {
 		return err
 	}
 
+	// Initialize log stats aggregator
+	service.InitLogStatsAggregator()
+
 	// Initialize Redis
 	err = common.InitRedisClient()
 	if err != nil {

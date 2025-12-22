@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -16,6 +17,33 @@ import (
 	"github.com/bytedance/gopkg/util/gopool"
 	"gorm.io/gorm"
 )
+
+// LogCacheInvalidateCallback 日志缓存失效回调函数类型
+type LogCacheInvalidateCallback func(username string)
+
+var (
+	logCacheInvalidateCallback LogCacheInvalidateCallback
+	logCacheCallbackMu         sync.RWMutex
+)
+
+// RegisterLogCacheInvalidateCallback 注册日志缓存失效回调
+// 由 service 层调用，用于在写入日志时触发缓存失效
+func RegisterLogCacheInvalidateCallback(callback LogCacheInvalidateCallback) {
+	logCacheCallbackMu.Lock()
+	defer logCacheCallbackMu.Unlock()
+	logCacheInvalidateCallback = callback
+}
+
+// triggerLogCacheInvalidate 触发日志缓存失效
+func triggerLogCacheInvalidate(username string) {
+	logCacheCallbackMu.RLock()
+	callback := logCacheInvalidateCallback
+	logCacheCallbackMu.RUnlock()
+
+	if callback != nil {
+		callback(username)
+	}
+}
 
 type Log struct {
 	Id               int    `json:"id" gorm:"index:idx_created_at_id,priority:1"`
@@ -65,7 +93,12 @@ func formatUserLogs(logs []*Log) {
 }
 
 // FillChannelNames fills channel names for a list of logs by batch lookup
+// 优化：使用缓存减少数据库查询
 func FillChannelNames(logs []*Log) {
+	if len(logs) == 0 {
+		return
+	}
+
 	channelIds := types.NewSet[int]()
 	for _, log := range logs {
 		if log.ChannelId != 0 {
@@ -73,21 +106,26 @@ func FillChannelNames(logs []*Log) {
 		}
 	}
 
-	if channelIds.Len() > 0 {
-		var channels []struct {
-			Id   int    `gorm:"column:id"`
-			Name string `gorm:"column:name"`
-		}
-		if err := DB.Table("channels").Select("id, name").Where("id IN ?", channelIds.Items()).Find(&channels).Error; err != nil {
-			return
-		}
-		channelMap := make(map[int]string, len(channels))
-		for _, channel := range channels {
-			channelMap[channel.Id] = channel.Name
-		}
-		for i := range logs {
-			logs[i].ChannelName = channelMap[logs[i].ChannelId]
-		}
+	if channelIds.Len() == 0 {
+		return
+	}
+
+	// 批量查询渠道名称
+	var channels []struct {
+		Id   int    `gorm:"column:id"`
+		Name string `gorm:"column:name"`
+	}
+	if err := DB.Table("channels").Select("id, name").Where("id IN ?", channelIds.Items()).Find(&channels).Error; err != nil {
+		return
+	}
+
+	channelMap := make(map[int]string, len(channels))
+	for _, channel := range channels {
+		channelMap[channel.Id] = channel.Name
+	}
+
+	for i := range logs {
+		logs[i].ChannelName = channelMap[logs[i].ChannelId]
 	}
 }
 
@@ -223,6 +261,9 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 		err := LOG_DB.Create(log).Error
 		if err != nil {
 			common.SysLog("failed to record consume log: " + err.Error())
+		} else {
+			// 写入成功后触发缓存失效
+			triggerLogCacheInvalidate(username)
 		}
 	})
 	if common.DataExportEnabled {
@@ -381,7 +422,12 @@ func applyLogFilters(query *gorm.DB, opts LogQueryOptions) *gorm.DB {
 
 // GetLogsByCursor retrieves logs using cursor-based pagination
 func GetLogsByCursor(opts LogQueryOptions) (*LogQueryResult, error) {
-	query := LOG_DB.Model(&Log{})
+	return GetLogsByCursorWithContext(context.Background(), opts)
+}
+
+// GetLogsByCursorWithContext retrieves logs using cursor-based pagination with context support
+func GetLogsByCursorWithContext(ctx context.Context, opts LogQueryOptions) (*LogQueryResult, error) {
+	query := LOG_DB.WithContext(ctx).Model(&Log{})
 
 	// Apply cursor condition (for pagination)
 	if opts.Cursor > 0 {
@@ -418,7 +464,12 @@ func GetLogsByCursor(opts LogQueryOptions) (*LogQueryResult, error) {
 
 // GetLogsCount returns the total count of logs matching the filter conditions
 func GetLogsCount(opts LogQueryOptions) (int64, error) {
-	query := LOG_DB.Model(&Log{})
+	return GetLogsCountWithContext(context.Background(), opts)
+}
+
+// GetLogsCountWithContext returns the total count of logs matching the filter conditions with context support
+func GetLogsCountWithContext(ctx context.Context, opts LogQueryOptions) (int64, error) {
+	query := LOG_DB.WithContext(ctx).Model(&Log{})
 
 	// Apply filter conditions (reuse the same filter logic)
 	query = applyLogFilters(query, opts)
@@ -436,7 +487,12 @@ type LogQueryOptionsWithUser struct {
 
 // GetUserLogsByCursor retrieves user-specific logs using cursor-based pagination
 func GetUserLogsByCursor(opts LogQueryOptionsWithUser) (*LogQueryResult, error) {
-	query := LOG_DB.Model(&Log{}).Where("user_id = ?", opts.UserId)
+	return GetUserLogsByCursorWithContext(context.Background(), opts)
+}
+
+// GetUserLogsByCursorWithContext retrieves user-specific logs using cursor-based pagination with context support
+func GetUserLogsByCursorWithContext(ctx context.Context, opts LogQueryOptionsWithUser) (*LogQueryResult, error) {
+	query := LOG_DB.WithContext(ctx).Model(&Log{}).Where("user_id = ?", opts.UserId)
 
 	// Apply cursor condition (for pagination)
 	if opts.Cursor > 0 {
@@ -481,11 +537,179 @@ type LogStat struct {
 	Tpm   int64 `json:"tpm"`
 }
 
+// LogStatsAggregationCallback 聚合数据查询回调
+// 用于从 service 层获取聚合数据，避免循环依赖
+type LogStatsAggregationCallback func(startHour, endHour time.Time, username, modelName string, channelID int, groupName string) (*LogStat, error)
+
+var (
+	logStatsAggregationCallback LogStatsAggregationCallback
+	logStatsAggCallbackMu       sync.RWMutex
+)
+
+// RegisterLogStatsAggregationCallback 注册聚合数据查询回调
+func RegisterLogStatsAggregationCallback(callback LogStatsAggregationCallback) {
+	logStatsAggCallbackMu.Lock()
+	defer logStatsAggCallbackMu.Unlock()
+	logStatsAggregationCallback = callback
+}
+
+// getLogStatsAggregationCallback 获取聚合数据查询回调
+func getLogStatsAggregationCallback() LogStatsAggregationCallback {
+	logStatsAggCallbackMu.RLock()
+	defer logStatsAggCallbackMu.RUnlock()
+	return logStatsAggregationCallback
+}
+
 // GetLogStats retrieves quota, rpm, and tpm statistics in a single optimized query
 func GetLogStats(opts LogQueryOptions) (*LogStat, error) {
+	return GetLogStatsWithContext(context.Background(), opts)
+}
+
+// GetLogStatsWithContext retrieves quota, rpm, and tpm statistics with context support
+// 优化：对于完整小时使用聚合数据，部分小时使用实时查询
+func GetLogStatsWithContext(ctx context.Context, opts LogQueryOptions) (*LogStat, error) {
 	now := time.Now().Unix()
 	recentStart := now - 60 // Last 60 seconds for rpm/tpm
 
+	// 尝试使用聚合数据优化查询
+	callback := getLogStatsAggregationCallback()
+	if callback != nil && opts.StartTimestamp > 0 && opts.EndTimestamp > 0 {
+		return getLogStatsWithAggregation(ctx, opts, callback, recentStart)
+	}
+
+	// 回退到原始查询
+	return getLogStatsRaw(ctx, opts, recentStart)
+}
+
+// getLogStatsWithAggregation 使用聚合数据的统计查询
+func getLogStatsWithAggregation(ctx context.Context, opts LogQueryOptions, callback LogStatsAggregationCallback, recentStart int64) (*LogStat, error) {
+	start := time.Unix(opts.StartTimestamp, 0)
+	end := time.Unix(opts.EndTimestamp, 0)
+
+	// 计算完整小时范围
+	completeStart := start.Truncate(time.Hour)
+	if completeStart.Before(start) {
+		completeStart = completeStart.Add(time.Hour)
+	}
+	completeEnd := end.Truncate(time.Hour)
+
+	var totalQuota int64
+	var hasAggData bool
+
+	// 如果有完整小时，使用聚合数据
+	if completeStart.Before(completeEnd) {
+		aggStat, err := callback(completeStart, completeEnd, opts.Username, opts.ModelName, opts.ChannelId, opts.Group)
+		if err == nil && aggStat != nil {
+			totalQuota += aggStat.Quota
+			hasAggData = true
+		}
+	}
+
+	// 查询部分小时的实时数据
+	var partialQuota int64
+
+	// 开始部分：从 start 到 completeStart
+	if start.Before(completeStart) {
+		partialEnd := completeStart
+		if partialEnd.After(end) {
+			partialEnd = end
+		}
+		quota, err := getPartialHourQuota(ctx, opts, start.Unix(), partialEnd.Unix())
+		if err == nil {
+			partialQuota += quota
+		}
+	}
+
+	// 结束部分：从 completeEnd 到 end
+	if completeEnd.Before(end) && (hasAggData || completeStart.After(start) || completeStart.Equal(start)) {
+		quota, err := getPartialHourQuota(ctx, opts, completeEnd.Unix(), end.Unix())
+		if err == nil {
+			partialQuota += quota
+		}
+	}
+
+	// 如果没有聚合数据且没有部分数据，回退到原始查询
+	if !hasAggData && partialQuota == 0 {
+		return getLogStatsRaw(ctx, opts, recentStart)
+	}
+
+	totalQuota += partialQuota
+
+	// RPM 和 TPM 始终使用实时查询（最近60秒）
+	rpm, tpm, err := getRecentRpmTpm(ctx, opts, recentStart)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LogStat{
+		Quota: totalQuota,
+		Rpm:   rpm,
+		Tpm:   tpm,
+	}, nil
+}
+
+// getPartialHourQuota 查询部分小时的 quota
+func getPartialHourQuota(ctx context.Context, opts LogQueryOptions, startTs, endTs int64) (int64, error) {
+	var quota int64
+	query := LOG_DB.WithContext(ctx).Table("logs").
+		Select("COALESCE(SUM(quota), 0)").
+		Where("type = ?", LogTypeConsume).
+		Where("created_at >= ? AND created_at < ?", startTs, endTs)
+
+	if opts.Username != "" {
+		query = query.Where("username = ?", opts.Username)
+	}
+	if opts.ModelName != "" {
+		query = query.Where("model_name LIKE ?", opts.ModelName)
+	}
+	if opts.TokenName != "" {
+		query = query.Where("token_name = ?", opts.TokenName)
+	}
+	if opts.ChannelId > 0 {
+		query = query.Where("channel_id = ?", opts.ChannelId)
+	}
+	if opts.Group != "" {
+		query = query.Where(logGroupCol+" = ?", opts.Group)
+	}
+
+	err := query.Scan(&quota).Error
+	return quota, err
+}
+
+// getRecentRpmTpm 查询最近的 RPM 和 TPM
+func getRecentRpmTpm(ctx context.Context, opts LogQueryOptions, recentStart int64) (int64, int64, error) {
+	var result struct {
+		Rpm int64
+		Tpm int64
+	}
+
+	query := LOG_DB.WithContext(ctx).Table("logs").
+		Select("COUNT(*) as rpm, COALESCE(SUM(prompt_tokens + completion_tokens), 0) as tpm").
+		Where("type = ?", LogTypeConsume).
+		Where("created_at >= ?", recentStart)
+
+	if opts.Username != "" {
+		query = query.Where("username = ?", opts.Username)
+	}
+	if opts.ModelName != "" {
+		query = query.Where("model_name LIKE ?", opts.ModelName)
+	}
+	if opts.TokenName != "" {
+		query = query.Where("token_name = ?", opts.TokenName)
+	}
+	if opts.ChannelId > 0 {
+		query = query.Where("channel_id = ?", opts.ChannelId)
+	}
+	if opts.Group != "" {
+		query = query.Where(logGroupCol+" = ?", opts.Group)
+	}
+
+	err := query.Scan(&result).Error
+	return result.Rpm, result.Tpm, err
+}
+
+// getLogStatsRaw 原始统计查询（不使用聚合数据）
+func getLogStatsRaw(ctx context.Context, opts LogQueryOptions, recentStart int64) (*LogStat, error) {
 	// Single query to get all statistics using CASE WHEN
 	var result struct {
 		Quota     int64
@@ -493,7 +717,7 @@ func GetLogStats(opts LogQueryOptions) (*LogStat, error) {
 		RecentTpm int64
 	}
 
-	query := LOG_DB.Table("logs").
+	query := LOG_DB.WithContext(ctx).Table("logs").
 		Select(`
 			SUM(CASE WHEN created_at >= ? AND created_at <= ? THEN quota ELSE 0 END) as quota,
 			SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent_rpm,
@@ -530,48 +754,47 @@ func GetLogStats(opts LogQueryOptions) (*LogStat, error) {
 	}, nil
 }
 
+// SumUsedQuota 优化版本：使用单次查询获取所有统计数据
 func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string) (stat Stat) {
-	tx := LOG_DB.Table("logs").Select("sum(quota) quota")
+	now := time.Now().Unix()
+	recentStart := now - 60 // 最近60秒
 
-	// 为rpm和tpm创建单独的查询
-	rpmTpmQuery := LOG_DB.Table("logs").Select("count(*) rpm, sum(prompt_tokens) + sum(completion_tokens) tpm")
+	// 使用单次查询获取所有统计数据
+	var result struct {
+		Quota     int
+		RecentRpm int
+		RecentTpm int
+	}
+
+	query := LOG_DB.Table("logs").
+		Select(`
+			SUM(CASE WHEN created_at >= ? AND created_at <= ? THEN quota ELSE 0 END) as quota,
+			SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent_rpm,
+			SUM(CASE WHEN created_at >= ? THEN prompt_tokens + completion_tokens ELSE 0 END) as recent_tpm
+		`, startTimestamp, endTimestamp, recentStart, recentStart).
+		Where("type = ?", LogTypeConsume)
 
 	if username != "" {
-		tx = tx.Where("username = ?", username)
-		rpmTpmQuery = rpmTpmQuery.Where("username = ?", username)
+		query = query.Where("username = ?", username)
 	}
 	if tokenName != "" {
-		tx = tx.Where("token_name = ?", tokenName)
-		rpmTpmQuery = rpmTpmQuery.Where("token_name = ?", tokenName)
-	}
-	if startTimestamp != 0 {
-		tx = tx.Where("created_at >= ?", startTimestamp)
-	}
-	if endTimestamp != 0 {
-		tx = tx.Where("created_at <= ?", endTimestamp)
+		query = query.Where("token_name = ?", tokenName)
 	}
 	if modelName != "" {
-		tx = tx.Where("model_name like ?", modelName)
-		rpmTpmQuery = rpmTpmQuery.Where("model_name like ?", modelName)
+		query = query.Where("model_name LIKE ?", modelName)
 	}
 	if channel != 0 {
-		tx = tx.Where("channel_id = ?", channel)
-		rpmTpmQuery = rpmTpmQuery.Where("channel_id = ?", channel)
+		query = query.Where("channel_id = ?", channel)
 	}
 	if group != "" {
-		tx = tx.Where(logGroupCol+" = ?", group)
-		rpmTpmQuery = rpmTpmQuery.Where(logGroupCol+" = ?", group)
+		query = query.Where(logGroupCol+" = ?", group)
 	}
 
-	tx = tx.Where("type = ?", LogTypeConsume)
-	rpmTpmQuery = rpmTpmQuery.Where("type = ?", LogTypeConsume)
+	query.Scan(&result)
 
-	// 只统计最近60秒的rpm和tpm
-	rpmTpmQuery = rpmTpmQuery.Where("created_at >= ?", time.Now().Add(-60*time.Second).Unix())
-
-	// 执行查询
-	tx.Scan(&stat)
-	rpmTpmQuery.Scan(&stat)
+	stat.Quota = result.Quota
+	stat.Rpm = result.RecentRpm
+	stat.Tpm = result.RecentTpm
 
 	return stat
 }

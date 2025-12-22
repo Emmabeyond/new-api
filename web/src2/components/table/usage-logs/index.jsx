@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React from 'react';
+import { Button, Select } from '@douyinfe/semi-ui';
 import CardPro from '../../common/ui/CardPro';
 import LogsTable from './UsageLogsTable';
 import LogsActions from './UsageLogsActions';
@@ -26,11 +27,45 @@ import ColumnSelectorModal from './modals/ColumnSelectorModal';
 import UserInfoModal from './modals/UserInfoModal';
 import { useLogsData } from '../../../hooks/usage-logs/useUsageLogsData';
 import { useIsMobile } from '../../../hooks/common/useIsMobile';
-import { createCardProPagination } from '../../../helpers/utils';
 
 const LogsPage = () => {
   const logsData = useLogsData();
   const isMobile = useIsMobile();
+  const { t, hasMore, isLoadingMore, loadMoreLogs, pageSize, handlePageSizeChange, logs } = logsData;
+
+  // Custom pagination area for cursor-based pagination
+  const paginationArea = (
+    <div className="flex items-center justify-between w-full gap-4">
+      <span
+        className='text-sm select-none'
+        style={{ color: 'var(--semi-color-text-2)' }}
+      >
+        {t('已加载')} {logs.length} {t('条记录')}
+      </span>
+      <div className="flex items-center gap-3">
+        <Select
+          value={pageSize}
+          onChange={handlePageSizeChange}
+          style={{ width: 100 }}
+          size={isMobile ? 'small' : 'default'}
+        >
+          <Select.Option value={10}>10 {t('条/页')}</Select.Option>
+          <Select.Option value={20}>20 {t('条/页')}</Select.Option>
+          <Select.Option value={50}>50 {t('条/页')}</Select.Option>
+          <Select.Option value={100}>100 {t('条/页')}</Select.Option>
+        </Select>
+        {hasMore && (
+          <Button
+            onClick={loadMoreLogs}
+            loading={isLoadingMore}
+            size={isMobile ? 'small' : 'default'}
+          >
+            {t('加载更多')}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -43,15 +78,7 @@ const LogsPage = () => {
         type='type2'
         statsArea={<LogsActions {...logsData} />}
         searchArea={<LogsFilters {...logsData} />}
-        paginationArea={createCardProPagination({
-          currentPage: logsData.activePage,
-          pageSize: logsData.pageSize,
-          total: logsData.logCount,
-          onPageChange: logsData.handlePageChange,
-          onPageSizeChange: logsData.handlePageSizeChange,
-          isMobile: isMobile,
-          t: logsData.t,
-        })}
+        paginationArea={paginationArea}
         t={logsData.t}
       >
         <LogsTable {...logsData} />

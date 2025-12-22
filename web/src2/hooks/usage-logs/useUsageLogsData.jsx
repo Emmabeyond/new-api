@@ -67,10 +67,13 @@ export const useLogsData = () => {
   const [showStat, setShowStat] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStat, setLoadingStat] = useState(false);
-  const [activePage, setActivePage] = useState(1);
-  const [logCount, setLogCount] = useState(0);
   const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE);
   const [logType, setLogType] = useState(0);
+  
+  // Cursor-based pagination state
+  const [nextCursor, setNextCursor] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // User and admin
   const isAdminUser = isAdmin();
@@ -506,9 +509,13 @@ export const useLogsData = () => {
     setLogs(logs);
   };
 
-  // Load logs function
-  const loadLogs = async (startIdx, pageSize, customLogType = null) => {
-    setLoading(true);
+  // Load logs function (cursor-based pagination)
+  const loadLogs = async (cursor = 0, customPageSize = null, customLogType = null, append = false) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
 
     let url = '';
     const {
@@ -529,40 +536,54 @@ export const useLogsData = () => {
           ? formLogType
           : logType;
 
+    const currentPageSize = customPageSize || pageSize;
     let localStartTimestamp = Date.parse(start_timestamp) / 1000;
     let localEndTimestamp = Date.parse(end_timestamp) / 1000;
+    
     if (isAdminUser) {
-      url = `/api/log/?p=${startIdx}&page_size=${pageSize}&type=${currentLogType}&username=${username}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&channel=${channel}&group=${group}`;
+      url = `/api/log/?cursor=${cursor}&page_size=${currentPageSize}&type=${currentLogType}&username=${username}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&channel=${channel}&group=${group}`;
     } else {
-      url = `/api/log/self/?p=${startIdx}&page_size=${pageSize}&type=${currentLogType}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&group=${group}`;
+      url = `/api/log/self/?cursor=${cursor}&page_size=${currentPageSize}&type=${currentLogType}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&group=${group}`;
     }
     url = encodeURI(url);
     const res = await API.get(url);
     const { success, message, data } = res.data;
     if (success) {
-      const newPageData = data.items;
-      setActivePage(data.page);
-      setPageSize(data.page_size);
-      setLogCount(data.total);
+      const newPageData = data.items || [];
+      setNextCursor(data.next_cursor || 0);
+      setHasMore(data.has_more || false);
 
-      setLogsFormat(newPageData);
+      if (append) {
+        // Append to existing logs
+        setLogs(prevLogs => {
+          const combined = [...prevLogs, ...newPageData];
+          setLogsFormat(combined);
+          return combined;
+        });
+      } else {
+        setLogsFormat(newPageData);
+      }
     } else {
       showError(message);
     }
     setLoading(false);
+    setIsLoadingMore(false);
+  };
+  
+  // Load more logs (for infinite scroll or "Load More" button)
+  const loadMoreLogs = async () => {
+    if (!hasMore || isLoadingMore || loading) return;
+    await loadLogs(nextCursor, pageSize, null, true);
   };
 
-  // Page handlers
-  const handlePageChange = (page) => {
-    setActivePage(page);
-    loadLogs(page, pageSize).then((r) => {});
-  };
-
+  // Page handlers (cursor-based - only page size change supported)
   const handlePageSizeChange = async (size) => {
     localStorage.setItem('page-size', size + '');
     setPageSize(size);
-    setActivePage(1);
-    loadLogs(activePage, size)
+    // Reset and reload from beginning
+    setNextCursor(0);
+    setHasMore(false);
+    loadLogs(0, size)
       .then()
       .catch((reason) => {
         showError(reason);
@@ -571,9 +592,10 @@ export const useLogsData = () => {
 
   // Refresh function
   const refresh = async () => {
-    setActivePage(1);
+    setNextCursor(0);
+    setHasMore(false);
     handleEyeClick();
-    await loadLogs(1, pageSize);
+    await loadLogs(0, pageSize);
   };
 
   // Copy text function
@@ -591,7 +613,7 @@ export const useLogsData = () => {
     const localPageSize =
       parseInt(localStorage.getItem('page-size')) || ITEMS_PER_PAGE;
     setPageSize(localPageSize);
-    loadLogs(activePage, localPageSize)
+    loadLogs(0, localPageSize)
       .then()
       .catch((reason) => {
         showError(reason);
@@ -619,12 +641,15 @@ export const useLogsData = () => {
     showStat,
     loading,
     loadingStat,
-    activePage,
-    logCount,
     pageSize,
     logType,
     stat,
     isAdminUser,
+    
+    // Cursor pagination state
+    nextCursor,
+    hasMore,
+    isLoadingMore,
 
     // Form state
     formApi,
@@ -653,7 +678,7 @@ export const useLogsData = () => {
 
     // Functions
     loadLogs,
-    handlePageChange,
+    loadMoreLogs,
     handlePageSizeChange,
     refresh,
     copyText,

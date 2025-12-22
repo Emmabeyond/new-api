@@ -6,6 +6,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,33 +14,8 @@ import (
 
 
 func GetAllLogs(c *gin.Context) {
-	// Check if cursor-based pagination is requested
-	cursorStr := c.Query("cursor")
-	if cursorStr != "" {
-		// Use cursor-based pagination
-		getAllLogsByCursor(c)
-		return
-	}
-
-	// Fallback to offset-based pagination for backward compatibility
-	pageInfo := common.GetPageQuery(c)
-	logType, _ := strconv.Atoi(c.Query("type"))
-	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
-	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
-	username := c.Query("username")
-	tokenName := c.Query("token_name")
-	modelName := c.Query("model_name")
-	channel, _ := strconv.Atoi(c.Query("channel"))
-	group := c.Query("group")
-	logs, total, err := model.GetAllLogs(logType, startTimestamp, endTimestamp, modelName, username, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), channel, group)
-	if err != nil {
-		common.ApiError(c, err)
-		return
-	}
-	pageInfo.SetTotal(int(total))
-	pageInfo.SetItems(logs)
-	common.ApiSuccess(c, pageInfo)
-	return
+	// 强制使用游标分页以提升性能，移除 offset 分页支持
+	getAllLogsByCursor(c)
 }
 
 // getAllLogsByCursor handles cursor-based pagination for logs
@@ -59,6 +35,27 @@ func getAllLogsByCursor(c *gin.Context) {
 	channel, _ := strconv.Atoi(c.Query("channel"))
 	group := c.Query("group")
 
+	// 添加时间范围限制，防止查询过大范围数据
+	const maxDays = 90 // 最多查询90天
+	const defaultDays = 7 // 默认查询7天
+
+	now := common.GetTimestamp()
+	if endTimestamp == 0 {
+		endTimestamp = now
+	}
+	if startTimestamp == 0 {
+		startTimestamp = endTimestamp - int64(defaultDays*24*3600)
+	}
+
+	// 限制查询范围不超过90天
+	if endTimestamp - startTimestamp > maxDays*24*3600 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "查询时间范围不能超过90天",
+		})
+		return
+	}
+
 	opts := model.LogQueryOptions{
 		LogType:        logType,
 		StartTimestamp: startTimestamp,
@@ -72,9 +69,14 @@ func getAllLogsByCursor(c *gin.Context) {
 		Cursor:         cursor,
 	}
 
-	result, err := model.GetLogsByCursor(opts)
+	// 使用超时上下文执行查询
+	ctx, cancel := service.WithDefaultQueryTimeout(c.Request.Context())
+	defer cancel()
+
+	result, err := model.GetLogsByCursorWithContext(ctx, opts)
 	if err != nil {
-		common.ApiError(c, err)
+		service.HandleQueryTimeout(err, "GetLogsByCursor")
+		service.HandleQueryError(c, err)
 		return
 	}
 
@@ -85,32 +87,8 @@ func getAllLogsByCursor(c *gin.Context) {
 }
 
 func GetUserLogs(c *gin.Context) {
-	// Check if cursor-based pagination is requested
-	cursorStr := c.Query("cursor")
-	if cursorStr != "" {
-		// Use cursor-based pagination
-		getUserLogsByCursor(c)
-		return
-	}
-
-	// Fallback to offset-based pagination for backward compatibility
-	pageInfo := common.GetPageQuery(c)
-	userId := c.GetInt("id")
-	logType, _ := strconv.Atoi(c.Query("type"))
-	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
-	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
-	tokenName := c.Query("token_name")
-	modelName := c.Query("model_name")
-	group := c.Query("group")
-	logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group)
-	if err != nil {
-		common.ApiError(c, err)
-		return
-	}
-	pageInfo.SetTotal(int(total))
-	pageInfo.SetItems(logs)
-	common.ApiSuccess(c, pageInfo)
-	return
+	// 强制使用游标分页以提升性能，移除 offset 分页支持
+	getUserLogsByCursor(c)
 }
 
 // getUserLogsByCursor handles cursor-based pagination for user-specific logs
@@ -129,6 +107,27 @@ func getUserLogsByCursor(c *gin.Context) {
 	modelName := c.Query("model_name")
 	group := c.Query("group")
 
+	// 添加时间范围限制，防止查询过大范围数据
+	const maxDays = 90 // 最多查询90天
+	const defaultDays = 7 // 默认查询7天
+
+	now := common.GetTimestamp()
+	if endTimestamp == 0 {
+		endTimestamp = now
+	}
+	if startTimestamp == 0 {
+		startTimestamp = endTimestamp - int64(defaultDays*24*3600)
+	}
+
+	// 限制查询范围不超过90天
+	if endTimestamp - startTimestamp > maxDays*24*3600 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "查询时间范围不能超过90天",
+		})
+		return
+	}
+
 	opts := model.LogQueryOptionsWithUser{
 		LogQueryOptions: model.LogQueryOptions{
 			LogType:        logType,
@@ -143,9 +142,14 @@ func getUserLogsByCursor(c *gin.Context) {
 		UserId: userId,
 	}
 
-	result, err := model.GetUserLogsByCursor(opts)
+	// 使用超时上下文执行查询
+	ctx, cancel := service.WithDefaultQueryTimeout(c.Request.Context())
+	defer cancel()
+
+	result, err := model.GetUserLogsByCursorWithContext(ctx, opts)
 	if err != nil {
-		common.ApiError(c, err)
+		service.HandleQueryTimeout(err, "GetUserLogsByCursor")
+		service.HandleQueryError(c, err)
 		return
 	}
 
@@ -219,9 +223,28 @@ func GetLogsStat(c *gin.Context) {
 		Group:          group,
 	}
 
-	stat, err := model.GetLogStats(opts)
+	// 获取缓存实例
+	cache := service.GetLogQueryCache()
+
+	// 使用缓存获取统计数据
+	stat, cacheHit, err := cache.GetStatsWithLoader(opts, func() (*model.LogStat, error) {
+		// 使用超时上下文执行查询
+		ctx, cancel := service.WithDefaultQueryTimeout(c.Request.Context())
+		defer cancel()
+
+		return model.GetLogStatsWithContext(ctx, opts)
+	})
+
+	// 设置缓存状态响应头
+	if cacheHit {
+		c.Header("X-Cache-Status", service.CacheStatusHit)
+	} else {
+		c.Header("X-Cache-Status", service.CacheStatusMiss)
+	}
+
 	if err != nil {
-		common.ApiError(c, err)
+		service.HandleQueryTimeout(err, "GetLogStats")
+		service.HandleQueryError(c, err)
 		return
 	}
 

@@ -293,6 +293,10 @@ func migrateDB() error {
 	// Create composite indexes for log queries optimization (when LOG_SQL_DSN is not set, use DB directly)
 	if os.Getenv("LOG_SQL_DSN") == "" {
 		createLogIndexesWithDB(DB)
+		// Also migrate LogStatsAggregation when using same DB
+		if err := DB.AutoMigrate(&LogStatsAggregation{}); err != nil {
+			common.SysLog("Warning: failed to migrate LogStatsAggregation: " + err.Error())
+		}
 	}
 	// Initialize default level configs
 	if err := InitDefaultLevelConfigs(); err != nil {
@@ -404,6 +408,10 @@ func migrateDBFast() error {
 func migrateLOGDB() error {
 	var err error
 	if err = LOG_DB.AutoMigrate(&Log{}); err != nil {
+		return err
+	}
+	// Migrate log stats aggregation table
+	if err = LOG_DB.AutoMigrate(&LogStatsAggregation{}); err != nil {
 		return err
 	}
 	// Create composite indexes for log queries optimization
