@@ -381,6 +381,10 @@ export function getChannelIcon(channelType) {
       return <Doubao.Color size={iconSize} />;
     case 56: // Replicate
       return <Replicate size={iconSize} />;
+    case 57: // Codex
+      return <OpenAI size={iconSize} />; // Codex 使用 OpenAI 图标
+    case 58: // Claude Code
+      return <Claude.Color size={iconSize} />; // Claude Code 使用 Claude 图标
     case 8: // 自定义渠道
     case 22: // 知识库：FastGPT
       return <FastGPT.Color size={iconSize} />;

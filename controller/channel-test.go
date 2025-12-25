@@ -82,6 +82,14 @@ func testChannel(channel *model.Channel, testModel string, endpointType string) 
 		if endpointInfo, ok := common.GetDefaultEndpointInfo(constant.EndpointType(endpointType)); ok {
 			requestPath = endpointInfo.Path
 		}
+	} else if channel.Type == constant.ChannelTypeCodex {
+		// Codex 渠道使用 /v1/responses 端点
+		requestPath = "/v1/responses"
+		endpointType = string(constant.EndpointTypeOpenAIResponse)
+	} else if channel.Type == constant.ChannelTypeClaudeCode {
+		// ClaudeCode 渠道使用 /v1/messages 端点 (Claude Messages API)
+		requestPath = "/v1/messages"
+		endpointType = string(constant.EndpointTypeAnthropic)
 	} else {
 		// 如果没有指定端点类型，使用原有的自动检测逻辑
 		// 先判断是否为 Embedding 模型
@@ -417,9 +425,19 @@ func buildTestRequest(model string, endpointType string) dto.Request {
 			}
 		case constant.EndpointTypeOpenAIResponse:
 			// 返回 OpenAIResponsesRequest
+			// Input 应该是 Messages 数组的 JSON 序列化（与 Chat Completions 格式一致）
+			// Codex API 默认返回流式响应，所以测试时使用 Stream: true
+			messages := []dto.Message{
+				{
+					Role:    "user",
+					Content: "hi",
+				},
+			}
+			messagesJSON, _ := json.Marshal(messages)
 			return &dto.OpenAIResponsesRequest{
-				Model: model,
-				Input: json.RawMessage("\"hi\""),
+				Model:  model,
+				Stream: true,
+				Input:  json.RawMessage(messagesJSON),
 			}
 		case constant.EndpointTypeAnthropic, constant.EndpointTypeGemini, constant.EndpointTypeOpenAI:
 			// 返回 GeneralOpenAIRequest
