@@ -19,13 +19,13 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React, { useEffect, useState } from 'react';
 import { API, showError } from '../../helpers';
-import { marked } from 'marked';
 import { Empty } from '@douyinfe/semi-ui';
 import {
   IllustrationConstruction,
   IllustrationConstructionDark,
 } from '@douyinfe/semi-illustrations';
 import { useTranslation } from 'react-i18next';
+import SafeMarkdown from '../../components/common/SafeMarkdown';
 
 const About = () => {
   const { t } = useTranslation();
@@ -39,9 +39,7 @@ const About = () => {
     const { success, message, data } = res.data;
     if (success) {
       let aboutContent = data;
-      if (!data.startsWith('https://')) {
-        aboutContent = marked.parse(data);
-      }
+      // 存储原始内容，由 SafeMarkdown 组件安全渲染
       setAbout(aboutContent);
       localStorage.setItem('about', aboutContent);
     } else {
@@ -159,10 +157,11 @@ const About = () => {
               style={{ width: '100%', height: '100vh', border: 'none' }}
             />
           ) : (
-            <div
+            <SafeMarkdown
+              content={about}
+              className='prose prose-lg max-w-none'
               style={{ fontSize: 'larger' }}
-              dangerouslySetInnerHTML={{ __html: about }}
-            ></div>
+            />
           )}
         </>
       )}

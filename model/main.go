@@ -284,6 +284,7 @@ func migrateDB() error {
 		&HelpDocument{},
 		&LevelConfig{},
 		&LevelChangeLog{},
+		&common.SecurityEvent{}, // 安全事件表
 	)
 	if err != nil {
 		return err
@@ -298,6 +299,10 @@ func migrateDB() error {
 			common.SysLog("Warning: failed to migrate LogStatsAggregation: " + err.Error())
 		}
 	}
+	// Create indexes for security_events table
+	createSecurityEventIndexes()
+	// Initialize security logger with database connection
+	common.SetSecurityDB(DB)
 	// Initialize default level configs
 	if err := InitDefaultLevelConfigs(); err != nil {
 		common.SysLog("Warning: failed to initialize default level configs: " + err.Error())
@@ -345,6 +350,42 @@ func createChannelIndexes() {
 	}
 
 	common.SysLog("Channel composite indexes created/verified")
+}
+
+// createSecurityEventIndexes creates indexes for security_events table
+func createSecurityEventIndexes() {
+	var err error
+
+	// Index definitions for security_events table
+	indexes := []struct {
+		name    string
+		columns string
+	}{
+		{"idx_security_events_timestamp", "timestamp DESC"},
+		{"idx_security_events_user_id", "user_id"},
+		{"idx_security_events_event_type", "event_type"},
+		{"idx_security_events_user_type_time", "user_id, event_type, timestamp DESC"},
+	}
+
+	for _, idx := range indexes {
+		if common.UsingPostgreSQL {
+			err = DB.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON security_events(%s)", idx.name, idx.columns)).Error
+		} else if common.UsingMySQL {
+			var count int64
+			DB.Raw("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'security_events' AND index_name = ?", idx.name).Scan(&count)
+			if count == 0 {
+				err = DB.Exec(fmt.Sprintf("CREATE INDEX %s ON security_events(%s)", idx.name, idx.columns)).Error
+			}
+		} else {
+			// SQLite
+			err = DB.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON security_events(%s)", idx.name, idx.columns)).Error
+		}
+		if err != nil {
+			common.SysLog(fmt.Sprintf("Warning: failed to create %s: %v", idx.name, err))
+		}
+	}
+
+	common.SysLog("Security event indexes created/verified")
 }
 
 func migrateDBFast() error {

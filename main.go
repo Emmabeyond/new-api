@@ -271,5 +271,11 @@ func InitResources() error {
 	// 初始化等级升级回调
 	service.InitLevelUpgradeCallback()
 
+	// 启动安全日志归档器（Requirements: 6.5）
+	common.StartSecurityLogArchiver()
+
+	// 初始化安全事件 Webhook 通知器（Requirements: 6.3）
+	common.InitWebhookNotifier()
+
 	return nil
 }

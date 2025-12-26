@@ -102,16 +102,20 @@ func GetContextKeyType[T any](c *gin.Context, key constant.ContextKey) (T, bool)
 }
 
 func ApiError(c *gin.Context, err error) {
+	// 使用 SanitizeErrorMessage 对错误信息进行 HTML 转义，防止 XSS 攻击
+	// Requirements: 4.2 - 返回错误信息时对用户输入进行 HTML 转义
 	c.JSON(http.StatusOK, gin.H{
 		"success": false,
-		"message": err.Error(),
+		"message": SanitizeErrorMessage(err),
 	})
 }
 
 func ApiErrorMsg(c *gin.Context, msg string) {
+	// 使用 SanitizeErrorMessageString 对错误信息进行 HTML 转义，防止 XSS 攻击
+	// Requirements: 4.2 - 返回错误信息时对用户输入进行 HTML 转义
 	c.JSON(http.StatusOK, gin.H{
 		"success": false,
-		"message": msg,
+		"message": SanitizeErrorMessageString(msg),
 	})
 }
 

@@ -53,14 +53,26 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查用户名是否包含 XSS 攻击特征
+	// Requirements: 4.3 - 检测到潜在的 XSS 攻击时记录安全审计日志
+	if common.DetectAndLogXSSAttempt(username, 0, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "输入包含非法字符",
+			"success": false,
+		})
+		return
+	}
+
 	user := model.User{
 		Username: username,
 		Password: password,
 	}
 	err = user.ValidateAndFill()
 	if err != nil {
+		// 使用 SanitizeErrorMessage 对错误信息进行转义
 		c.JSON(http.StatusOK, gin.H{
-			"message": err.Error(),
+			"message": common.SanitizeErrorMessage(err),
 			"success": false,
 		})
 		return
@@ -166,10 +178,28 @@ func Register(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查用户名和显示名是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3 - 检测到恶意脚本尝试时记录安全审计日志
+	if common.DetectAndLogXSSAttempt(user.Username, 0, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "用户名包含非法字符",
+		})
+		return
+	}
+	if user.DisplayName != "" && common.DetectAndLogXSSAttempt(user.DisplayName, 0, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "显示名包含非法字符",
+		})
+		return
+	}
+
 	if err := common.Validate.Struct(&user); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": "输入不合法 " + err.Error(),
+			"message": "输入不合法 " + common.SanitizeErrorMessage(err),
 		})
 		return
 	}
@@ -609,13 +639,32 @@ func UpdateUser(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查用户名和显示名是否包含 XSS 攻击特征
+	// Requirements: 4.3 - 检测到潜在的 XSS 攻击时记录安全审计日志
+	userId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(updatedUser.Username, userId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "用户名包含非法字符",
+		})
+		return
+	}
+	if updatedUser.DisplayName != "" && common.DetectAndLogXSSAttempt(updatedUser.DisplayName, userId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "显示名包含非法字符",
+		})
+		return
+	}
+
 	if updatedUser.Password == "" {
 		updatedUser.Password = "$I_LOVE_U" // make Validator happy :)
 	}
 	if err := common.Validate.Struct(&updatedUser); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": "输入不合法 " + err.Error(),
+			"message": "输入不合法 " + common.SanitizeErrorMessage(err),
 		})
 		return
 	}
@@ -840,10 +889,29 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查用户名和显示名是否包含 XSS 攻击特征
+	// Requirements: 4.3 - 检测到潜在的 XSS 攻击时记录安全审计日志
+	adminId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(user.Username, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "用户名包含非法字符",
+		})
+		return
+	}
+	if user.DisplayName != "" && common.DetectAndLogXSSAttempt(user.DisplayName, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "显示名包含非法字符",
+		})
+		return
+	}
+
 	if err := common.Validate.Struct(&user); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": "输入不合法 " + err.Error(),
+			"message": "输入不合法 " + common.SanitizeErrorMessage(err),
 		})
 		return
 	}

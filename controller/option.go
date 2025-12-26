@@ -90,6 +90,28 @@ func UpdateOption(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查用户可见内容是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在公告创建时检测 XSS
+	adminId := c.GetInt("id")
+	sensitiveKeys := []string{
+		"Notice", "console_setting.announcements", "console_setting.api_info",
+		"console_setting.faq", "Footer", "SystemName", "Logo", "HomePageContent",
+	}
+	for _, key := range sensitiveKeys {
+		if option.Key == key {
+			valueStr := fmt.Sprintf("%v", option.Value)
+			if common.DetectAndLogXSSAttempt(valueStr, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "内容包含潜在的安全风险，请检查输入",
+				})
+				return
+			}
+			break
+		}
+	}
+
 	switch option.Value.(type) {
 	case bool:
 		option.Value = common.Interface2String(option.Value.(bool))

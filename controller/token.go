@@ -149,6 +149,18 @@ func AddToken(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查令牌名称是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在用户输入点添加检测
+	userId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(token.Name, userId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "令牌名称包含非法字符",
+		})
+		return
+	}
+
 	key, err := common.GenerateKey()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -215,6 +227,17 @@ func UpdateToken(c *gin.Context) {
 		})
 		return
 	}
+
+	// XSS 检测：检查令牌名称是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在用户输入点添加检测
+	if common.DetectAndLogXSSAttempt(token.Name, userId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "令牌名称包含非法字符",
+		})
+		return
+	}
+
 	cleanToken, err := model.GetTokenByIds(token.Id, userId)
 	if err != nil {
 		common.ApiError(c, err)

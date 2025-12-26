@@ -38,6 +38,12 @@ services:
       - SQL_MAX_OPEN_CONNS=500  # 数据库最大打开连接
       - SQL_MAX_LIFETIME=300  # 连接最大生命周期（秒）
       - SQL_MAX_IDLE_TIME=60  # 空闲连接最大存活时间（秒）
+      # ========== 安全配置 Security Settings ==========
+      - ALLOWED_ORIGINS=https://api.bigaipro.com,https://api.abu117.cn  # CORS 允许的来源
+      - SECURITY_LOG_RETENTION_DAYS=90  # 安全日志保留天数
+      - SECURITY_LOG_ARCHIVE_THRESHOLD=10000  # 安全日志归档阈值
+      # - SECURITY_WEBHOOK_URL=https://your-webhook.example.com/security-alerts  # 安全事件通知（可选）
+      # - CSP_POLICY=...  # 自定义 CSP 策略（可选，有默认值）
       # ========== 其他可选配置 Optional Settings ==========
     depends_on:
       - redis

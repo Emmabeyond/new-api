@@ -35,6 +35,7 @@ import { Button, Tooltip, Toast } from '@douyinfe/semi-ui';
 import { copy, rehypeSplitWordsIntoSpans } from '../../../helpers';
 import { IconCopy } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
+import SafeHTMLContent from '../SafeHTMLContent';
 
 mermaid.initialize({
   startOnLoad: false,
@@ -227,7 +228,7 @@ export function PreCode(props) {
           >
             HTML预览:
           </div>
-          <div dangerouslySetInnerHTML={{ __html: htmlCode }} />
+          <SafeHTMLContent htmlContent={htmlCode} mode="markdown" />
         </div>
       )}
     </>

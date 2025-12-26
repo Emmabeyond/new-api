@@ -199,6 +199,14 @@ docker run --name new-api -d --restart always \
 - 🔑 OIDC 统一认证
 - 🔍 Key 查询使用额度（配合 [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool)）
 
+### 🛡️ 安全防护
+
+- 🔒 **XSS 防护**：前端 HTML 内容净化（DOMPurify）+ 后端输入验证
+- 🛡️ **安全响应头**：CSP、X-XSS-Protection、X-Content-Type-Options、X-Frame-Options、HSTS
+- 🌐 **CORS 白名单**：可配置的跨域来源白名单验证
+- 📝 **安全审计日志**：XSS 攻击检测与日志记录
+- 🔔 **Webhook 告警**：安全事件实时通知
+
 ### 🚀 高级功能
 
 **API 格式支持：**
@@ -313,6 +321,36 @@ docker run --name new-api -d --restart always \
 
 </details>
 
+<details>
+<summary>🛡️ 安全相关环境变量配置</summary>
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `ALLOWED_ORIGINS` | CORS 允许的来源列表（逗号分隔） | `http://localhost:3000` |
+| `CSP_POLICY` | Content-Security-Policy 策略 | 内置默认策略 |
+| `SECURITY_WEBHOOK_URL` | 安全事件 Webhook 通知地址 | - |
+| `SECURITY_LOG_RETENTION_DAYS` | 安全日志保留天数 | `90` |
+| `SECURITY_LOG_ARCHIVE_THRESHOLD` | 安全日志归档阈值（条数） | `10000` |
+
+**配置示例：**
+
+```bash
+# CORS 配置 - 允许多个来源
+ALLOWED_ORIGINS=https://example.com,https://app.example.com
+
+# CSP 策略 - 自定义内容安全策略
+CSP_POLICY="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
+
+# 安全事件 Webhook 通知
+SECURITY_WEBHOOK_URL=https://your-webhook.example.com/security-alerts
+
+# 安全日志配置
+SECURITY_LOG_RETENTION_DAYS=90
+SECURITY_LOG_ARCHIVE_THRESHOLD=10000
+```
+
+</details>
+
 ### 🔧 部署方式
 
 <details>
@@ -402,6 +440,135 @@ docker run --name new-api -d --restart always \
 |------|------|
 | [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool) | Key 额度查询工具 |
 | [new-api-horizon](https://github.com/Calcium-Ion/new-api-horizon) | New API 高性能优化版 |
+
+---
+
+## � ️ 安全功能
+
+### XSS 防护
+
+New API 采用多层防御策略防止 XSS（跨站脚本攻击）：
+
+| 防护层 | 技术方案 | 说明 |
+|--------|----------|------|
+| **前端净化** | DOMPurify + react-markdown | 净化所有 HTML 内容，移除危险标签和属性 |
+| **后端验证** | 输入验证 + 输出编码 | 验证用户输入，转义 HTML 特殊字符 |
+| **浏览器防护** | CSP + X-XSS-Protection | 启用浏览器内置安全机制 |
+| **审计日志** | 安全事件记录 | 检测并记录 XSS 攻击尝试 |
+
+### 安全响应头
+
+系统自动添加以下安全响应头：
+
+- **Content-Security-Policy (CSP)**：限制资源加载来源
+- **X-XSS-Protection**：启用浏览器 XSS 过滤器
+- **X-Content-Type-Options**：防止 MIME 类型嗅探
+- **X-Frame-Options**：防止点击劫持
+- **Strict-Transport-Security (HSTS)**：强制 HTTPS 连接
+
+### CORS 配置
+
+通过 `ALLOWED_ORIGINS` 环境变量配置允许的跨域来源：
+
+```bash
+# 单个来源
+ALLOWED_ORIGINS=https://example.com
+
+# 多个来源（逗号分隔）
+ALLOWED_ORIGINS=https://example.com,https://app.example.com,https://admin.example.com
+```
+
+> **⚠️ 注意：** 未配置时默认仅允许 `http://localhost:3000`，生产环境请务必配置正确的来源列表。
+
+### 安全审计日志
+
+系统会自动记录以下安全事件：
+
+- XSS 攻击尝试
+- 无效的跨域请求
+- 可疑的输入内容
+
+配置 Webhook 可实时接收安全告警：
+
+```bash
+SECURITY_WEBHOOK_URL=https://your-webhook.example.com/security-alerts
+```
+
+---
+
+## 🔒 安全 FAQ
+
+<details>
+<summary><strong>Q: 如何配置 CORS 允许的来源？</strong></summary>
+
+设置 `ALLOWED_ORIGINS` 环境变量，多个来源用逗号分隔：
+
+```bash
+ALLOWED_ORIGINS=https://example.com,https://app.example.com
+```
+
+如果不设置，默认仅允许 `http://localhost:3000`。
+
+</details>
+
+<details>
+<summary><strong>Q: 如何自定义 CSP 策略？</strong></summary>
+
+设置 `CSP_POLICY` 环境变量：
+
+```bash
+CSP_POLICY="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
+```
+
+如果不设置，系统会使用内置的默认策略。
+
+</details>
+
+<details>
+<summary><strong>Q: 如何接收安全事件通知？</strong></summary>
+
+配置 `SECURITY_WEBHOOK_URL` 环境变量，系统会向该地址发送 POST 请求：
+
+```bash
+SECURITY_WEBHOOK_URL=https://your-webhook.example.com/security-alerts
+```
+
+Webhook 请求体格式：
+```json
+{
+  "event_type": "xss_attempt",
+  "timestamp": 1703836800,
+  "user_id": 123,
+  "ip_address": "192.168.1.1",
+  "details": "检测到 XSS 攻击尝试"
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Q: 安全日志保存多久？</strong></summary>
+
+默认保留 90 天，可通过 `SECURITY_LOG_RETENTION_DAYS` 环境变量调整：
+
+```bash
+SECURITY_LOG_RETENTION_DAYS=180  # 保留 180 天
+```
+
+当日志数量超过 `SECURITY_LOG_ARCHIVE_THRESHOLD`（默认 10000 条）时，系统会自动归档旧日志。
+
+</details>
+
+<details>
+<summary><strong>Q: 升级后需要做什么配置？</strong></summary>
+
+1. **CORS 配置**：如果之前使用通配符 `*`，需要改为具体的来源列表
+2. **环境变量**：建议配置 `ALLOWED_ORIGINS` 和 `SECURITY_WEBHOOK_URL`
+3. **前端组件**：如果有自定义组件使用 `dangerouslySetInnerHTML`，建议改用 `SafeHTMLContent` 或 `SafeMarkdown` 组件
+
+详细迁移指南请参考 [安全迁移文档](./docs/SECURITY_MIGRATION.md)。
+
+</details>
 
 ---
 

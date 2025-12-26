@@ -28,13 +28,14 @@ import {
 } from '@douyinfe/semi-ui';
 import { useTranslation } from 'react-i18next';
 import { API, showError, getRelativeTime } from '../../helpers';
-import { marked } from 'marked';
 import {
   IllustrationNoContent,
   IllustrationNoContentDark,
 } from '@douyinfe/semi-illustrations';
 import { StatusContext } from '../../context/Status';
 import { Bell, Megaphone } from 'lucide-react';
+import SafeMarkdown from '../common/SafeMarkdown';
+import SafeHTMLContent from '../common/SafeHTMLContent';
 
 const NoticeModal = ({
   visible,
@@ -89,8 +90,8 @@ const NoticeModal = ({
       const { success, message, data } = res.data;
       if (success) {
         if (data !== '') {
-          const htmlNotice = marked.parse(data);
-          setNoticeContent(htmlNotice);
+          // 存储原始 Markdown 内容，由 SafeMarkdown 组件安全渲染
+          setNoticeContent(data);
         } else {
           setNoticeContent('');
         }
@@ -142,8 +143,8 @@ const NoticeModal = ({
     }
 
     return (
-      <div
-        dangerouslySetInnerHTML={{ __html: noticeContent }}
+      <SafeMarkdown
+        content={noticeContent}
         className='notice-content-scroll max-h-[55vh] overflow-y-auto pr-2'
       />
     );
@@ -170,8 +171,6 @@ const NoticeModal = ({
       <div className='max-h-[55vh] overflow-y-auto pr-2 card-content-scroll'>
         <Timeline mode='left'>
           {processedAnnouncements.map((item, idx) => {
-            const htmlContent = marked.parse(item.content || '');
-            const htmlExtra = item.extra ? marked.parse(item.extra) : '';
             return (
               <Timeline.Item
                 key={idx}
@@ -179,18 +178,18 @@ const NoticeModal = ({
                 time={`${item.relative ? item.relative + ' ' : ''}${item.time}`}
                 extra={
                   item.extra ? (
-                    <div
+                    <SafeMarkdown
+                      content={item.extra}
                       className='text-xs text-gray-500'
-                      dangerouslySetInnerHTML={{ __html: htmlExtra }}
                     />
                   ) : null
                 }
                 className={item.isUnread ? '' : ''}
               >
                 <div>
-                  <div
+                  <SafeMarkdown
+                    content={item.content || ''}
                     className={item.isUnread ? 'shine-text' : ''}
-                    dangerouslySetInnerHTML={{ __html: htmlContent }}
                   />
                 </div>
               </Timeline.Item>

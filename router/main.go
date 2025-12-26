@@ -8,11 +8,16 @@ import (
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetRouter(router *gin.Engine, buildFS embed.FS, indexPage []byte) {
+	// 注册全局安全响应头中间件（Requirements 2.1-2.5）
+	// 该中间件添加 CSP、X-XSS-Protection、X-Content-Type-Options、X-Frame-Options、HSTS 等安全头
+	router.Use(middleware.SecurityHeaders(nil))
+
 	SetApiRouter(router)
 	SetDashboardRouter(router)
 	SetRelayRouter(router)

@@ -27,6 +27,7 @@ import {
 } from '@douyinfe/semi-illustrations';
 import { useTranslation } from 'react-i18next';
 import MarkdownRenderer from '../markdown/MarkdownRenderer';
+import SafeHTMLContent from '../SafeHTMLContent';
 
 // 检查是否为 URL
 const isUrl = (content) => {
@@ -199,7 +200,7 @@ const DocumentRenderer = ({ apiEndpoint, title, cacheKey, emptyMessage }) => {
     );
   }
 
-  // 如果是 HTML 内容，直接渲染
+  // 如果是 HTML 内容，使用 SafeHTMLContent 安全渲染
   if (isHtmlContent(content)) {
     const { content: htmlContent, styles } = sanitizeHtml(content);
     
@@ -215,9 +216,10 @@ const DocumentRenderer = ({ apiEndpoint, title, cacheKey, emptyMessage }) => {
         <div className='max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8'>
           <div className='bg-white rounded-lg shadow-sm p-8'>
             <Title heading={2} className='text-center mb-8'>{title}</Title>
-            <div 
+            <SafeHTMLContent
+              htmlContent={htmlContent}
+              mode="markdown"
               className='prose prose-lg max-w-none'
-              dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           </div>
         </div>

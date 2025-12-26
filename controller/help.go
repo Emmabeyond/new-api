@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/gin-gonic/gin"
 )
@@ -114,10 +115,21 @@ func AdminCreateHelpCategory(c *gin.Context) {
 		return
 	}
 
+	// XSS 检测：检查分类名称是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在用户输入点添加检测
+	adminId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(category.Name, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "分类名称包含非法字符",
+		})
+		return
+	}
+
 	if err := model.CreateHelpCategory(&category); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": err.Error(),
+			"message": common.SanitizeErrorMessage(err),
 		})
 		return
 	}
@@ -152,11 +164,22 @@ func AdminUpdateHelpCategory(c *gin.Context) {
 		return
 	}
 
+	// XSS 检测：检查分类名称是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在用户输入点添加检测
+	adminId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(category.Name, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "分类名称包含非法字符",
+		})
+		return
+	}
+
 	category.Id = id
 	if err := model.UpdateHelpCategory(&category); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": err.Error(),
+			"message": common.SanitizeErrorMessage(err),
 		})
 		return
 	}
@@ -226,10 +249,28 @@ func AdminCreateHelpDocument(c *gin.Context) {
 		return
 	}
 
+	// XSS 检测：检查文档标题和内容是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在用户输入点添加检测
+	adminId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(doc.Title, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "文档标题包含非法字符",
+		})
+		return
+	}
+	if common.DetectAndLogXSSAttempt(doc.Content, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "文档内容包含潜在的安全风险",
+		})
+		return
+	}
+
 	if err := model.CreateHelpDocument(&doc); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": err.Error(),
+			"message": common.SanitizeErrorMessage(err),
 		})
 		return
 	}
@@ -264,11 +305,29 @@ func AdminUpdateHelpDocument(c *gin.Context) {
 		return
 	}
 
+	// XSS 检测：检查文档标题和内容是否包含 XSS 攻击特征
+	// Requirements: 1.5, 4.3, 6.1, 6.2 - 在用户输入点添加检测
+	adminId := c.GetInt("id")
+	if common.DetectAndLogXSSAttempt(doc.Title, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "文档标题包含非法字符",
+		})
+		return
+	}
+	if common.DetectAndLogXSSAttempt(doc.Content, adminId, c.ClientIP(), c.GetHeader("User-Agent"), c.Request.URL.Path) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "文档内容包含潜在的安全风险",
+		})
+		return
+	}
+
 	doc.Id = id
 	if err := model.UpdateHelpDocument(&doc); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": err.Error(),
+			"message": common.SanitizeErrorMessage(err),
 		})
 		return
 	}

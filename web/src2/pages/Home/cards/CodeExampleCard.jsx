@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import BentoCard from '../components/BentoCard';
 import { StatusContext } from '../../../context/Status';
 import { copy, showSuccess } from '../../../helpers';
+import SafeHTMLContent from '../../../components/common/SafeHTMLContent';
 
 const { Text } = Typography;
 
@@ -78,7 +79,7 @@ const response = await client.chat.completions.create({
           <span className="text-semi-color-text-3 w-6 text-right mr-3 select-none opacity-40">
             {index + 1}
           </span>
-          <span dangerouslySetInnerHTML={{ __html: formattedLine || '&nbsp;' }} />
+          <SafeHTMLContent htmlContent={formattedLine || '&nbsp;'} mode="default" />
         </div>
       );
     });
