@@ -39,6 +39,7 @@ import TransferModal from './modals/TransferModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
 import TopupHistoryModal from './modals/TopupHistoryModal';
 import CheckinResultModal from './modals/CheckinResultModal';
+import QRCodePaymentModal from './modals/QRCodePaymentModal';
 import { SliderCaptcha } from '../captcha';
 
 const TopUp = () => {
@@ -107,6 +108,17 @@ const TopUp = () => {
     discount: {},
   });
 
+  // 二维码支付弹窗状态
+  const [qrCodeModalVisible, setQrCodeModalVisible] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState({
+    qrCodeUrl: '',
+    tradeNo: '',
+    amount: 0,
+    money: '',
+    paymentMethod: '',
+  });
+  const [qrCodeLoading, setQrCodeLoading] = useState(false);
+
   const topUp = async () => {
     if (redemptionCode === '') {
       showInfo(t('请输入兑换码！'));
@@ -164,24 +176,127 @@ const TopUp = () => {
       }
     }
 
+    if (topUpCount < minTopUp) {
+      showError(t('充值数量不能小于') + minTopUp);
+      return;
+    }
+
     setPayWay(payment);
     setPaymentLoading(true);
+
     try {
+      // 对于支付宝和微信支付，尝试使用二维码模式
+      if (payment === 'alipay' || payment === 'wxpay') {
+        const qrCodeResult = await requestQRCode(payment);
+        if (qrCodeResult) {
+          // 成功获取二维码，显示二维码弹窗
+          return;
+        }
+        // 获取二维码失败，降级到跳转模式
+        showInfo(t('正在跳转到支付页面...'));
+      }
+
+      // Stripe 或降级模式：使用原有的确认弹窗流程
       if (payment === 'stripe') {
         await getStripeAmount();
       } else {
         await getAmount();
-      }
-
-      if (topUpCount < minTopUp) {
-        showError(t('充值数量不能小于') + minTopUp);
-        return;
       }
       setOpen(true);
     } catch (error) {
       showError(t('获取金额失败'));
     } finally {
       setPaymentLoading(false);
+    }
+  };
+
+  // 请求二维码支付
+  const requestQRCode = async (payment) => {
+    try {
+      setQrCodeLoading(true);
+      const res = await API.post('/api/user/pay/qrcode', {
+        amount: parseInt(topUpCount),
+        payment_method: payment,
+      });
+
+      if (res.data.message === 'success') {
+        const data = res.data.data;
+        
+        // 优先使用二维码，其次使用支付链接
+        if (data.qrcode) {
+          setQrCodeData({
+            qrCodeUrl: data.qrcode,
+            tradeNo: data.trade_no,
+            amount: data.amount,
+            money: data.money,
+            paymentMethod: payment,
+          });
+          setQrCodeModalVisible(true);
+          setPaymentLoading(false);
+          return true;
+        } else if (data.payurl) {
+          // 没有二维码但有支付链接，降级到跳转模式
+          window.open(data.payurl, '_blank');
+          setPaymentLoading(false);
+          return true;
+        }
+      } else {
+        // API 返回错误
+        showError(res.data.data || t('获取支付二维码失败'));
+      }
+      return false;
+    } catch (err) {
+      console.error('请求二维码失败:', err);
+      return false;
+    } finally {
+      setQrCodeLoading(false);
+    }
+  };
+
+  // 二维码支付成功回调
+  const handleQRCodePaymentSuccess = (rechargedAmount) => {
+    setQrCodeModalVisible(false);
+    
+    // 显示成功提示
+    showSuccess(t('充值成功！'));
+    
+    // 计算实际充值的额度
+    const quotaPerUnit = getQuotaPerUnit() || 500000;
+    const quotaToAdd = rechargedAmount * quotaPerUnit;
+    
+    Modal.success({
+      title: t('充值成功！'),
+      content: t('成功充值额度：') + renderQuota(quotaToAdd),
+      centered: true,
+    });
+
+    // 更新用户额度
+    if (userState.user) {
+      const updatedUser = {
+        ...userState.user,
+        quota: userState.user.quota + quotaToAdd,
+      };
+      userDispatch({ type: 'login', payload: updatedUser });
+    }
+  };
+
+  // 关闭二维码弹窗
+  const handleQRCodeModalClose = () => {
+    setQrCodeModalVisible(false);
+    setQrCodeData({
+      qrCodeUrl: '',
+      tradeNo: '',
+      amount: 0,
+      money: '',
+      paymentMethod: '',
+    });
+  };
+
+  // 刷新二维码
+  const handleQRCodeRefresh = async () => {
+    const payment = qrCodeData.paymentMethod;
+    if (payment) {
+      await requestQRCode(payment);
     }
   };
 
@@ -740,6 +855,20 @@ const TopUp = () => {
         result={checkinResult}
         t={t}
         renderQuota={renderQuota}
+      />
+
+      {/* 二维码支付弹窗 */}
+      <QRCodePaymentModal
+        visible={qrCodeModalVisible}
+        onClose={handleQRCodeModalClose}
+        onSuccess={handleQRCodePaymentSuccess}
+        onRefresh={handleQRCodeRefresh}
+        qrCodeUrl={qrCodeData.qrCodeUrl}
+        tradeNo={qrCodeData.tradeNo}
+        amount={qrCodeData.amount}
+        money={qrCodeData.money}
+        paymentMethod={qrCodeData.paymentMethod}
+        t={t}
       />
 
       {/* 滑块验证码弹窗 */}
