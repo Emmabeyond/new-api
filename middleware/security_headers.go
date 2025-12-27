@@ -28,6 +28,7 @@ const DefaultCSPPolicy = "default-src 'self'; " +
 	"img-src 'self' data: https:; " +
 	"font-src 'self' data:; " +
 	"connect-src 'self'; " +
+	"frame-src 'self' https:; " +
 	"frame-ancestors 'self'; " +
 	"base-uri 'self'; " +
 	"form-action 'self'"

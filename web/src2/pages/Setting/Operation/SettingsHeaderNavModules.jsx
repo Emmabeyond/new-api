@@ -50,6 +50,7 @@ export default function SettingsHeaderNavModules(props) {
     help: true,
     guestbook: true,
     about: true,
+    contact: true,
   });
 
   // 处理顶栏模块配置变更
@@ -92,6 +93,7 @@ export default function SettingsHeaderNavModules(props) {
       help: true,
       guestbook: true,
       about: true,
+      contact: true,
     };
     setHeaderNavModules(defaultModules);
     showSuccess(t('已重置为默认配置'));
@@ -151,6 +153,11 @@ export default function SettingsHeaderNavModules(props) {
           modules.guestbook = true;
         }
 
+        // 处理向后兼容性：如果没有contact字段，添加默认值
+        if (modules.contact === undefined) {
+          modules.contact = true;
+        }
+
         setHeaderNavModules(modules);
       } catch (error) {
         // 使用默认配置
@@ -165,6 +172,7 @@ export default function SettingsHeaderNavModules(props) {
           help: true,
           guestbook: true,
           about: true,
+          contact: true,
         };
         setHeaderNavModules(defaultModules);
       }
@@ -208,6 +216,11 @@ export default function SettingsHeaderNavModules(props) {
       key: 'about',
       title: t('关于'),
       description: t('关于系统的详细信息'),
+    },
+    {
+      key: 'contact',
+      title: t('联系我们'),
+      description: t('联系方式和客服信息'),
     },
   ];
 

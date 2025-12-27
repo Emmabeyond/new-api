@@ -53,6 +53,24 @@ const MARKDOWN_CONFIG = {
   ALLOWED_ATTR: [...DEFAULT_CONFIG.ALLOWED_ATTR, 'src', 'alt', 'title'],
 };
 
+// About 页面配置：完全宽松配置
+// 因为 About 页面只有管理员可以设置，完全信任管理员输入的内容
+const ABOUT_PAGE_CONFIG = {
+  FORBID_TAGS: [], // 不禁止任何标签（包括 script）
+  FORBID_ATTR: [], // 不禁止任何属性
+  ALLOW_DATA_ATTR: true, // 允许 data-* 属性
+  ALLOW_UNKNOWN_PROTOCOLS: false, // 不允许未知协议（安全考虑）
+  ADD_TAGS: ['style', 'script'], // 明确添加 style 和 script 标签
+  ADD_ATTR: ['style', 'onclick', 'onload', 'onerror'], // 明确添加事件属性
+  KEEP_CONTENT: true,
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  RETURN_DOM_IMPORT: false,
+  SAFE_FOR_TEMPLATES: false,
+  WHOLE_DOCUMENT: false,
+  FORCE_BODY: false,
+};
+
 // 严格配置：仅允许基本格式化
 const STRICT_CONFIG = {
   ALLOWED_TAGS: ['p', 'br', 'strong', 'em'],
@@ -114,11 +132,27 @@ export function sanitizeStrict(dirtyHTML) {
   }
 }
 
+/**
+ * 净化 About 页面的 HTML 内容
+ * 管理员内容完全可信，直接返回原始内容
+ * @param {string} aboutHTML - About 页面的 HTML
+ * @returns {string} 原始 HTML（不净化）
+ */
+export function sanitizeAboutPage(aboutHTML) {
+  if (!aboutHTML || typeof aboutHTML !== 'string') {
+    return '';
+  }
+  // 管理员内容完全可信，直接返回原始内容
+  return aboutHTML;
+}
+
 export default {
   sanitizeHTML,
   sanitizeMarkdown,
   sanitizeStrict,
+  sanitizeAboutPage,
   DEFAULT_CONFIG,
   MARKDOWN_CONFIG,
   STRICT_CONFIG,
+  ABOUT_PAGE_CONFIG,
 };

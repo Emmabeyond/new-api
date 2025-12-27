@@ -26,6 +26,15 @@ import {
 } from '@douyinfe/semi-illustrations';
 import { useTranslation } from 'react-i18next';
 import SafeMarkdown from '../../components/common/SafeMarkdown';
+import SafeHTMLContent from '../../components/common/SafeHTMLContent';
+
+// 检查是否为 HTML 内容
+const isHtmlContent = (content) => {
+  if (!content || typeof content !== 'string') return false;
+  // 检查是否包含HTML标签
+  const htmlTagRegex = /<\/?[a-z][\s\S]*>/i;
+  return htmlTagRegex.test(content);
+};
 
 const About = () => {
   const { t } = useTranslation();
@@ -130,6 +139,44 @@ const About = () => {
     </div>
   );
 
+  // 判断是否为完整的 HTML 页面（包含 html 或 body 标签）
+  const isFullHtmlPage = about && (
+    about.includes('<html') || 
+    about.includes('<body') || 
+    about.includes('<!DOCTYPE')
+  );
+
+  // 如果是完整 HTML 页面，使用 iframe 完全隔离
+  if (isFullHtmlPage && aboutLoaded) {
+    return (
+      <div className='mt-[60px] px-2'>
+        {about.startsWith('https://') ? (
+          <iframe
+            src={about}
+            style={{ 
+              width: '100%', 
+              height: 'calc(100vh - 60px)', 
+              border: 'none',
+              display: 'block'
+            }}
+            title={t('关于')}
+          />
+        ) : (
+          <iframe
+            srcDoc={about}
+            style={{ 
+              width: '100%', 
+              height: 'calc(100vh - 60px)', 
+              border: 'none',
+              display: 'block'
+            }}
+            title={t('关于')}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className='mt-[60px] px-2'>
       {aboutLoaded && about === '' ? (
@@ -155,6 +202,13 @@ const About = () => {
             <iframe
               src={about}
               style={{ width: '100%', height: '100vh', border: 'none' }}
+            />
+          ) : isHtmlContent(about) ? (
+            <SafeHTMLContent
+              htmlContent={about}
+              mode='about'
+              className={isFullHtmlPage ? '' : 'prose prose-lg max-w-none'}
+              style={isFullHtmlPage ? {} : { fontSize: 'larger' }}
             />
           ) : (
             <SafeMarkdown

@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import SkeletonWrapper from '../components/SkeletonWrapper';
 
 const Navigation = ({
@@ -28,16 +28,32 @@ const Navigation = ({
   userState,
   pricingRequireAuth,
 }) => {
+  const location = useLocation();
+
+  // 判断链接是否为当前激活状态
+  const isActive = (link) => {
+    const currentPath = location.pathname;
+    
+    // 首页精确匹配
+    if (link.to === '/') {
+      return currentPath === '/';
+    }
+    
+    // 其他页面前缀匹配
+    return currentPath.startsWith(link.to);
+  };
+
   const renderNavLinks = () => {
     const baseClasses =
-      'flex-shrink-0 flex items-center gap-1 font-semibold rounded-md transition-all duration-200 ease-in-out';
-    const hoverClasses = 'hover:text-semi-color-primary';
-    const spacingClasses = isMobile ? 'p-1' : 'p-2';
-
-    const commonLinkClasses = `${baseClasses} ${spacingClasses} ${hoverClasses}`;
+      'flex-shrink-0 flex items-center gap-1 font-semibold rounded-lg transition-all duration-300 ease-in-out';
+    const hoverClasses = 'hover:text-semi-color-primary hover:bg-semi-color-primary/5';
+    const spacingClasses = isMobile ? 'px-2 py-1.5' : 'px-3 py-2';
+    const activeClasses = 'bg-semi-color-primary/10 text-semi-color-primary border-b-2 border-semi-color-primary shadow-sm';
 
     return mainNavLinks.map((link) => {
-      const linkContent = <span>{link.text}</span>;
+      const linkContent = <span className={isMobile ? 'text-sm' : ''}>{link.text}</span>;
+      const active = !link.isExternal && isActive(link);
+      const commonLinkClasses = `${baseClasses} ${spacingClasses} ${hoverClasses} ${active ? activeClasses : ''}`;
 
       if (link.isExternal) {
         return (
@@ -70,7 +86,7 @@ const Navigation = ({
   };
 
   return (
-    <nav className='flex flex-1 items-center gap-1 lg:gap-2 mx-2 md:mx-4 overflow-x-auto whitespace-nowrap scrollbar-hide'>
+    <nav className='flex flex-1 items-center gap-2 lg:gap-3 mx-2 md:mx-4 overflow-x-auto whitespace-nowrap scrollbar-hide'>
       <SkeletonWrapper
         loading={isLoading}
         type='navigation'
