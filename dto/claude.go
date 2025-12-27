@@ -34,6 +34,19 @@ type ClaudeMediaMessage struct {
 	Input     any    `json:"input,omitempty"`
 	Content   any    `json:"content,omitempty"`
 	ToolUseId string `json:"tool_use_id,omitempty"`
+	// web_search citations
+	Citations []ClaudeCitation `json:"citations,omitempty"`
+}
+
+// ClaudeCitation Claude web_search 引用信息
+type ClaudeCitation struct {
+	Type       string `json:"type,omitempty"`        // "char_location"
+	CitedText  string `json:"cited_text,omitempty"`  // 引用的文本
+	DocumentID string `json:"document_id,omitempty"` // 文档 ID
+	Title      string `json:"title,omitempty"`       // 标题
+	URL        string `json:"url,omitempty"`         // URL
+	StartIndex int    `json:"start_char_index,omitempty"`
+	EndIndex   int    `json:"end_char_index,omitempty"`
 }
 
 func (c *ClaudeMediaMessage) SetText(s string) {
@@ -169,10 +182,12 @@ type InputSchema struct {
 }
 
 type ClaudeWebSearchTool struct {
-	Type         string                       `json:"type"`
-	Name         string                       `json:"name"`
-	MaxUses      int                          `json:"max_uses,omitempty"`
-	UserLocation *ClaudeWebSearchUserLocation `json:"user_location,omitempty"`
+	Type           string                       `json:"type"`
+	Name           string                       `json:"name"`
+	MaxUses        int                          `json:"max_uses,omitempty"`
+	AllowedDomains []string                     `json:"allowed_domains,omitempty"`
+	BlockedDomains []string                     `json:"blocked_domains,omitempty"`
+	UserLocation   *ClaudeWebSearchUserLocation `json:"user_location,omitempty"`
 }
 
 type ClaudeWebSearchUserLocation struct {
@@ -181,6 +196,30 @@ type ClaudeWebSearchUserLocation struct {
 	Country  string `json:"country,omitempty"`
 	Region   string `json:"region,omitempty"`
 	City     string `json:"city,omitempty"`
+}
+
+// ClaudeComputerUseTool Claude 计算机使用工具
+// https://docs.anthropic.com/en/docs/agents-and-tools/computer-use
+type ClaudeComputerUseTool struct {
+	Type            string `json:"type"`                        // "computer_20250124"
+	Name            string `json:"name"`                        // "computer"
+	DisplayWidthPx  int    `json:"display_width_px,omitempty"`  // 屏幕宽度（像素）
+	DisplayHeightPx int    `json:"display_height_px,omitempty"` // 屏幕高度（像素）
+	DisplayNumber   int    `json:"display_number,omitempty"`    // 显示器编号
+}
+
+// ClaudeBashTool Claude bash 命令执行工具
+// https://docs.anthropic.com/en/docs/agents-and-tools/computer-use
+type ClaudeBashTool struct {
+	Type string `json:"type"` // "bash_20250124"
+	Name string `json:"name"` // "bash" 或自定义名称
+}
+
+// ClaudeTextEditorTool Claude 文本编辑器工具
+// https://docs.anthropic.com/en/docs/agents-and-tools/computer-use
+type ClaudeTextEditorTool struct {
+	Type string `json:"type"` // "text_editor_20250124"
+	Name string `json:"name"` // "str_replace_editor" 或自定义名称
 }
 
 type ClaudeToolChoice struct {
@@ -384,28 +423,61 @@ func (c *ClaudeRequest) GetTools() []any {
 	}
 }
 
+// ProcessToolsResult 工具处理结果
+type ProcessToolsResult struct {
+	NormalTools      []*Tool
+	WebSearchTools   []*ClaudeWebSearchTool
+	ComputerUseTools []*ClaudeComputerUseTool
+	BashTools        []*ClaudeBashTool
+	TextEditorTools  []*ClaudeTextEditorTool
+}
+
 // ProcessTools 处理工具列表，支持类型断言
+// 返回所有工具类型的分类列表
 func ProcessTools(tools []any) ([]*Tool, []*ClaudeWebSearchTool) {
-	var normalTools []*Tool
-	var webSearchTools []*ClaudeWebSearchTool
+	result := ProcessToolsAll(tools)
+	return result.NormalTools, result.WebSearchTools
+}
+
+// ProcessToolsAll 处理工具列表，返回所有工具类型的分类结果
+func ProcessToolsAll(tools []any) *ProcessToolsResult {
+	result := &ProcessToolsResult{
+		NormalTools:      make([]*Tool, 0),
+		WebSearchTools:   make([]*ClaudeWebSearchTool, 0),
+		ComputerUseTools: make([]*ClaudeComputerUseTool, 0),
+		BashTools:        make([]*ClaudeBashTool, 0),
+		TextEditorTools:  make([]*ClaudeTextEditorTool, 0),
+	}
 
 	for _, tool := range tools {
 		switch t := tool.(type) {
 		case *Tool:
-			normalTools = append(normalTools, t)
+			result.NormalTools = append(result.NormalTools, t)
 		case *ClaudeWebSearchTool:
-			webSearchTools = append(webSearchTools, t)
+			result.WebSearchTools = append(result.WebSearchTools, t)
+		case *ClaudeComputerUseTool:
+			result.ComputerUseTools = append(result.ComputerUseTools, t)
+		case *ClaudeBashTool:
+			result.BashTools = append(result.BashTools, t)
+		case *ClaudeTextEditorTool:
+			result.TextEditorTools = append(result.TextEditorTools, t)
 		case Tool:
-			normalTools = append(normalTools, &t)
+			result.NormalTools = append(result.NormalTools, &t)
 		case ClaudeWebSearchTool:
-			webSearchTools = append(webSearchTools, &t)
+			result.WebSearchTools = append(result.WebSearchTools, &t)
+		case ClaudeComputerUseTool:
+			result.ComputerUseTools = append(result.ComputerUseTools, &t)
+		case ClaudeBashTool:
+			result.BashTools = append(result.BashTools, &t)
+		case ClaudeTextEditorTool:
+			result.TextEditorTools = append(result.TextEditorTools, &t)
 		default:
 			// 未知类型，跳过
 			continue
 		}
 	}
 
-	return normalTools, webSearchTools
+	return result
 }
 
 type Thinking struct {

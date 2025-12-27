@@ -1,4 +1,4 @@
-package claude
+ package claude
 
 import (
 	"encoding/json"
@@ -24,7 +24,283 @@ const (
 	WebSearchMaxUsesLow    = 1
 	WebSearchMaxUsesMedium = 5
 	WebSearchMaxUsesHigh   = 10
+
+	// Claude 原生工具类型常量
+	ClaudeToolTypeComputer   = "computer_20250124"
+	ClaudeToolTypeBash       = "bash_20250124"
+	ClaudeToolTypeTextEditor = "text_editor_20250124"
+	ClaudeToolTypeWebSearch  = "web_search_20250305"
 )
+
+// ClaudeToolTypeInfo 工具类型信息
+type ClaudeToolTypeInfo struct {
+	IsClaudeNative bool   // 是否是 Claude 原生工具
+	ToolType       string // 工具类型标识
+}
+
+// DetectClaudeToolType 检测工具是否为 Claude 原生工具类型
+// 支持通过 function name 或 custom 字段中的 type 来识别
+func DetectClaudeToolType(tool dto.ToolCallRequest) ClaudeToolTypeInfo {
+	// 1. 检查 custom 字段中是否有 type 指定
+	if len(tool.Custom) > 0 {
+		var customData map[string]any
+		if err := json.Unmarshal(tool.Custom, &customData); err == nil {
+			if toolType, ok := customData["type"].(string); ok {
+				switch toolType {
+				case ClaudeToolTypeComputer, ClaudeToolTypeBash, ClaudeToolTypeTextEditor:
+					return ClaudeToolTypeInfo{IsClaudeNative: true, ToolType: toolType}
+				}
+			}
+		}
+	}
+
+	// 2. 通过 function name 检测
+	funcName := tool.Function.Name
+	switch {
+	case strings.HasPrefix(funcName, "computer") || funcName == "computer":
+		return ClaudeToolTypeInfo{IsClaudeNative: true, ToolType: ClaudeToolTypeComputer}
+	case funcName == "bash":
+		return ClaudeToolTypeInfo{IsClaudeNative: true, ToolType: ClaudeToolTypeBash}
+	case funcName == "str_replace_editor" || funcName == "text_editor":
+		return ClaudeToolTypeInfo{IsClaudeNative: true, ToolType: ClaudeToolTypeTextEditor}
+	}
+
+	return ClaudeToolTypeInfo{IsClaudeNative: false, ToolType: ""}
+}
+
+// convertComputerUseTool 将 OpenAI 格式的 computer_use 工具转换为 Claude 格式
+func convertComputerUseTool(tool dto.ToolCallRequest) *dto.ClaudeComputerUseTool {
+	claudeTool := &dto.ClaudeComputerUseTool{
+		Type: ClaudeToolTypeComputer,
+		Name: "computer",
+	}
+
+	// 从 custom 字段提取参数
+	if len(tool.Custom) > 0 {
+		var customData map[string]any
+		if err := json.Unmarshal(tool.Custom, &customData); err == nil {
+			if name, ok := customData["name"].(string); ok && name != "" {
+				claudeTool.Name = name
+			}
+			if width, ok := customData["display_width_px"].(float64); ok {
+				claudeTool.DisplayWidthPx = int(width)
+			}
+			if height, ok := customData["display_height_px"].(float64); ok {
+				claudeTool.DisplayHeightPx = int(height)
+			}
+			if num, ok := customData["display_number"].(float64); ok {
+				claudeTool.DisplayNumber = int(num)
+			}
+		}
+	}
+
+	// 从 function parameters 提取参数（作为备选）
+	if params, ok := tool.Function.Parameters.(map[string]any); ok {
+		if claudeTool.DisplayWidthPx == 0 {
+			if width, ok := params["display_width_px"].(float64); ok {
+				claudeTool.DisplayWidthPx = int(width)
+			}
+		}
+		if claudeTool.DisplayHeightPx == 0 {
+			if height, ok := params["display_height_px"].(float64); ok {
+				claudeTool.DisplayHeightPx = int(height)
+			}
+		}
+		if claudeTool.DisplayNumber == 0 {
+			if num, ok := params["display_number"].(float64); ok {
+				claudeTool.DisplayNumber = int(num)
+			}
+		}
+	}
+
+	return claudeTool
+}
+
+// convertBashTool 将 OpenAI 格式的 bash 工具转换为 Claude 格式
+func convertBashTool(tool dto.ToolCallRequest) *dto.ClaudeBashTool {
+	claudeTool := &dto.ClaudeBashTool{
+		Type: ClaudeToolTypeBash,
+		Name: "bash",
+	}
+
+	// 从 custom 字段提取 name
+	if len(tool.Custom) > 0 {
+		var customData map[string]any
+		if err := json.Unmarshal(tool.Custom, &customData); err == nil {
+			if name, ok := customData["name"].(string); ok && name != "" {
+				claudeTool.Name = name
+			}
+		}
+	}
+
+	return claudeTool
+}
+
+// convertTextEditorTool 将 OpenAI 格式的 text_editor 工具转换为 Claude 格式
+func convertTextEditorTool(tool dto.ToolCallRequest) *dto.ClaudeTextEditorTool {
+	claudeTool := &dto.ClaudeTextEditorTool{
+		Type: ClaudeToolTypeTextEditor,
+		Name: "str_replace_editor",
+	}
+
+	// 从 custom 字段提取 name
+	if len(tool.Custom) > 0 {
+		var customData map[string]any
+		if err := json.Unmarshal(tool.Custom, &customData); err == nil {
+			if name, ok := customData["name"].(string); ok && name != "" {
+				claudeTool.Name = name
+			}
+		}
+	}
+
+	return claudeTool
+}
+
+// parseBase64Image 从 data URI 中解析 media_type 和 base64 数据
+// 支持格式: data:image/png;base64,xxxxx 或纯 base64 字符串
+func parseBase64Image(dataUri string) (mediaType string, base64Data string, err error) {
+	if strings.HasPrefix(dataUri, "data:") {
+		// 解析 data URI 格式
+		parts := strings.SplitN(dataUri, ",", 2)
+		if len(parts) != 2 {
+			return "", "", fmt.Errorf("invalid data URI format")
+		}
+		// 解析 media type: data:image/png;base64
+		metaParts := strings.SplitN(parts[0], ";", 2)
+		mediaType = strings.TrimPrefix(metaParts[0], "data:")
+		base64Data = parts[1]
+		return mediaType, base64Data, nil
+	}
+	// 纯 base64 字符串，尝试检测图片类型
+	// 默认假设为 PNG
+	return "image/png", dataUri, nil
+}
+
+// ConvertToolResultContent 将 OpenAI 格式的 tool result 内容转换为 Claude 格式
+// 支持纯文本、图片 URL、base64 图片、混合内容数组
+func ConvertToolResultContent(c *gin.Context, content any) (any, error) {
+	if content == nil {
+		return nil, nil
+	}
+
+	// 1. 纯字符串内容
+	if strContent, ok := content.(string); ok {
+		return strContent, nil
+	}
+
+	// 2. 数组内容 - 可能包含文本和图片
+	if arrayContent, ok := content.([]any); ok {
+		claudeContent := make([]dto.ClaudeMediaMessage, 0, len(arrayContent))
+
+		for _, item := range arrayContent {
+			itemMap, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			itemType, _ := itemMap["type"].(string)
+			switch itemType {
+			case "text":
+				if text, ok := itemMap["text"].(string); ok {
+					claudeContent = append(claudeContent, dto.ClaudeMediaMessage{
+						Type: "text",
+						Text: common.GetPointer[string](text),
+					})
+				}
+			case "image_url", "image":
+				// 处理图片内容
+				var imageUrl string
+				if imgUrlData, ok := itemMap["image_url"].(map[string]any); ok {
+					imageUrl, _ = imgUrlData["url"].(string)
+				} else if imgUrl, ok := itemMap["image_url"].(string); ok {
+					imageUrl = imgUrl
+				} else if imgUrl, ok := itemMap["url"].(string); ok {
+					imageUrl = imgUrl
+				}
+
+				if imageUrl != "" {
+					claudeMediaMsg := dto.ClaudeMediaMessage{
+						Type: "image",
+						Source: &dto.ClaudeMessageSource{
+							Type: "base64",
+						},
+					}
+
+					if strings.HasPrefix(imageUrl, "http") {
+						// URL 图片 - 下载并转换为 base64
+						fileData, err := service.GetFileBase64FromUrl(c, imageUrl, "converting tool result image")
+						if err != nil {
+							return nil, fmt.Errorf("failed to download image: %w", err)
+						}
+						claudeMediaMsg.Source.MediaType = fileData.MimeType
+						claudeMediaMsg.Source.Data = fileData.Base64Data
+					} else {
+						// base64 图片
+						mediaType, base64Data, err := parseBase64Image(imageUrl)
+						if err != nil {
+							return nil, fmt.Errorf("failed to parse base64 image: %w", err)
+						}
+						claudeMediaMsg.Source.MediaType = mediaType
+						claudeMediaMsg.Source.Data = base64Data
+					}
+
+					claudeContent = append(claudeContent, claudeMediaMsg)
+				}
+			}
+		}
+
+		if len(claudeContent) > 0 {
+			return claudeContent, nil
+		}
+	}
+
+	// 3. 单个对象内容
+	if mapContent, ok := content.(map[string]any); ok {
+		itemType, _ := mapContent["type"].(string)
+		if itemType == "image_url" || itemType == "image" {
+			var imageUrl string
+			if imgUrlData, ok := mapContent["image_url"].(map[string]any); ok {
+				imageUrl, _ = imgUrlData["url"].(string)
+			} else if imgUrl, ok := mapContent["image_url"].(string); ok {
+				imageUrl = imgUrl
+			} else if imgUrl, ok := mapContent["url"].(string); ok {
+				imageUrl = imgUrl
+			}
+
+			if imageUrl != "" {
+				claudeContent := make([]dto.ClaudeMediaMessage, 0, 1)
+				claudeMediaMsg := dto.ClaudeMediaMessage{
+					Type: "image",
+					Source: &dto.ClaudeMessageSource{
+						Type: "base64",
+					},
+				}
+
+				if strings.HasPrefix(imageUrl, "http") {
+					fileData, err := service.GetFileBase64FromUrl(c, imageUrl, "converting tool result image")
+					if err != nil {
+						return nil, fmt.Errorf("failed to download image: %w", err)
+					}
+					claudeMediaMsg.Source.MediaType = fileData.MimeType
+					claudeMediaMsg.Source.Data = fileData.Base64Data
+				} else {
+					mediaType, base64Data, err := parseBase64Image(imageUrl)
+					if err != nil {
+						return nil, fmt.Errorf("failed to parse base64 image: %w", err)
+					}
+					claudeMediaMsg.Source.MediaType = mediaType
+					claudeMediaMsg.Source.Data = base64Data
+				}
+
+				claudeContent = append(claudeContent, claudeMediaMsg)
+				return claudeContent, nil
+			}
+		}
+	}
+
+	// 默认返回原始内容
+	return content, nil
+}
 
 func stopReasonClaude2OpenAI(reason string) string {
 	switch reason {
@@ -74,8 +350,29 @@ func RequestOpenAI2ClaudeComplete(textRequest dto.GeneralOpenAIRequest) *dto.Cla
 
 func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRequest) (*dto.ClaudeRequest, error) {
 	claudeTools := make([]any, 0, len(textRequest.Tools))
+	hasStrictMode := false
 
 	for _, tool := range textRequest.Tools {
+		// 检测 strict mode 参数
+		if tool.Function.Strict != nil && *tool.Function.Strict {
+			hasStrictMode = true
+		}
+
+		// 检测是否为 Claude 原生工具类型
+		toolTypeInfo := DetectClaudeToolType(tool)
+		if toolTypeInfo.IsClaudeNative {
+			switch toolTypeInfo.ToolType {
+			case ClaudeToolTypeComputer:
+				claudeTools = append(claudeTools, convertComputerUseTool(tool))
+			case ClaudeToolTypeBash:
+				claudeTools = append(claudeTools, convertBashTool(tool))
+			case ClaudeToolTypeTextEditor:
+				claudeTools = append(claudeTools, convertTextEditorTool(tool))
+			}
+			continue
+		}
+
+		// 标准 function 工具转换
 		if params, ok := tool.Function.Parameters.(map[string]any); ok {
 			claudeTool := dto.Tool{
 				Name:        tool.Function.Name,
@@ -95,6 +392,11 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 			}
 			claudeTools = append(claudeTools, &claudeTool)
 		}
+	}
+
+	// 记录 strict mode 警告
+	if hasStrictMode {
+		logger.LogWarn(c.Request.Context(), "OpenAI strict mode detected but Claude does not have an equivalent feature. Tools will be converted normally.")
 	}
 
 	// Web search tool
@@ -144,6 +446,16 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 			case "high":
 				webSearchTool.MaxUses = WebSearchMaxUsesHigh
 			}
+		}
+
+		// 处理 allowed_domains 域名白名单
+		if len(textRequest.WebSearchOptions.AllowedDomains) > 0 {
+			webSearchTool.AllowedDomains = textRequest.WebSearchOptions.AllowedDomains
+		}
+
+		// 处理 blocked_domains 域名黑名单
+		if len(textRequest.WebSearchOptions.BlockedDomains) > 0 {
+			webSearchTool.BlockedDomains = textRequest.WebSearchOptions.BlockedDomains
 		}
 
 		claudeTools = append(claudeTools, &webSearchTool)
@@ -321,6 +633,12 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 				Role: message.Role,
 			}
 			if message.Role == "tool" {
+				// 转换 tool result 内容，支持图片
+				convertedContent, err := ConvertToolResultContent(c, message.Content)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert tool result content: %w", err)
+				}
+
 				if len(claudeMessages) > 0 && claudeMessages[len(claudeMessages)-1].Role == "user" {
 					lastMessage := claudeMessages[len(claudeMessages)-1]
 					if content, ok := lastMessage.Content.(string); ok {
@@ -334,7 +652,7 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 					lastMessage.Content = append(lastMessage.Content.([]dto.ClaudeMediaMessage), dto.ClaudeMediaMessage{
 						Type:      "tool_result",
 						ToolUseId: message.ToolCallId,
-						Content:   message.Content,
+						Content:   convertedContent,
 					})
 					claudeMessages[len(claudeMessages)-1] = lastMessage
 					continue
@@ -344,7 +662,7 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 						{
 							Type:      "tool_result",
 							ToolUseId: message.ToolCallId,
-							Content:   message.Content,
+							Content:   convertedContent,
 						},
 					}
 				}
@@ -448,7 +766,20 @@ func StreamResponseClaude2OpenAI(reqMode int, claudeResponse *dto.ClaudeResponse
 				if claudeResponse.ContentBlock.Type == "text" && claudeResponse.ContentBlock.Text != nil {
 					choice.Delta.SetContentString(*claudeResponse.ContentBlock.Text)
 				}
+				// 处理所有 tool_use 类型，包括 Claude 原生工具（computer_use、bash、text_editor）
 				if claudeResponse.ContentBlock.Type == "tool_use" {
+					tools = append(tools, dto.ToolCallResponse{
+						Index: common.GetPointer(fcIdx),
+						ID:    claudeResponse.ContentBlock.Id,
+						Type:  "function",
+						Function: dto.FunctionResponse{
+							Name:      claudeResponse.ContentBlock.Name,
+							Arguments: "",
+						},
+					})
+				}
+				// 处理服务器端工具（如 web_search）
+				if claudeResponse.ContentBlock.Type == "server_tool_use" {
 					tools = append(tools, dto.ToolCallResponse{
 						Index: common.GetPointer(fcIdx),
 						ID:    claudeResponse.ContentBlock.Id,
@@ -520,6 +851,8 @@ func ResponseClaude2OpenAI(reqMode int, claudeResponse *dto.ClaudeResponse) *dto
 	}
 	tools := make([]dto.ToolCallResponse, 0)
 	thinkingContent := ""
+	// 收集所有 citations
+	var allCitations []dto.ClaudeCitation
 
 	if reqMode == RequestModeCompletion {
 		choice := dto.OpenAITextResponseChoice{
@@ -537,10 +870,25 @@ func ResponseClaude2OpenAI(reqMode int, claudeResponse *dto.ClaudeResponse) *dto
 		for _, message := range claudeResponse.Content {
 			switch message.Type {
 			case "tool_use":
+				// 处理所有 tool_use 类型，包括 Claude 原生工具（computer_use、bash、text_editor）
+				// Claude 原生工具的响应格式与普通 function 工具相同
 				args, _ := json.Marshal(message.Input)
 				tools = append(tools, dto.ToolCallResponse{
 					ID:   message.Id,
 					Type: "function", // compatible with other OpenAI derivative applications
+					Function: dto.FunctionResponse{
+						Name:      message.Name,
+						Arguments: string(args),
+					},
+				})
+			case "server_tool_use":
+				// 处理服务器端工具（如 web_search）
+				// server_tool_use 是 Claude 服务器端执行的工具，不需要客户端处理
+				// 但我们仍然将其转换为 tool_calls 格式以保持一致性
+				args, _ := json.Marshal(message.Input)
+				tools = append(tools, dto.ToolCallResponse{
+					ID:   message.Id,
+					Type: "function",
 					Function: dto.FunctionResponse{
 						Name:      message.Name,
 						Arguments: string(args),
@@ -553,6 +901,10 @@ func ResponseClaude2OpenAI(reqMode int, claudeResponse *dto.ClaudeResponse) *dto
 				}
 			case "text":
 				responseText = message.GetText()
+				// 收集 citations
+				if len(message.Citations) > 0 {
+					allCitations = append(allCitations, message.Citations...)
+				}
 			}
 		}
 	}
@@ -571,10 +923,31 @@ func ResponseClaude2OpenAI(reqMode int, claudeResponse *dto.ClaudeResponse) *dto
 		choice.Message.SetToolCalls(tools)
 	}
 	choice.Message.ReasoningContent = thinkingContent
+	// 如果有 citations，将其添加到响应中
+	if len(allCitations) > 0 {
+		choice.Message.Citations = convertClaudeCitationsToOpenAI(allCitations)
+	}
 	fullTextResponse.Model = claudeResponse.Model
 	choices = append(choices, choice)
 	fullTextResponse.Choices = choices
 	return &fullTextResponse
+}
+
+// convertClaudeCitationsToOpenAI 将 Claude citations 转换为 OpenAI 格式
+func convertClaudeCitationsToOpenAI(citations []dto.ClaudeCitation) []dto.OpenAICitation {
+	result := make([]dto.OpenAICitation, 0, len(citations))
+	for _, c := range citations {
+		result = append(result, dto.OpenAICitation{
+			Type:       c.Type,
+			CitedText:  c.CitedText,
+			DocumentID: c.DocumentID,
+			Title:      c.Title,
+			URL:        c.URL,
+			StartIndex: c.StartIndex,
+			EndIndex:   c.EndIndex,
+		})
+	}
+	return result
 }
 
 type ClaudeResponseInfo struct {

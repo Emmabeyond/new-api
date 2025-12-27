@@ -247,6 +247,7 @@ type FunctionRequest struct {
 	Name        string `json:"name"`
 	Parameters  any    `json:"parameters,omitempty"`
 	Arguments   string `json:"arguments,omitempty"`
+	Strict      *bool  `json:"strict,omitempty"` // OpenAI strict mode 参数
 }
 
 type StreamOptions struct {
@@ -288,8 +289,20 @@ type Message struct {
 	Reasoning        string          `json:"reasoning,omitempty"`
 	ToolCalls        json.RawMessage `json:"tool_calls,omitempty"`
 	ToolCallId       string          `json:"tool_call_id,omitempty"`
+	Citations        []OpenAICitation `json:"citations,omitempty"` // web_search 引用信息
 	parsedContent    []MediaContent
 	//parsedStringContent *string
+}
+
+// OpenAICitation web_search 引用信息（OpenAI 格式）
+type OpenAICitation struct {
+	Type       string `json:"type,omitempty"`        // 引用类型
+	CitedText  string `json:"cited_text,omitempty"`  // 引用的文本
+	DocumentID string `json:"document_id,omitempty"` // 文档 ID
+	Title      string `json:"title,omitempty"`       // 标题
+	URL        string `json:"url,omitempty"`         // URL
+	StartIndex int    `json:"start_index,omitempty"` // 开始索引
+	EndIndex   int    `json:"end_index,omitempty"`   // 结束索引
 }
 
 type MediaContent struct {
@@ -785,6 +798,8 @@ func (m *Message) ParseContent() []MediaContent {
 type WebSearchOptions struct {
 	SearchContextSize string          `json:"search_context_size,omitempty"`
 	UserLocation      json.RawMessage `json:"user_location,omitempty"`
+	AllowedDomains    []string        `json:"allowed_domains,omitempty"`
+	BlockedDomains    []string        `json:"blocked_domains,omitempty"`
 }
 
 // https://platform.openai.com/docs/api-reference/responses/create
