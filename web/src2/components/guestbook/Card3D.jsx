@@ -106,19 +106,30 @@ const Card3D = ({
         }}
       />
 
-      {/* 精选标记 */}
+      {/* 精选标记 - 高级玻璃拟态风格 */}
       {isFeatured && (
-        <div className='absolute -top-1 -right-1 z-20'>
-          <div className='relative'>
-            {/* 发光效果 */}
-            <div className='absolute inset-0 animate-pulse'>
-              <div className='w-full h-full rounded-full bg-amber-400/50 blur-md' />
+        <div className='absolute -top-2 -right-2 z-20'>
+          <div className='relative group'>
+            {/* 外层光晕动画 */}
+            <div className='absolute -inset-1 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 opacity-75 blur-sm animate-pulse' />
+            
+            {/* 玻璃拟态容器 */}
+            <div className='relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl backdrop-blur-md bg-gradient-to-br from-amber-400/90 via-yellow-400/85 to-orange-400/90 border border-amber-200/50 shadow-[0_4px_20px_rgba(251,191,36,0.4),inset_0_1px_0_rgba(255,255,255,0.3)]'>
+              {/* 星星图标 - 带闪烁效果 */}
+              <div className='relative'>
+                <Star size={13} fill='currentColor' className='text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]' />
+                {/* 星星闪光点 */}
+                <div className='absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-white rounded-full animate-ping opacity-75' />
+              </div>
+              
+              {/* 文字 */}
+              <span className='text-white text-xs font-semibold tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]'>
+                精选
+              </span>
             </div>
-            {/* 星星徽章 */}
-            <div className='relative flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-medium shadow-lg'>
-              <Star size={12} fill='currentColor' className='animate-spin-slow' />
-              <span>精选</span>
-            </div>
+            
+            {/* 底部微光反射 */}
+            <div className='absolute -bottom-1 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-amber-300/40 to-transparent blur-sm' />
           </div>
         </div>
       )}

@@ -119,7 +119,7 @@ const FeaturedMessagesPanel = ({ CARD_PROPS }) => {
                     <Text strong className='text-sm truncate'>
                       {msg.username}
                     </Text>
-                    <Star size={12} className='text-yellow-500 fill-yellow-500 flex-shrink-0' />
+                    <Star size={12} className='text-amber-500 fill-amber-400 flex-shrink-0 drop-shadow-[0_0_3px_rgba(251,191,36,0.6)]' />
                     <Text type='tertiary' className='text-xs flex-shrink-0'>
                       {formatTime(msg.created_at)}
                     </Text>

@@ -70,10 +70,10 @@ const MyMessageCard = ({ message, onDelete, deleting }) => {
           </Tag>
           
           {message.is_featured && (
-            <Tag color='orange' size='small' className='flex items-center gap-1'>
-              <Star size={12} fill='currentColor' />
-              {t('精选')}
-            </Tag>
+            <div className='relative inline-flex items-center gap-1 px-2 py-0.5 rounded-lg backdrop-blur-sm bg-gradient-to-r from-amber-400/90 to-orange-400/90 border border-amber-300/50 shadow-[0_2px_8px_rgba(251,191,36,0.3)]'>
+              <Star size={11} fill='currentColor' className='text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]' />
+              <span className='text-white text-xs font-medium'>{t('精选')}</span>
+            </div>
           )}
         </div>
         

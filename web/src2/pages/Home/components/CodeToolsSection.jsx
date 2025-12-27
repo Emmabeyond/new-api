@@ -171,7 +171,7 @@ const CodeToolsSection = () => {
       icon: <OpenAI size={20} />,
       description: t('OpenAI 官方命令行工具'),
       color: 'green',
-      groupNote: t('仅 default 分组的 API Key 支持 OpenAI 格式调用'),
+      groupNote: t('支持 OpenAI 格式调用，推荐使用 codex 分组'),
       sections: [
         {
           title: t('基础配置'),
@@ -220,7 +220,7 @@ const CodeToolsSection = () => {
       icon: <span className="text-base">⌘</span>,
       description: t('AI 驱动的代码编辑器'),
       color: 'cyan',
-      groupNote: t('仅 default 分组的 API Key 支持 OpenAI 格式调用'),
+      groupNote: t('支持 OpenAI 格式调用，可使用 codex 或 claude code 分组'),
       sections: [
         {
           title: t('基础配置'),
