@@ -72,6 +72,11 @@ const TopUp = () => {
   const [creemOpen, setCreemOpen] = useState(false);
   const [selectedCreemProduct, setSelectedCreemProduct] = useState(null);
 
+  // LINUX DO Credit 相关状态
+  const [enableLinuxDoTopUp, setEnableLinuxDoTopUp] = useState(false);
+  const [linuxDoMinTopUp, setLinuxDoMinTopUp] = useState(1);
+  const [linuxDoLoading, setLinuxDoLoading] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
   const [payWay, setPayWay] = useState('');
@@ -169,6 +174,11 @@ const TopUp = () => {
         showError(t('管理员未开启Stripe充值！'));
         return;
       }
+    } else if (payment === 'linuxdo') {
+      if (!enableLinuxDoTopUp) {
+        showError(t('管理员未开启 LINUX DO Credit 充值！'));
+        return;
+      }
     } else {
       if (!enableOnlineTopUp) {
         showError(t('管理员未开启在线充值！'));
@@ -185,7 +195,13 @@ const TopUp = () => {
     setPaymentLoading(true);
 
     try {
-      // 对于支付宝和微信支付，尝试使用二维码模式
+      // LINUX DO Credit: 直接跳转支付页面，不需要二维码
+      if (payment === 'linuxdo') {
+        await requestLinuxDoPayment();
+        return;
+      }
+
+      // 对于支付宝、微信支付，尝试使用二维码模式
       if (payment === 'alipay' || payment === 'wxpay') {
         const qrCodeResult = await requestQRCode(payment);
         if (qrCodeResult) {
@@ -201,10 +217,37 @@ const TopUp = () => {
         await getStripeAmount();
       } else {
         await getAmount();
+        setOpen(true);
       }
-      setOpen(true);
     } catch (error) {
       showError(t('获取金额失败'));
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // 请求 LINUX DO Credit 支付（直接跳转）
+  const requestLinuxDoPayment = async () => {
+    try {
+      const res = await API.post('/api/user/pay/qrcode', {
+        amount: parseInt(topUpCount),
+        payment_method: 'linuxdo',
+      });
+
+      if (res.data.message === 'success') {
+        const data = res.data.data;
+        if (data.payurl) {
+          // 直接跳转到支付页面
+          window.open(data.payurl, '_blank');
+          return true;
+        }
+      } else {
+        showError(res.data.data || t('获取支付链接失败'));
+      }
+      return false;
+    } catch (err) {
+      console.error('LINUX DO Credit 支付请求失败:', err);
+      return false;
     } finally {
       setPaymentLoading(false);
     }
@@ -371,7 +414,6 @@ const TopUp = () => {
         showError(res);
       }
     } catch (err) {
-      console.log(err);
       showError(t('支付请求失败'));
     } finally {
       setOpen(false);
@@ -415,7 +457,6 @@ const TopUp = () => {
         showError(res);
       }
     } catch (err) {
-      console.log(err);
       showError(t('支付请求失败'));
     } finally {
       setCreemOpen(false);
@@ -427,6 +468,7 @@ const TopUp = () => {
     // 与 Stripe 保持一致的实现方式
     window.open(data.checkout_url, '_blank');
   };
+
 
   const getUserQuota = async () => {
     let res = await API.get(`/api/user/self`);
@@ -508,16 +550,17 @@ const TopUp = () => {
             : enableStripeTopUp
               ? data.stripe_min_topup
               : 1;
+          const enableLinuxDoTopUp = data.enable_linuxdo_topup || false;
           setEnableOnlineTopUp(enableOnlineTopUp);
           setEnableStripeTopUp(enableStripeTopUp);
           setEnableCreemTopUp(enableCreemTopUp);
+          setEnableLinuxDoTopUp(enableLinuxDoTopUp);
+          setLinuxDoMinTopUp(data.linuxdo_min_topup || 1);
           setMinTopUp(minTopUpValue);
           setTopUpCount(minTopUpValue);
 
           // 设置 Creem 产品
           try {
-            console.log(' data is ?', data);
-            console.log(' creem products is ?', data.creem_products);
             const products = JSON.parse(data.creem_products || '[]');
             setCreemProducts(products);
           } catch (e) {
@@ -532,7 +575,6 @@ const TopUp = () => {
           // 初始化显示实付金额
           getAmount(minTopUpValue);
         } catch (e) {
-          console.log('解析支付方式失败:', e);
           setPayMethods([]);
         }
 
@@ -644,7 +686,7 @@ const TopUp = () => {
         showError(res);
       }
     } catch (err) {
-      console.log(err);
+      // 忽略错误
     }
     setAmountLoading(false);
   };
@@ -670,7 +712,7 @@ const TopUp = () => {
         showError(res);
       }
     } catch (err) {
-      console.log(err);
+      // 忽略错误
     } finally {
       setAmountLoading(false);
     }
@@ -925,6 +967,7 @@ const TopUp = () => {
               enableOnlineTopUp={enableOnlineTopUp}
               enableStripeTopUp={enableStripeTopUp}
               enableCreemTopUp={enableCreemTopUp}
+              enableLinuxDoTopUp={enableLinuxDoTopUp}
               creemProducts={creemProducts}
               creemPreTopUp={creemPreTopUp}
               presetAmounts={presetAmounts}

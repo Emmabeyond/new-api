@@ -87,6 +87,12 @@ func InitOptionMap() {
 	common.OptionMap["CreemProducts"] = setting.CreemProducts
 	common.OptionMap["CreemTestMode"] = strconv.FormatBool(setting.CreemTestMode)
 	common.OptionMap["CreemWebhookSecret"] = setting.CreemWebhookSecret
+	// LINUX DO Credit 配置
+	common.OptionMap["LinuxDoPayAddress"] = setting.LinuxDoPayAddress
+	common.OptionMap["LinuxDoClientId"] = setting.LinuxDoClientId
+	common.OptionMap["LinuxDoClientSecret"] = ""
+	common.OptionMap["LinuxDoMinTopUp"] = strconv.Itoa(setting.LinuxDoMinTopUp)
+	common.OptionMap["LinuxDoUnitPrice"] = strconv.FormatFloat(setting.LinuxDoUnitPrice, 'f', -1, 64)
 	common.OptionMap["TopupGroupRatio"] = common.TopupGroupRatio2JSONString()
 	common.OptionMap["Chats"] = setting.Chats2JsonString()
 	common.OptionMap["AutoGroups"] = setting.AutoGroups2JsonString()
@@ -351,6 +357,17 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.CreemTestMode = value == "true"
 	case "CreemWebhookSecret":
 		setting.CreemWebhookSecret = value
+	// LINUX DO Credit 配置
+	case "LinuxDoPayAddress":
+		setting.LinuxDoPayAddress = value
+	case "LinuxDoClientId":
+		setting.LinuxDoClientId = value
+	case "LinuxDoClientSecret":
+		setting.LinuxDoClientSecret = value
+	case "LinuxDoMinTopUp":
+		setting.LinuxDoMinTopUp, _ = strconv.Atoi(value)
+	case "LinuxDoUnitPrice":
+		setting.LinuxDoUnitPrice, _ = strconv.ParseFloat(value, 64)
 	case "TopupGroupRatio":
 		err = common.UpdateTopupGroupRatioByJSONString(value)
 	case "GitHubClientId":

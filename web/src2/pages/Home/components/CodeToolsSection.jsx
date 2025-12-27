@@ -190,7 +190,7 @@ const CodeToolsSection = () => {
           content: (
             <StepList steps={[
               t('登录后进入控制台，创建一个新的 API Key'),
-              t('确保 API Key 属于 default 分组'),
+              t('推荐在 codex 分组创建 API Key'),
               t('将 Base URL 设置为上述站点地址'),
               t('使用创建的 API Key 作为 OPENAI_API_KEY'),
             ]} />
@@ -250,7 +250,7 @@ const CodeToolsSection = () => {
           content: (
             <NoteList notes={[
               t('请将 sk-xxxxxx 替换为您创建的实际 API Key'),
-              t('确保 API Key 属于 default 分组'),
+              t('推荐在 codex 或 claude code 分组创建 API Key'),
               t('配置完成后可能需要重启 Cursor 才能生效'),
             ]} />
           ),

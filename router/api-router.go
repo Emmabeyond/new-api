@@ -66,6 +66,7 @@ func SetApiRouter(router *gin.Engine) {
 			//userRoute.POST("/tokenlog", middleware.CriticalRateLimit(), controller.TokenLog)
 			userRoute.GET("/logout", controller.Logout)
 			userRoute.GET("/epay/notify", controller.EpayNotify)
+			userRoute.GET("/linuxdo/notify", controller.LinuxDoNotify)
 			userRoute.GET("/groups", controller.GetUserGroups)
 
 			selfRoute := userRoute.Group("/")
@@ -93,8 +94,13 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/amount", controller.RequestAmount)
 				selfRoute.POST("/stripe/pay", middleware.CriticalRateLimit(), controller.RequestStripePay)
 				selfRoute.POST("/stripe/amount", controller.RequestStripeAmount)
-				selfRoute.POST("/creem/pay", middleware.CriticalRateLimit(), controller.RequestCreemPay)
-				selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
+			selfRoute.POST("/creem/pay", middleware.CriticalRateLimit(), controller.RequestCreemPay)
+			// LINUX DO Credit 支付路由
+			selfRoute.POST("/linuxdo/pay", middleware.CriticalRateLimit(), controller.RequestLinuxDoPay)
+			selfRoute.POST("/linuxdo/qrcode", middleware.CriticalRateLimit(), controller.RequestLinuxDoQRCode)
+			selfRoute.POST("/linuxdo/amount", controller.RequestLinuxDoAmount)
+			selfRoute.GET("/linuxdo/status", controller.GetLinuxDoOrderStatus)
+			selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 
 				// 2FA routes

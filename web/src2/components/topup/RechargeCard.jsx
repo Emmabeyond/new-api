@@ -54,6 +54,7 @@ const RechargeCard = ({
   enableOnlineTopUp,
   enableStripeTopUp,
   enableCreemTopUp,
+  enableLinuxDoTopUp,
   creemProducts,
   creemPreTopUp,
   presetAmounts,
@@ -91,7 +92,6 @@ const RechargeCard = ({
   const onlineFormApiRef = useRef(null);
   const redeemFormApiRef = useRef(null);
   const showAmountSkeleton = useMinimumLoadingTime(amountLoading);
-  console.log(' enabled screem ?', enableCreemTopUp, ' products ?', creemProducts);
   return (
     <Card className='!rounded-2xl shadow-sm border-0'>
       {/* 卡片头部 */}
@@ -236,7 +236,7 @@ const RechargeCard = ({
             <div className='py-8 flex justify-center'>
               <Spin size='large' />
             </div>
-          ) : enableOnlineTopUp || enableStripeTopUp || enableCreemTopUp ? (
+          ) : enableOnlineTopUp || enableStripeTopUp || enableCreemTopUp || enableLinuxDoTopUp ? (
             <Form
               getFormApi={(api) => (onlineFormApiRef.current = api)}
               initValues={{ topUpCount: topUpCount }}
@@ -304,7 +304,7 @@ const RechargeCard = ({
                       <Form.Slot label={t('选择支付方式')}>
                         {payMethods && payMethods.length > 0 ? (
                           <Space wrap>
-                            {payMethods.map((payMethod) => {
+                            {payMethods && payMethods.map((payMethod) => {
                               const minTopupVal =
                                 Number(payMethod.min_topup) || 0;
                               const isStripe = payMethod.type === 'stripe';
@@ -330,6 +330,8 @@ const RechargeCard = ({
                                       <SiWechat size={18} color='#07C160' />
                                     ) : payMethod.type === 'stripe' ? (
                                       <SiStripe size={18} color='#635BFF' />
+                                    ) : payMethod.type === 'linuxdo' ? (
+                                      <Coins size={18} color='#6366F1' />
                                     ) : (
                                       <CreditCard
                                         size={18}
@@ -526,6 +528,7 @@ const RechargeCard = ({
                     </div>
                   </Form.Slot>
                 )}
+
               </div>
             </Form>
           ) : (

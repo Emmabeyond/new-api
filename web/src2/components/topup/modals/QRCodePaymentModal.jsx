@@ -21,7 +21,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Typography, Card, Button, Spin } from '@douyinfe/semi-ui';
 import { IconRefresh } from '@douyinfe/semi-icons';
 import { QRCodeSVG } from 'qrcode.react';
-import { SiAlipay, SiWechat } from 'react-icons/si';
+import { SiAlipay, SiWechat, SiLinux } from 'react-icons/si';
+import { Coins } from 'lucide-react';
 import { useOrderPolling } from '../../../hooks/topup/useOrderPolling';
 
 const { Text, Title } = Typography;
@@ -136,12 +137,22 @@ const QRCodePaymentModal = ({
         icon: <SiAlipay size={20} color='#1677FF' />,
         name: t('支付宝'),
         color: '#1677FF',
+        currency: '¥',
+      };
+    }
+    if (paymentMethod === 'linuxdo') {
+      return {
+        icon: <Coins size={20} color='#6366F1' />,
+        name: 'LINUX DO Credit',
+        color: '#6366F1',
+        currency: '', // 积分不需要货币符号
       };
     }
     return {
       icon: <SiWechat size={20} color='#07C160' />,
       name: t('微信'),
       color: '#07C160',
+      currency: '¥',
     };
   };
 
@@ -187,7 +198,7 @@ const QRCodePaymentModal = ({
                 {t('支付金额')}：
               </Text>
               <Text strong style={{ color: 'red', fontSize: '16px' }}>
-                ¥{money}
+                {paymentInfo.currency}{money}{paymentMethod === 'linuxdo' ? t(' 积分') : ''}
               </Text>
             </div>
           </div>

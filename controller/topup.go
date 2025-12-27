@@ -49,15 +49,17 @@ func GetTopUpInfo(c *gin.Context) {
 	}
 
 	data := gin.H{
-		"enable_online_topup": operation_setting.PayAddress != "" && operation_setting.EpayId != "" && operation_setting.EpayKey != "",
-		"enable_stripe_topup": setting.StripeApiSecret != "" && setting.StripeWebhookSecret != "" && setting.StripePriceId != "",
-		"enable_creem_topup":  setting.CreemApiKey != "" && setting.CreemProducts != "[]",
-		"creem_products":      setting.CreemProducts,
-		"pay_methods":         payMethods,
-		"min_topup":           operation_setting.MinTopUp,
-		"stripe_min_topup":    setting.StripeMinTopUp,
-		"amount_options":      operation_setting.GetPaymentSetting().AmountOptions,
-		"discount":            operation_setting.GetPaymentSetting().AmountDiscount,
+		"enable_online_topup":  operation_setting.PayAddress != "" && operation_setting.EpayId != "" && operation_setting.EpayKey != "",
+		"enable_stripe_topup":  setting.StripeApiSecret != "" && setting.StripeWebhookSecret != "" && setting.StripePriceId != "",
+		"enable_creem_topup":   setting.CreemApiKey != "" && setting.CreemProducts != "[]",
+		"enable_linuxdo_topup": setting.LinuxDoClientId != "" && setting.LinuxDoClientSecret != "",
+		"creem_products":       setting.CreemProducts,
+		"pay_methods":          payMethods,
+		"min_topup":            operation_setting.MinTopUp,
+		"stripe_min_topup":     setting.StripeMinTopUp,
+		"linuxdo_min_topup":    setting.LinuxDoMinTopUp,
+		"amount_options":       operation_setting.GetPaymentSetting().AmountOptions,
+		"discount":             operation_setting.GetPaymentSetting().AmountDiscount,
 	}
 	common.ApiSuccess(c, data)
 }
@@ -521,7 +523,7 @@ type QRCodeRequest struct {
 	PaymentMethod string `json:"payment_method"`
 }
 
-// RequestEpayQRCode 获取易支付二维码
+// RequestEpayQRCode 获取易支付二维码（也支持 LINUX DO Credit）
 // POST /api/user/pay/qrcode
 func RequestEpayQRCode(c *gin.Context) {
 	var req QRCodeRequest
@@ -530,8 +532,19 @@ func RequestEpayQRCode(c *gin.Context) {
 		return
 	}
 
-	if req.Amount < getMinTopup() {
-		c.JSON(200, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", getMinTopup())})
+	// 判断是否为 LINUX DO Credit 支付
+	isLinuxDo := req.PaymentMethod == PaymentMethodLinuxDo
+
+	// 获取最小充值金额
+	var minTopupVal int64
+	if isLinuxDo {
+		minTopupVal = getLinuxDoMinTopup()
+	} else {
+		minTopupVal = getMinTopup()
+	}
+
+	if req.Amount < minTopupVal {
+		c.JSON(200, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", minTopupVal)})
 		return
 	}
 
@@ -542,50 +555,99 @@ func RequestEpayQRCode(c *gin.Context) {
 		return
 	}
 
-	payMoney := getPayMoney(req.Amount, group)
+	// 根据支付方式计算支付金额
+	var payMoney float64
+	if isLinuxDo {
+		payMoney = getLinuxDoPayMoney(req.Amount, group)
+	} else {
+		payMoney = getPayMoney(req.Amount, group)
+	}
+
 	if payMoney < 0.01 {
 		c.JSON(200, gin.H{"message": "error", "data": "充值金额过低"})
 		return
 	}
 
-	if !operation_setting.ContainsPayMethod(req.PaymentMethod) {
+	// 非 LINUX DO Credit 需要检查支付方式是否存在
+	if !isLinuxDo && !operation_setting.ContainsPayMethod(req.PaymentMethod) {
 		c.JSON(200, gin.H{"message": "error", "data": "支付方式不存在"})
 		return
 	}
 
 	// 生成订单号
 	tradeNo := fmt.Sprintf("%s%d", common.GetRandomString(6), time.Now().Unix())
-	tradeNo = fmt.Sprintf("USR%dNO%s", id, tradeNo)
+	if isLinuxDo {
+		tradeNo = fmt.Sprintf("LDO%dNO%s", id, tradeNo)
+	} else {
+		tradeNo = fmt.Sprintf("USR%dNO%s", id, tradeNo)
+	}
 
 	// 获取回调地址
 	callBackAddress := service.GetCallbackAddress()
-	notifyUrl := callBackAddress + "/api/user/epay/notify"
 	returnUrl := system_setting.ServerAddress + "/console/topup"
 
-	// 获取用户 IP
-	clientIP := c.ClientIP()
-
-	// 调用易支付 API 获取二维码
-	apiReq := &service.EpayAPIRequest{
-		Type:       req.PaymentMethod,
-		OutTradeNo: tradeNo,
-		NotifyURL:  notifyUrl,
-		ReturnURL:  returnUrl,
-		Name:       fmt.Sprintf("TUC%d", req.Amount),
-		Money:      strconv.FormatFloat(payMoney, 'f', 2, 64),
-		ClientIP:   clientIP,
-		Device:     "pc",
+	var notifyUrl string
+	if isLinuxDo {
+		notifyUrl = callBackAddress + "/api/user/linuxdo/notify"
+	} else {
+		notifyUrl = callBackAddress + "/api/user/epay/notify"
 	}
 
-	apiResp, err := service.CallEpayAPI(apiReq)
-	if err != nil {
-		// API 调用失败，返回错误
-		errMsg := "获取支付二维码失败"
-		if apiResp != nil && apiResp.Msg != "" {
-			errMsg = apiResp.Msg
+	var qrCode, payUrl, urlScheme string
+
+	if isLinuxDo {
+		// 调用 LINUX DO Credit API
+		apiReq := &service.LinuxDoAPIRequest{
+			Type:       "epay",
+			OutTradeNo: tradeNo,
+			NotifyURL:  notifyUrl,
+			ReturnURL:  returnUrl,
+			Name:       fmt.Sprintf("TUC%d", req.Amount),
+			Money:      strconv.FormatFloat(payMoney, 'f', 2, 64),
+			Device:     "pc",
 		}
-		c.JSON(200, gin.H{"message": "error", "data": errMsg})
-		return
+
+		apiResp, err := service.CallLinuxDoAPI(apiReq)
+		if err != nil {
+			errMsg := "获取支付二维码失败"
+			if apiResp != nil && apiResp.Msg != "" {
+				errMsg = apiResp.Msg
+			}
+			c.JSON(200, gin.H{"message": "error", "data": errMsg})
+			return
+		}
+		
+		qrCode = apiResp.QRCode
+		payUrl = apiResp.PayURL
+		urlScheme = apiResp.URLScheme
+	} else {
+		// 获取用户 IP（易支付需要）
+		clientIP := c.ClientIP()
+		
+		// 调用易支付 API
+		apiReq := &service.EpayAPIRequest{
+			Type:       req.PaymentMethod,
+			OutTradeNo: tradeNo,
+			NotifyURL:  notifyUrl,
+			ReturnURL:  returnUrl,
+			Name:       fmt.Sprintf("TUC%d", req.Amount),
+			Money:      strconv.FormatFloat(payMoney, 'f', 2, 64),
+			ClientIP:   clientIP,
+			Device:     "pc",
+		}
+
+		apiResp, err := service.CallEpayAPI(apiReq)
+		if err != nil {
+			errMsg := "获取支付二维码失败"
+			if apiResp != nil && apiResp.Msg != "" {
+				errMsg = apiResp.Msg
+			}
+			c.JSON(200, gin.H{"message": "error", "data": errMsg})
+			return
+		}
+		qrCode = apiResp.QRCode
+		payUrl = apiResp.PayURL
+		urlScheme = apiResp.URLScheme
 	}
 
 	// 计算实际充值金额
@@ -611,20 +673,29 @@ func RequestEpayQRCode(c *gin.Context) {
 		return
 	}
 
-	// 返回二维码或支付链接
+	// 返回支付信息
 	responseData := gin.H{
 		"trade_no": tradeNo,
 		"amount":   req.Amount,
 		"money":    strconv.FormatFloat(payMoney, 'f', 2, 64),
 	}
 
-	// 优先返回二维码，其次返回支付链接
-	if apiResp.QRCode != "" {
-		responseData["qrcode"] = apiResp.QRCode
-	} else if apiResp.PayURL != "" {
-		responseData["payurl"] = apiResp.PayURL
-	} else if apiResp.URLScheme != "" {
-		responseData["urlscheme"] = apiResp.URLScheme
+	// LINUX DO Credit: 优先返回支付链接（二维码需要登录支持，直接跳转支付更可靠）
+	// 易支付: 优先返回二维码，其次返回支付链接
+	if isLinuxDo {
+		// LINUX DO Credit 直接返回支付链接，不返回二维码
+		if payUrl != "" {
+			responseData["payurl"] = payUrl
+		}
+	} else {
+		// 易支付：优先返回二维码，其次返回支付链接
+		if qrCode != "" {
+			responseData["qrcode"] = qrCode
+		} else if payUrl != "" {
+			responseData["payurl"] = payUrl
+		} else if urlScheme != "" {
+			responseData["urlscheme"] = urlScheme
+		}
 	}
 
 	c.JSON(200, gin.H{"message": "success", "data": responseData})
@@ -653,9 +724,18 @@ func GetOrderStatus(c *gin.Context) {
 		return
 	}
 
-	// 如果订单状态是 pending，尝试从易支付查询最新状态
+	// 如果订单状态是 pending，根据支付方式查询最新状态
 	if topUp.Status == "pending" {
-		isPaid, err := service.QueryEpayOrder(tradeNo)
+		var isPaid bool
+		var err error
+
+		// 根据支付方式调用对应的查询接口
+		if topUp.PaymentMethod == PaymentMethodLinuxDo {
+			isPaid, err = service.QueryLinuxDoOrder(tradeNo)
+		} else {
+			isPaid, err = service.QueryEpayOrder(tradeNo)
+		}
+
 		if err == nil && isPaid {
 			// 更新订单状态
 			LockOrder(tradeNo)
@@ -671,7 +751,12 @@ func GetOrderStatus(c *gin.Context) {
 					dQuotaPerUnit := decimal.NewFromFloat(common.QuotaPerUnit)
 					quotaToAdd := int(dAmount.Mul(dQuotaPerUnit).IntPart())
 					model.IncreaseUserQuota(topUp.UserId, quotaToAdd, true)
-					model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%f", logger.LogQuota(quotaToAdd), topUp.Money))
+
+					logMsg := "使用在线充值成功"
+					if topUp.PaymentMethod == PaymentMethodLinuxDo {
+						logMsg = "使用 LINUX DO Credit 充值成功"
+					}
+					model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("%s，充值金额: %v，支付金额：%f", logMsg, logger.LogQuota(quotaToAdd), topUp.Money))
 				}
 			}
 		}
