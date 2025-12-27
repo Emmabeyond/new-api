@@ -48,6 +48,7 @@ export default function SettingsHeaderNavModules(props) {
     },
     docs: true,
     help: true,
+    guestbook: true,
     about: true,
   });
 
@@ -89,6 +90,7 @@ export default function SettingsHeaderNavModules(props) {
       },
       docs: true,
       help: true,
+      guestbook: true,
       about: true,
     };
     setHeaderNavModules(defaultModules);
@@ -144,6 +146,11 @@ export default function SettingsHeaderNavModules(props) {
           };
         }
 
+        // 处理向后兼容性：如果没有guestbook字段，添加默认值
+        if (modules.guestbook === undefined) {
+          modules.guestbook = true;
+        }
+
         setHeaderNavModules(modules);
       } catch (error) {
         // 使用默认配置
@@ -156,6 +163,7 @@ export default function SettingsHeaderNavModules(props) {
           },
           docs: true,
           help: true,
+          guestbook: true,
           about: true,
         };
         setHeaderNavModules(defaultModules);
@@ -190,6 +198,11 @@ export default function SettingsHeaderNavModules(props) {
       key: 'help',
       title: t('帮助中心'),
       description: t('用户帮助文档和常见问题'),
+    },
+    {
+      key: 'guestbook',
+      title: t('留言墙'),
+      description: t('用户留言板，展示社区反馈'),
     },
     {
       key: 'about',

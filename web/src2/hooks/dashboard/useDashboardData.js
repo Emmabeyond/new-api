@@ -91,9 +91,10 @@ export const useDashboardData = (userState, userDispatch, statusState) => {
     statusState?.status?.announcements_enabled ?? true;
   const faqEnabled = statusState?.status?.faq_enabled ?? true;
   const uptimeEnabled = statusState?.status?.uptime_kuma_enabled ?? true;
+  const guestbookEnabled = statusState?.status?.guestbook_enabled ?? true;
 
   const hasApiInfoPanel = apiInfoEnabled;
-  const hasInfoPanels = announcementsEnabled || faqEnabled || uptimeEnabled;
+  const hasInfoPanels = announcementsEnabled || faqEnabled || uptimeEnabled || guestbookEnabled;
 
   // ========== Memoized Values ==========
   const timeOptions = useMemo(
@@ -305,6 +306,7 @@ export const useDashboardData = (userState, userDispatch, statusState) => {
     announcementsEnabled,
     faqEnabled,
     uptimeEnabled,
+    guestbookEnabled,
 
     // 函数
     handleInputChange,

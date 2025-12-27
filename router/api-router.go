@@ -337,6 +337,31 @@ func SetApiRouter(router *gin.Engine) {
 			}
 		}
 
+		// Guestbook routes (留言板)
+		guestbookRoute := apiRouter.Group("/guestbook")
+		{
+			// 公开接口
+			guestbookRoute.GET("/messages", controller.GetApprovedMessages)
+			guestbookRoute.GET("/featured", controller.GetFeaturedMessages)
+
+			// 用户接口（需登录）
+			guestbookRoute.POST("/messages", middleware.UserAuth(), middleware.CriticalRateLimit(), controller.CreateMessage)
+			guestbookRoute.GET("/my-messages", middleware.UserAuth(), controller.GetMyMessages)
+			guestbookRoute.DELETE("/messages/:id", middleware.UserAuth(), controller.DeleteMyMessage)
+
+			// 管理员接口
+			guestbookAdminRoute := guestbookRoute.Group("/admin")
+			guestbookAdminRoute.Use(middleware.AdminAuth())
+			{
+				guestbookAdminRoute.GET("/messages", controller.AdminGetAllMessages)
+				guestbookAdminRoute.PUT("/messages/:id/review", controller.AdminReviewMessage)
+				guestbookAdminRoute.PUT("/messages/:id/feature", controller.AdminFeatureMessage)
+				guestbookAdminRoute.PUT("/messages/:id/reply", controller.AdminReplyToMessage)
+				guestbookAdminRoute.DELETE("/messages/:id/reply", controller.AdminDeleteReply)
+				guestbookAdminRoute.DELETE("/messages/:id", controller.AdminDeleteMessage)
+			}
+		}
+
 		// User level routes
 		levelRoute := apiRouter.Group("/level")
 		{

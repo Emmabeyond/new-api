@@ -59,6 +59,7 @@ export const useSidebar = () => {
       personal: true,
       'user-level': true,
       'theme-center': true,
+      guestbook: true,
     },
     admin: {
       enabled: true,
@@ -69,6 +70,7 @@ export const useSidebar = () => {
       level: true,
       'admin-checkin': true,
       'topup-admin': true,
+      'guestbook-admin': true,
       setting: true,
     },
   };
@@ -78,6 +80,15 @@ export const useSidebar = () => {
     if (statusState?.status?.SidebarModulesAdmin) {
       try {
         const config = JSON.parse(statusState.status.SidebarModulesAdmin);
+        
+        // 处理向后兼容性：添加新字段的默认值
+        if (config.personal && config.personal.guestbook === undefined) {
+          config.personal.guestbook = true;
+        }
+        if (config.admin && config.admin['guestbook-admin'] === undefined) {
+          config.admin['guestbook-admin'] = true;
+        }
+        
         return config;
       } catch (error) {
         return defaultAdminConfig;

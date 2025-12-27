@@ -129,6 +129,10 @@ export function getLucideIcon(key, selected = false) {
       return <Palette {...commonProps} color={iconColor} />;
     case 'user-level':
       return <Crown {...commonProps} color={iconColor} />;
+    case 'guestbook':
+      return <MessageSquare {...commonProps} color={iconColor} />;
+    case 'guestbook-admin':
+      return <MessageSquare {...commonProps} color={iconColor} />;
     default:
       return <CircleUser {...commonProps} color={iconColor} />;
   }

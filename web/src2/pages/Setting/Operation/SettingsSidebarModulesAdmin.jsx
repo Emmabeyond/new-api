@@ -59,6 +59,7 @@ export default function SettingsSidebarModulesAdmin(props) {
       personal: true,
       'user-level': true,
       'theme-center': true,
+      guestbook: true,
     },
     admin: {
       enabled: true,
@@ -67,6 +68,7 @@ export default function SettingsSidebarModulesAdmin(props) {
       redemption: true,
       user: true,
       setting: true,
+      'guestbook-admin': true,
     },
   });
 
@@ -119,6 +121,7 @@ export default function SettingsSidebarModulesAdmin(props) {
         topup: true,
         personal: true,
         'user-level': true,
+        guestbook: true,
       },
       admin: {
         enabled: true,
@@ -127,6 +130,7 @@ export default function SettingsSidebarModulesAdmin(props) {
         redemption: true,
         user: true,
         setting: true,
+        'guestbook-admin': true,
       },
     };
     setSidebarModulesAdmin(defaultModules);
@@ -173,6 +177,15 @@ export default function SettingsSidebarModulesAdmin(props) {
     if (props.options && props.options.SidebarModulesAdmin) {
       try {
         const modules = JSON.parse(props.options.SidebarModulesAdmin);
+        
+        // 处理向后兼容性：添加新字段的默认值
+        if (modules.personal && modules.personal.guestbook === undefined) {
+          modules.personal.guestbook = true;
+        }
+        if (modules.admin && modules.admin['guestbook-admin'] === undefined) {
+          modules.admin['guestbook-admin'] = true;
+        }
+        
         setSidebarModulesAdmin(modules);
       } catch (error) {
         // 使用默认配置
@@ -186,7 +199,7 @@ export default function SettingsSidebarModulesAdmin(props) {
             midjourney: true,
             task: true,
           },
-          personal: { enabled: true, topup: true, personal: true, 'user-level': true, 'theme-center': true },
+          personal: { enabled: true, topup: true, personal: true, 'user-level': true, 'theme-center': true, guestbook: true },
           admin: {
             enabled: true,
             channel: true,
@@ -194,6 +207,7 @@ export default function SettingsSidebarModulesAdmin(props) {
             redemption: true,
             user: true,
             setting: true,
+            'guestbook-admin': true,
           },
         };
         setSidebarModulesAdmin(defaultModules);
@@ -253,6 +267,11 @@ export default function SettingsSidebarModulesAdmin(props) {
           title: t('主题中心'),
           description: t('界面主题切换'),
         },
+        {
+          key: 'guestbook',
+          title: t('留言板'),
+          description: t('用户留言和反馈'),
+        },
       ],
     },
     {
@@ -268,6 +287,11 @@ export default function SettingsSidebarModulesAdmin(props) {
           description: t('兑换码生成管理'),
         },
         { key: 'user', title: t('用户管理'), description: t('用户账户管理') },
+        {
+          key: 'guestbook-admin',
+          title: t('留言管理'),
+          description: t('审核和管理用户留言'),
+        },
         {
           key: 'setting',
           title: t('系统设置'),

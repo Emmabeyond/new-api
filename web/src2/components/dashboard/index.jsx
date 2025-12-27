@@ -29,6 +29,7 @@ import ApiInfoPanel from './ApiInfoPanel';
 import AnnouncementsPanel from './AnnouncementsPanel';
 import FaqPanel from './FaqPanel';
 import UptimePanel from './UptimePanel';
+import FeaturedMessagesPanel from './FeaturedMessagesPanel';
 import SearchModal from './modals/SearchModal';
 
 import { useDashboardData } from '../../hooks/dashboard/useDashboardData';
@@ -260,6 +261,11 @@ const Dashboard = () => {
                 ILLUSTRATION_SIZE={ILLUSTRATION_SIZE}
                 t={dashboardData.t}
               />
+            )}
+
+            {/* 精选留言卡片 */}
+            {dashboardData.guestbookEnabled && (
+              <FeaturedMessagesPanel CARD_PROPS={CARD_PROPS} />
             )}
           </div>
         </div>

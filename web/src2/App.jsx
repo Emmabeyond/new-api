@@ -51,6 +51,7 @@ import SetupCheck from './components/layout/SetupCheck';
 import Checkin from './pages/Checkin';
 import AdminCheckin from './pages/AdminCheckin';
 import TopUpAdmin from './pages/TopUpAdmin';
+import GuestbookAdmin from './pages/GuestbookAdmin';
 
 const Home = lazy(() => import('./pages/Home'));
 const ThemeCenter = lazy(() => import('./pages/ThemeCenter'));
@@ -59,6 +60,7 @@ const About = lazy(() => import('./pages/About'));
 const UserAgreement = lazy(() => import('./pages/UserAgreement'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Help = lazy(() => import('./pages/Help'));
+const Guestbook = lazy(() => import('./pages/Guestbook'));
 
 function App() {
   const location = useLocation();
@@ -169,6 +171,16 @@ function App() {
           element={
             <AdminRoute>
               <TopUpAdmin />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path='/console/guestbook-admin'
+          element={
+            <AdminRoute>
+              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+                <GuestbookAdmin />
+              </Suspense>
             </AdminRoute>
           }
         />
@@ -370,6 +382,14 @@ function App() {
           element={
             <Suspense fallback={<Loading></Loading>} key={location.pathname}>
               <Help />
+            </Suspense>
+          }
+        />
+        <Route
+          path='/guestbook'
+          element={
+            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              <Guestbook />
             </Suspense>
           }
         />

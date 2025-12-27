@@ -285,12 +285,15 @@ func migrateDB() error {
 		&LevelConfig{},
 		&LevelChangeLog{},
 		&common.SecurityEvent{}, // 安全事件表
+		&GuestbookMessage{},     // 留言板
 	)
 	if err != nil {
 		return err
 	}
 	// Create composite indexes for channel queries optimization
 	createChannelIndexes()
+	// Create composite indexes for guestbook queries optimization
+	createGuestbookIndexes()
 	// Create composite indexes for log queries optimization (when LOG_SQL_DSN is not set, use DB directly)
 	if os.Getenv("LOG_SQL_DSN") == "" {
 		createLogIndexesWithDB(DB)
@@ -309,6 +312,18 @@ func migrateDB() error {
 	}
 	// 迁移：为空等级用户设置默认等级 tier_1
 	migrateEmptyUserLevels()
+	// 初始化默认留言板数据
+	if err := InitDefaultGuestbookMessages(); err != nil {
+		common.SysLog("Warning: failed to initialize default guestbook messages: " + err.Error())
+	}
+	// 初始化默认 AI 工具帮助文档
+	if err := InitDefaultAIToolsHelpDocuments(); err != nil {
+		common.SysLog("Warning: failed to initialize default AI tools help documents: " + err.Error())
+	}
+	// 初始化默认 FAQ
+	if err := InitDefaultFAQ(); err != nil {
+		common.SysLog("Warning: failed to initialize default FAQ: " + err.Error())
+	}
 	return nil
 }
 

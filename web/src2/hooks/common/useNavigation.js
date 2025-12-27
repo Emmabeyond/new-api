@@ -28,6 +28,7 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
       pricing: true,
       docs: true,
       help: true,
+      guestbook: true,
       about: true,
     };
 
@@ -67,6 +68,12 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
         itemKey: 'help',
         to: '/help',
       },
+      // 留言墙：内部页面
+      {
+        text: t('留言墙'),
+        itemKey: 'guestbook',
+        to: '/guestbook',
+      },
       {
         text: t('关于'),
         itemKey: 'about',
@@ -87,6 +94,9 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
       }
       if (link.itemKey === 'help') {
         return modules.help === true;
+      }
+      if (link.itemKey === 'guestbook') {
+        return modules.guestbook === true;
       }
       return modules[link.itemKey] === true;
     });

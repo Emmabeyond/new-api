@@ -52,6 +52,8 @@ const routerMap = {
   'admin-checkin': '/console/admin-checkin',
   'theme-center': '/console/theme-center',
   'topup-admin': '/console/topup-admin',
+  guestbook: '/guestbook',
+  'guestbook-admin': '/console/guestbook-admin',
 };
 
 const SiderBar = ({ onNavigate = () => {} }) => {
@@ -138,6 +140,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         to: '/checkin',
       },
       {
+        text: t('留言板'),
+        itemKey: 'guestbook',
+        to: '/guestbook',
+      },
+      {
         text: t('等级/限制'),
         itemKey: 'user-level',
         to: '/user-level',
@@ -199,6 +206,12 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('充值管理'),
         itemKey: 'topup-admin',
         to: '/topup-admin',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('留言管理'),
+        itemKey: 'guestbook-admin',
+        to: '/guestbook-admin',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {

@@ -68,6 +68,11 @@ export const useHeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
           };
         }
 
+        // 处理向后兼容性：如果没有guestbook字段，添加默认值
+        if (modules.guestbook === undefined) {
+          modules.guestbook = true;
+        }
+
         return modules;
       } catch (error) {
         console.error('解析顶栏模块配置失败:', error);
