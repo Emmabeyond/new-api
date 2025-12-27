@@ -26,17 +26,10 @@ import { useTranslation } from 'react-i18next';
 import NoticeModal from '../../components/layout/NoticeModal';
 import SafeMarkdown from '../../components/common/SafeMarkdown';
 
-// Bento Grid Components
-import HeroSection from './components/HeroSection';
-import BentoGrid from './components/BentoGrid';
-import ProvidersCard from './cards/ProvidersCard';
-import StatsCard from './cards/StatsCard';
-import StabilityCard from './cards/StabilityCard';
-import PricingCard from './cards/PricingCard';
-import CodeExampleCard from './cards/CodeExampleCard';
-import ModelsCard from './cards/ModelsCard';
-import SpeedCard from './cards/SpeedCard';
-import SupportCard from './cards/SupportCard';
+// Developer-focused Components
+import DevHeroSection from './components/DevHeroSection';
+import CodeToolsSection from './components/CodeToolsSection';
+import FeaturesSection from './components/FeaturesSection';
 
 const Home = () => {
   const { i18n } = useTranslation();
@@ -47,10 +40,7 @@ const Home = () => {
   const [noticeVisible, setNoticeVisible] = useState(false);
   const isMobile = useIsMobile();
   
-  const isDemoSiteMode = statusState?.status?.demo_site_enabled || false;
-  const docsLink = statusState?.status?.docs_link || '';
   const serverAddress = statusState?.status?.server_address || `${window.location.origin}`;
-  const version = statusState?.status?.version;
 
   const displayHomePageContent = async () => {
     setHomePageContent(localStorage.getItem('home_page_content') || '');
@@ -111,34 +101,14 @@ const Home = () => {
       
       {homePageContentLoaded && homePageContent === '' ? (
         <div className="w-full overflow-x-hidden">
-          {/* Hero Section */}
-          <div className="w-full border-b border-semi-color-border">
-            <HeroSection
-              serverAddress={serverAddress}
-              isDemoSiteMode={isDemoSiteMode}
-              docsLink={docsLink}
-              version={version}
-            />
-          </div>
+          {/* Developer Hero Section */}
+          <DevHeroSection serverAddress={serverAddress} />
 
-          {/* Bento Grid Section */}
-          <div className="w-full py-12 md:py-16 lg:py-20">
-            <BentoGrid>
-              {/* 第一行: 大卡片(2x2) + 2个中卡片 */}
-              <ProvidersCard delay={0} />
-              <StatsCard delay={50} />
-              <StabilityCard delay={100} />
-              
-              {/* 第二行: 大卡片继续 + 2个中卡片 */}
-              <PricingCard delay={150} />
-              <SpeedCard delay={200} />
-              
-              {/* 第三行: 宽卡片(2x1) + 2个中卡片 */}
-              <CodeExampleCard delay={250} />
-              <ModelsCard delay={300} />
-              <SupportCard delay={350} />
-            </BentoGrid>
-          </div>
+          {/* Code Tools Section - 核心区域 */}
+          <CodeToolsSection serverAddress={serverAddress} />
+
+          {/* Features Section - 核心特性 */}
+          <FeaturesSection />
         </div>
       ) : (
         <div className="overflow-x-hidden w-full">
